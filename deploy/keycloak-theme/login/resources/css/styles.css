@@ -1,0 +1,48 @@
+.login-pf body {
+  background: url('../img/logo.png') no-repeat scroll 15% 14vh black;
+  background-attachment: fixed;
+  background-size: 300px 80px;
+  font-family: 'Roboto', 'Open Sans', Helvetica, Arial, sans-serif;
+}
+
+.login-pf-page .card-pf {
+  background-color: #6b0c37;
+  margin-top: 20vh;
+}
+
+.login-pf-header {
+  color: white;
+}
+
+/*title banner size and colour*/
+div#kc-header-wrapper {
+  background-color: transparent;
+}
+
+/* label change Username, Password text*/
+div#kc-form label {
+  color: white !important;
+}
+
+/*fields*/
+.login-pf-page input[type='text'],
+.login-pf-page input[type='password'] {
+  color: #000000;
+}
+
+/*button*/
+.login-pf-page input[type='submit'] {
+  background-color: #9575cd;
+  background-image: none;
+  border-color: #d1c4e9;
+}
+div#kc-header {
+  display: none;
+}
+div#kc-locale {
+  font-size: larger;
+}
+#kc-locale-dropdown a,
+a {
+  color: #d1c4e9;
+}

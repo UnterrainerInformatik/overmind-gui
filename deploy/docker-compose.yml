@@ -1,0 +1,75 @@
+version: "3"
+services:
+
+  web:
+    image: gufalcon/nexus-server-gui:latest
+    restart: always
+    depends_on:
+      - keycloak
+    ports:
+      - "1380:80"
+      - "13443:443"
+    environment:
+      - HTTP_PORT=80
+      - HTTP_HOST=0.0.0.0
+    volumes:
+      - "/app/deploy/nexus-server-gui/nginx.conf:/etc/nginx/nginx.conf"
+    command: ["nginx", "-g", "daemon off;"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.nexus.port=80"
+      - "traefik.nexus.backend=nexus"
+      - "traefik.nexus.frontend.rule=Host:nexus-app.unterrainer.info"
+      - "traefik.nexus.frontend.entryPoints=http,https"
+
+  keycloak_db:
+    image: mariadb:10.5.6-focal
+    restart: always
+    ports:
+      - 13300:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=${KEYCLOAK_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - PROXY_ADDRESS_FORWARDING=true
+      - KEYCLOAK_HOSTNAME=keycloak.unterrainer.info
+    # Copy-pasted from https://github.com/docker-library/mariadb/issues/94
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+    volumes:
+      - "/app/data/keycloak-nexus/mysql-data/db:/var/lib/mysql"
+    labels:
+      - "traefik.enable=false"
+
+  keycloak:
+    image: jboss/keycloak:11.0.2
+    restart: always
+    depends_on:
+      - keycloak_db
+    ports:
+      - 13222:8080
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=${KEYCLOAK_PASSWORD}
+      - DB_VENDOR=mariadb
+      - DB_ADDR=keycloak_db
+      - DB_DATABASE=keycloak
+      - DB_USER=keycloak
+      - DB_PASSWORD=${KEYCLOAK_DB_PASSWORD}
+      - PROXY_ADDRESS_FORWARDING=true
+      - KEYCLOAK_HOSTNAME=keycloak.unterrainer.info
+    command: ["-b", "0.0.0.0", "-Dkeycloak.profile.feature.docker=enabled"]
+    volumes:
+      - "/app/deploy/nexus-server-gui/keycloak-theme:/opt/jboss/keycloak/themes/nexus-theme"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.keycloak.port=8080"
+      - "traefik.keycloak.backend=keycloak"
+      - "traefik.keycloak.frontend.rule=Host:keycloak.unterrainer.info"
+      - "traefik.keycloak.frontend.entryPoints=http, https"
+
+networks:
+  default:
+    external:
+      name: proxy_default
