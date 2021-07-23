@@ -3,7 +3,6 @@
     <div v-for="(item, i) in mnu" :key="i">
       <v-list
         nav
-        v-if="item.role == null || keycloakClientRoles.includes(item.role)"
       >
         <v-list-item
           v-if="item.link === 'SPACER'"
@@ -107,9 +106,6 @@ export default {
     ...mapGetters('gui/tooltips', {
       tooltips: 'tooltips',
       openDelay: 'openDelay'
-    }),
-    ...mapGetters('keycloak', {
-      keycloakClientRoles: 'clientRoles'
     })
   },
 
