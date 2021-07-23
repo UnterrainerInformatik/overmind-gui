@@ -27,35 +27,36 @@
 #   script-phase. So you cannot even source from there directly. That's why the source
 #   command is IN the deploy.sh script.
 
-language: java
-jdk:
-- openjdk14
+language: node_js
+node_js:
+    - 14
+cache:
+    directories:
+        - node_modules
 before_install:
-- openssl aes-256-cbc -K $encrypted_dc5fea8a7be5_key -iv $encrypted_dc5fea8a7be5_iv
-  -in overmind_deploy_rsa.enc -out overmind_deploy_rsa -d
-- git clone https://github.com/UnterrainerInformatik/Travis-Scripts.git travis
-- source travis/functions.Java.sh
-- tr_setProjectSubdir Java
-- source $TRAVIS/before_install.sh
+    - git clone https://github.com/UnterrainerInformatik/Travis-Scripts.git travis
+    - source travis/functions.npm.sh
+    - tr_setProjectSubdir npm
+    - source $TRAVIS/before_install.sh
 install:
-- source $TRAVIS/install.sh
+    - source $TRAVIS/install.sh
 before_script:
-- source $TRAVIS/before_script.sh
+    - source $TRAVIS/before_script.sh
 script:
-- source $TRAVIS/script.sh
-before_deploy: "./$TRAVIS/before_deploy.sh"
+    - source $TRAVIS/script.sh
+
+before_deploy: ./$TRAVIS/before_deploy.sh
 deploy:
-- provider: script
-  skip_cleanup: true
-  script: "./$TRAVIS/deploy.sh"
-  on:
-    branch: master
-- provider: releases
-  skip_cleanup: true
-  overwrite: true
-  api_key:
-    secure: "$GITHUB_API_KEY"
-  file: "$ARTIFACT_ID.$POM_VERSION.zip"
-  on:
-    tags: true
-    branch: master
+    - provider: script
+      skip_cleanup: true
+      script: ./$TRAVIS/deploy.sh
+      on:
+          branch: master
+    - provider: releases
+      skip_cleanup: true
+      overwrite: true
+      api_key: $GITHUB_API_KEY
+      file: $ARTIFACT_ID.$POM_VERSION.zip
+      on:
+          tags: true
+          branch: master
