@@ -8,17 +8,16 @@ services:
       - "18443:443"
     environment:
       - HTTP_PORT=80
-      - HTTPS_PORT=443
       - HTTP_HOST=0.0.0.0
     volumes:
       - "/app/deploy/overmind-gui/nginx.conf:/etc/nginx/nginx.conf"
     command: ["nginx", "-g", "daemon off;"]
     labels:
       - "traefik.enable=true"
-      - "traefik.overmind.port=443"
+      - "traefik.overmind.port=80"
       - "traefik.overmind.backend=overmind-gui"
       - "traefik.overmind.frontend.rule=Host:overmind.unterrainer.info"
-      - "traefik.overmind.frontend.entryPoints=https"
+      - "traefik.overmind.frontend.entryPoints=http,https"
 
 networks:
   default:
