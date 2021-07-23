@@ -1,9 +1,7 @@
 <template>
   <v-container>
     <div v-for="(item, i) in mnu" :key="i">
-      <v-list
-        nav
-      >
+      <v-list>
         <v-list-item
           v-if="item.link === 'SPACER'"
           dense

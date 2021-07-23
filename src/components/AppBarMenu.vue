@@ -30,7 +30,7 @@
     </template>
 
     <v-list>
-      <v-list-group sub-group prepend-icon="expand_more">
+      <v-list-group sub-group prepend-icon="expand_more" :class="$vuetify.theme.dark ? 'grey--text text--lighten-3' : 'grey--text text--darken-3'">
         <template v-slot:activator>
           <v-list-item-title>{{ $t('mnu.language') }}</v-list-item-title>
           <v-list-item-icon><v-icon>translate</v-icon></v-list-item-icon>
@@ -45,7 +45,7 @@
             }
           "
           active-class="v-list-item--active"
-          :class="$i18n.locale === lang ? 'v-list-item--active' : ''"
+          :class="($i18n.locale === lang ? 'v-list-item--active' : '') + ' ' + ($i18n.locale === lang ? ' primary white--text' : '')"
         >
           <v-list-item-content>
             <v-list-item-title>{{ lang }}</v-list-item-title>
@@ -57,7 +57,7 @@
         <template v-slot:activator="{ on, attrs }">
           <v-list-item v-bind="attrs" v-on="on">
             <v-list-item-action>
-              <v-switch v-model="twoWayTooltips" color="primary"></v-switch>
+              <v-switch v-model="twoWayTooltips" color="secondary"></v-switch>
             </v-list-item-action>
             <v-list-item-title>{{ $t('mnu.help') }}</v-list-item-title>
           </v-list-item>
@@ -69,7 +69,7 @@
         <template v-slot:activator="{ on, attrs }">
           <v-list-item v-bind="attrs" v-on="on">
             <v-list-item-action>
-              <v-switch v-model="dark" color="primary"></v-switch>
+              <v-switch v-model="dark" color="secondary"></v-switch>
             </v-list-item-action>
             <v-list-item-title>{{ $t('mnu.dark') }}</v-list-item-title>
           </v-list-item>
@@ -99,7 +99,7 @@
 </template>
 
 <script lang="js">
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'AppBarMenu',

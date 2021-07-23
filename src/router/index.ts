@@ -14,6 +14,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/Main.vue')
   },
   {
+    path: '/app/colortest',
+    name: 'colortest',
+    component: () => import('../views/ColorTest.vue')
+  },
+  {
     path: '/settings/about',
     name: 'about',
     component: () => import('../views/About.vue')
