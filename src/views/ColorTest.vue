@@ -1,7 +1,15 @@
 <template>
   <div class="home">
     <v-container fluid>
+      <v-alert color="success">success</v-alert>
+      <v-alert color="info">info</v-alert>
+      <v-alert color="warning">warning</v-alert>
+      <v-alert color="error">error</v-alert>
 
+      <div>
+        darkTheme: {{ darkTheme }}<br />
+        languageKey: {{ languageKey }}
+      </div>
     </v-container>
   </div>
 </template>
@@ -10,10 +18,9 @@
 // @ is an alias to /src
 
 export default {
-  name: 'Main',
+  name: 'ColorTest',
 
-  components: {
-  },
+  components: {},
 
   data: () => ({
     localeBackingField: '',
@@ -22,8 +29,7 @@ export default {
     loading: true
   }),
 
-  watch: {
-  },
+  watch: {},
 
   computed: {
     locale: {
@@ -36,8 +42,7 @@ export default {
     }
   },
 
-  methods: {
-  },
+  methods: {},
 
   mounted () {
     this.locale = this.$i18n.locale

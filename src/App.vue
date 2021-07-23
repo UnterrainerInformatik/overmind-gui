@@ -26,7 +26,7 @@
             <img
               class="ma-0 pa-0 mt-3"
               width="40"
-              alt="nexus-logo"
+              alt="logo"
               src="@/assets/logo.png"
             /> </v-container
         ></v-toolbar-title>
@@ -41,10 +41,6 @@
       </v-app-bar>
 
       <v-main>
-        <div>
-          darkTheme: {{ darkTheme }}<br />
-          languageKey: {{ languageKey }}
-        </div>
         <ModalLoading></ModalLoading>
         <Snackbar></Snackbar>
         <v-container fluid>
