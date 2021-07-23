@@ -38,20 +38,6 @@
         <v-spacer></v-spacer>
 
         <AppBarMenu></AppBarMenu>
-
-        <v-tooltip
-          bottom
-          :open-delay="openDelay"
-          :disabled="!tooltips"
-          z-index="1000"
-        >
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn icon @click="logout()" v-bind="attrs" v-on="on">
-              <v-icon color="white">power_settings_new</v-icon>
-            </v-btn>
-          </template>
-          <div v-html="$t('tooltip.mnu.logout')"></div>
-        </v-tooltip>
       </v-app-bar>
 
       <v-main>

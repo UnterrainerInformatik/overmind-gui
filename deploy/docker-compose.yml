@@ -14,10 +14,10 @@ services:
     command: ["nginx", "-g", "daemon off;"]
     labels:
       - "traefik.enable=true"
-      - "traefik.overmind.port=80"
-      - "traefik.overmind.backend=overmind-gui"
-      - "traefik.overmind.frontend.rule=Host:overmind.unterrainer.info"
-      - "traefik.overmind.frontend.entryPoints=http,https"
+      - "traefik.overmind-gui.port=80"
+      - "traefik.overmind-gui.backend=overmind-gui"
+      - "traefik.overmind-gui.frontend.rule=Host:overmind.unterrainer.info"
+      - "traefik.overmind-gui.frontend.entryPoints=http,https"
 
 networks:
   default:
