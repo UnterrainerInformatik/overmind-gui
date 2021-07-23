@@ -41,9 +41,7 @@
           :key="`Lang${i}`"
           @click="
             () => {
-              $i18n.locale = lang
-              $store.dispatch('preferences/languageKey', lang)
-              savePreferences()
+              saveLanguageKey(lang)
             }
           "
           active-class="v-list-item--active"
@@ -101,8 +99,7 @@
 </template>
 
 <script lang="js">
-import { mapGetters } from 'vuex'
-import preferencesUtils from '@/utils/preferencesUtils'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   name: 'AppBarMenu',
@@ -114,10 +111,12 @@ export default {
   computed: {
     twoWayTooltips: {
       get () {
-        return this.$store.state.gui.tooltips
+        return this.$store.state.gui.tooltips.tooltips
       },
       set (value) {
         this.$store.dispatch('gui/tooltips/tooltips', value)
+        localStorage.setItem('tooltips', value)
+        console.log('Saved tooltips: ' + value)
       }
     },
     dark: {
@@ -126,8 +125,8 @@ export default {
       },
       set (value) {
         this.$vuetify.theme.dark = value
-        this.$store.dispatch('preferences/darkTheme', value)
-        preferencesUtils.savePreferences()
+        localStorage.setItem('darkTheme', this.$vuetify.theme.dark)
+        console.log('Saved darkTheme: ' + this.$vuetify.theme.dark)
       }
     },
     ...mapGetters('gui/tooltips', {
@@ -137,8 +136,10 @@ export default {
   },
 
   methods: {
-    savePreferences () {
-      preferencesUtils.savePreferences()
+    saveLanguageKey (lang) {
+      this.$i18n.locale = lang
+      localStorage.setItem('languageKey', lang)
+      console.log('Saved languageKey: ' + lang)
     }
   }
 }

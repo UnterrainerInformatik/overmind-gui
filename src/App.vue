@@ -25,7 +25,7 @@
           <v-container class="ma-0 pa-0">
             <img
               class="ma-0 pa-0 mt-3"
-              width="200"
+              width="40"
               alt="nexus-logo"
               src="@/assets/logo.png"
             /> </v-container
@@ -56,7 +56,6 @@
 
       <v-main>
         <div>
-          userName: {{ userName }}<br />
           darkTheme: {{ darkTheme }}<br />
           languageKey: {{ languageKey }}
         </div>
@@ -77,8 +76,6 @@ import NavDrawer from '@/components/NavDrawer.vue'
 import AppBarMenu from '@/components/AppBarMenu.vue'
 import Snackbar from '@/components/Snackbar.vue'
 import ModalLoading from '@/components/ModalLoading.vue'
-import keycloakUtils from '@/utils/keycloakUtils'
-import preferencesUtils from '@/utils/preferencesUtils'
 
 export default {
   name: 'Main',
@@ -95,7 +92,9 @@ export default {
       x: 0,
       y: 0
     },
-    localeBackingField: ''
+    localeBackingField: '',
+    darkTheme: 'false',
+    languageKey: 'de'
   }),
 
   computed: {
@@ -121,22 +120,10 @@ export default {
     ...mapGetters('gui/tooltips', {
       tooltips: 'tooltips',
       openDelay: 'openDelay'
-    }),
-    ...mapGetters('preferences', {
-      darkTheme: 'darkTheme',
-      languageKey: 'languageKey'
-    }),
-    ...mapGetters('keycloak', {
-      userName: 'userName'
     })
   },
 
   methods: {
-    logout () {
-      keycloakUtils.logout().then(() => {
-        window.location.href = 'https://nexus.unterrainer.info'
-      })
-    },
     goto (destination) {
       if (this.$router.currentRoute.path !== destination) {
         this.$router.push(destination)
@@ -148,10 +135,40 @@ export default {
   },
 
   mounted () {
-    preferencesUtils.load(this.$store.getters['keycloak/userName']).then(() => {
-      this.$i18n.locale = this.$store.getters['preferences/languageKey']
-      this.$vuetify.theme.dark = this.$store.getters['preferences/darkTheme']
-    })
+    const lang = localStorage.getItem('languageKey')
+    if (lang) {
+      console.log('Loaded languageKey: ' + lang)
+      this.$i18n.locale = lang
+    } else {
+      console.log('Setting languageKey default')
+      this.$i18n.locale = 'de'
+    }
+
+    const theme = localStorage.getItem('darkTheme')
+    if (theme) {
+      console.log('Loaded darkTheme: ' + theme)
+      if (theme === 'false') {
+        this.$vuetify.theme.dark = false
+      } else {
+        this.$vuetify.theme.dark = true
+      }
+    } else {
+      console.log('Setting darkTheme default')
+      this.$vuetify.theme.dark = 'false'
+    }
+
+    const tool = localStorage.getItem('tooltips')
+    if (tool) {
+      console.log('Loaded tooltips: ' + tool)
+      if (tool === 'false') {
+        this.$store.dispatch('gui/tooltips/tooltips', false)
+      } else {
+        this.$store.dispatch('gui/tooltips/tooltips', true)
+      }
+    } else {
+      console.log('Setting darkTheme default')
+      this.$vuetify.theme.dark = 'false'
+    }
   }
 }
 </script>

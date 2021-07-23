@@ -14,11 +14,6 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/Main.vue')
   },
   {
-    path: '/settings/preferences',
-    name: 'preferences',
-    component: () => import('../views/Preferences.vue')
-  },
-  {
     path: '/settings/about',
     name: 'about',
     component: () => import('../views/About.vue')

@@ -7,7 +7,7 @@ const store = {
       servers: {
         uinf: {
           protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'https',
-          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'nexus-server.unterrainer.info',
+          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : '10.10.196.4:8080',
           port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '443'
           // protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'http', // DEV
           // address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'localhost', // DEV
@@ -21,12 +21,13 @@ const store = {
           health: '/health',
           datetime: '/datetime'
         },
-        crontab: {
-          runs: '/crontab/runs'
-        },
-        logs: '/logs',
-        users: '/users',
-        preferences: '/preferences'
+        crontabs: '/setup/crontabs',
+        logs: '/setup/logs',
+        appliances: '/setup/appliances',
+        plans: '/plans',
+        execute: '/execute',
+        setupAppliance: '/setupAppliance',
+        reload: '/setup/reload'
       }
     }
   }),

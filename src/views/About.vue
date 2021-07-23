@@ -9,11 +9,11 @@
     >
       <v-card-title>
         <div class="title headline">
-          Nexus-Server
+          Overmind
         </div>
       </v-card-title>
       <v-card-text>
-        <div class="font-weight-light">Connect your game.</div>
+        <div class="font-weight-light">Be aware of your house.</div>
       </v-card-text>
       <v-card-text>
         <h4>{{ $t('page.about.version') }}: {{ version }}</h4>
