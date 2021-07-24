@@ -86,13 +86,13 @@ export default {
     mnu: [
       {
         icon: 'calendar_today',
-        key: 'mnu.main',
+        key: 'mnu.plans',
         role: null,
         subs: [
           {
-            link: '/app/main',
+            link: '/app/plans',
             icon: 'today',
-            key: 'pageTitle.main',
+            key: 'pageTitle.plans',
             role: null
           }
         ]

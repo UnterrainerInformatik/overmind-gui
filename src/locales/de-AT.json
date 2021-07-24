@@ -22,7 +22,7 @@
 		"dark": "Dark Theme",
 		"help": "Help Tooltips",
 		"language": "Language",
-		"main": "Pläne"
+		"plans": "Pläne"
 	},
 	"page": {
 		"about": {
@@ -45,7 +45,7 @@
 	"pageTitle": {
 		"about": "Über uns",
 		"logout": "Abmelden",
-		"main": "Pläne",
+		"plans": "Pläne",
 		"preferences": "Einstellungen"
 	},
 	"table": {
@@ -60,12 +60,12 @@
 			"dark": "Zwischen heller und dunkler Einstellung wechseln",
 			"help": "Ein oder ausschalten der<br />kontextbezogenen Hilfs-Tooltips",
 			"logout": "Abmelden oder Benutzer wechseln",
-			"main": "Alle Pläne einsehen",
+			"plans": "Alle Pläne einsehen",
 			"preferences": "Verschiedene Einstellungen"
 		},
 		"pageTitle": {
 			"about": "Informationen über unsere Firma und dieses Programm",
-			"main": "Die Pläne, die zur Zeit laufen oder auf standby sind"
+			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind"
 		}
 	}
 }
