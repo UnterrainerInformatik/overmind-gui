@@ -70,7 +70,7 @@ export default {
   mounted () {
     const aps = 'enabled=true'
     this.getPlans(true, 1000, 0, aps)
-    this.interval = setInterval(() => this.getPlans(false, 1000, 0, aps), 10000)
+    this.interval = setInterval(() => this.getPlans(false, 1000, 0, aps), 1000)
   }
 }
 </script>
