@@ -1,0 +1,71 @@
+{
+	"bool": {
+		"false": "false",
+		"true": "true"
+	},
+	"message": {
+		"error": {
+			"communication": "There was an error communicating with the server.",
+			"copyPaste": "The text could not be copied to the clipboard.",
+			"heading": "Error"
+		},
+		"success": {
+			"copyPaste": "The text was copied to the clipboard.",
+			"heading": "Success"
+		},
+		"warning": {
+			"heading": "Warning",
+			"internal": "There was an internal warning."
+		}
+	},
+	"mnu": {
+		"dark": "Dark Theme",
+		"help": "Help Tooltips",
+		"language": "Language",
+		"main": "Plans"
+	},
+	"page": {
+		"about": {
+			"buildTime": "Build-time",
+			"email": "Email",
+			"fax": "Fax",
+			"loading": "loading",
+			"module": "Module",
+			"telephone": "Telephone",
+			"version": "Version",
+			"web": "Webpage"
+		},
+		"plans": {
+			"viewToggle": {
+				"active": "active",
+				"all": "all"
+			}
+		}
+	},
+	"pageTitle": {
+		"about": "About",
+		"logout": "Logout",
+		"main": "Plans",
+		"preferences": "Preferences"
+	},
+	"table": {
+		"jump": "Jump to",
+		"loading": "Loading... Please wait",
+		"noData": "No data available",
+		"rowsPerPage": "Rows / page",
+		"search": "Search"
+	},
+	"tooltip": {
+		"mnu": {
+			"dark": "Switch between light- and dark-theme",
+			"help": "Turn display of the<br />help-tooltips on/off",
+			"logout": "",
+			"main": "See all plans",
+			"preferences": ""
+		},
+		"pageTitle": {
+			"about": "Information about our company and this program",
+			"main": "The plans currently running or on standby"
+		}
+	}
+}

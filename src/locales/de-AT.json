@@ -1,0 +1,71 @@
+{
+	"bool": {
+		"false": "Falsch",
+		"true": "Richtig"
+	},
+	"message": {
+		"error": {
+			"communication": "Bei der Kommunikation mit dem Server trat ein Fehler auf.",
+			"copyPaste": "Der Text konnte nicht in die Zwischenablage kopiert werden.",
+			"heading": "Fehler"
+		},
+		"success": {
+			"copyPaste": "Der Text wurde in die Zwischenablage kopiert.",
+			"heading": "Erfolg"
+		},
+		"warning": {
+			"heading": "Warnung",
+			"internal": "Es gab eine interne Warnung."
+		}
+	},
+	"mnu": {
+		"dark": "Dark Theme",
+		"help": "Help Tooltips",
+		"language": "Language",
+		"main": "Pläne"
+	},
+	"page": {
+		"about": {
+			"buildTime": "Build-Zeitpunkt",
+			"email": "E-Mail",
+			"fax": "Fax",
+			"loading": "lädt",
+			"module": "Modul",
+			"telephone": "Telefon",
+			"version": "Version",
+			"web": "Webseite"
+		},
+		"plans": {
+			"viewToggle": {
+				"active": "Aktiv",
+				"all": "Alle"
+			}
+		}
+	},
+	"pageTitle": {
+		"about": "Über uns",
+		"logout": "Abmelden",
+		"main": "Pläne",
+		"preferences": "Einstellungen"
+	},
+	"table": {
+		"jump": "Springe zu",
+		"loading": "Lade Daten... Bitte warten",
+		"noData": "Keine Daten verfügbar",
+		"rowsPerPage": "Zeilen / Seite",
+		"search": "Suche"
+	},
+	"tooltip": {
+		"mnu": {
+			"dark": "Zwischen heller und dunkler Einstellung wechseln",
+			"help": "Ein oder ausschalten der<br />kontextbezogenen Hilfs-Tooltips",
+			"logout": "Abmelden oder Benutzer wechseln",
+			"main": "Alle Pläne einsehen",
+			"preferences": "Verschiedene Einstellungen"
+		},
+		"pageTitle": {
+			"about": "Informationen über unsere Firma und dieses Programm",
+			"main": "Die Pläne, die zur Zeit laufen oder auf standby sind"
+		}
+	}
+}

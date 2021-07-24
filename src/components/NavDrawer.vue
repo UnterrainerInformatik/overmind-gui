@@ -85,13 +85,13 @@ export default {
   data: () => ({
     mnu: [
       {
-        icon: 'house',
+        icon: 'calendar_today',
         key: 'mnu.main',
         role: null,
         subs: [
           {
             link: '/app/main',
-            icon: 'home',
+            icon: 'today',
             key: 'pageTitle.main',
             role: null
           }
