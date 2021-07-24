@@ -1,0 +1,85 @@
+<template>
+  <div class="home">
+    <v-btn-toggle mandatory borderless dense rounded v-model="viewToggle">
+      <v-btn
+        class="ma-1"
+        @click="
+          () => {
+            onlyEnabled = true
+            this.getPlans(true, size, offset)
+          }
+        "
+        >{{ $t('page.plans.viewToggle.active') }}</v-btn
+      >
+      <v-btn
+        class="ma-1"
+        @click="
+          () => {
+            onlyEnabled = false
+            this.getPlans(true, size, offset)
+          }
+        "
+        >{{ $t('page.plans.viewToggle.all') }}</v-btn
+      >
+    </v-btn-toggle>
+    <v-container fluid class="ma-0 pa-0">
+      <span v-for="(item, i) in raw.entries" :key="i">
+        <PlanPanel :item="item"></PlanPanel>
+      </span>
+    </v-container>
+  </div>
+</template>
+
+<script type="js">
+// @ is an alias to /src
+import PlanPanel from '@/components/PlanPanel.vue'
+import { getList } from '@/utils/axiosUtils'
+
+export default {
+  name: 'Plans',
+
+  components: {
+    PlanPanel
+  },
+
+  data: () => ({
+    raw: {},
+    onlyActive: false,
+    countAll: 0,
+    offset: 0,
+    size: 1000,
+    viewToggle: 0,
+    onlyEnabled: true,
+    loading: true
+  }),
+
+  watch: {
+  },
+
+  computed: {
+  },
+
+  methods: {
+    async getPlans (showLoadingProgress, size, offset, additionalParams) {
+      this.loading = showLoadingProgress
+      console.log('getPlans')
+      return getList('uinf', 'orderedPlans', size, offset, () => { return undefined }, () => { return undefined }, additionalParams + (this.onlyEnabled ? '&enabled=true' : '')).then((response) => {
+        if (!response || !response.entries) {
+          return
+        }
+        this.raw = response
+        this.loading = false
+      })
+    }
+  },
+
+  mounted () {
+    this.getPlans(true, this.size, this.offset)
+    this.interval = setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
+  }
+}
+</script>
+
+<style lang="scss">
+@import 'index.scss';
+</style>
