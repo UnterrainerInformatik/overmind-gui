@@ -148,8 +148,8 @@ export default {
         this.$store.dispatch('gui/tooltips/tooltips', true)
       }
     } else {
-      console.log('Setting darkTheme default')
-      this.$vuetify.theme.dark = 'false'
+      console.log('Setting tooltips default')
+      this.$store.dispatch('gui/tooltips/tooltips', true)
     }
   }
 }
