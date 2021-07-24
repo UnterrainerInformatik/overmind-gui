@@ -25,6 +25,7 @@ const store = {
         logs: '/setup/logs',
         appliances: '/setup/appliances',
         plans: '/plans',
+        orderedPlans: 'orderedPlans',
         execute: '/execute',
         setupAppliance: '/setupAppliance',
         reload: '/setup/reload'

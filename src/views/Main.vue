@@ -16,7 +16,6 @@ export default {
   },
 
   data: () => ({
-    localeBackingField: '',
     raw: {},
     countAll: 0,
     loading: true
@@ -26,21 +25,13 @@ export default {
   },
 
   computed: {
-    locale: {
-      get () {
-        return this.$i18n.locale
-      },
-      set (value) {
-        this.localeBackingField = value
-      }
-    }
   },
 
   methods: {
   },
 
   mounted () {
-    this.locale = this.$i18n.locale
+    console.log('mounted')
   }
 }
 </script>
