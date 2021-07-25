@@ -6,12 +6,17 @@ Vue.use(VueRouter)
 const routes: Array<RouteConfig> = [
   {
     path: '/',
-    redirect: '/app/plans'
+    redirect: '/app/switches'
   },
   {
     path: '/app/plans',
     name: 'plans',
     component: () => import('../views/Plans.vue')
+  },
+  {
+    path: '/app/switches',
+    name: 'switches',
+    component: () => import('../views/Switches.vue')
   },
   {
     path: '/app/colortest',

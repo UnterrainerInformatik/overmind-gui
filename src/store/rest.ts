@@ -6,12 +6,12 @@ const store = {
     config: {
       servers: {
         uinf: {
-          protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'https',
-          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'overmind-server.unterrainer.info',
-          port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '443'
-          // protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'http', // DEV
-          // address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'localhost', // DEV
-          // port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '8080' // DEV
+          // protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'https',
+          // address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'overmind-server.unterrainer.info',
+          // port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '443'
+          protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'http', // DEV
+          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'localhost', // DEV
+          port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '8080' // DEV
         }
       },
       endpoint: {
@@ -27,8 +27,12 @@ const store = {
         plans: '/plans',
         orderedPlans: '/orderedplans',
         execute: '/execute',
+        triggerEvent: '/triggerevent',
         setupAppliance: '/setupAppliance',
-        reload: '/setup/reload'
+        reload: '/setup/reload',
+        applianceToMappings: '/setup/appliancetomappings',
+        mappingEntries: '/setup/mappingentries',
+        usedSwitches: '/usedswitches'
       }
     }
   }),

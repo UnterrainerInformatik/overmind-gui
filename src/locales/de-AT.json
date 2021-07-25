@@ -46,7 +46,15 @@
 		"about": "Über uns",
 		"logout": "Abmelden",
 		"plans": "Pläne",
-		"preferences": "Einstellungen"
+		"preferences": "Einstellungen",
+		"switches": "Schalter"
+	},
+	"sensors": {
+		"motion": "Bewegungsmelder",
+		"off": "Oben",
+		"on": "Unten",
+		"switch1": "Links",
+		"switch2": "Rechts"
 	},
 	"table": {
 		"jump": "Springe zu",
@@ -65,7 +73,8 @@
 		},
 		"pageTitle": {
 			"about": "Informationen über unsere Firma und dieses Programm",
-			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind"
+			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind",
+			"switches": "Schalter anzeigen und betätigen"
 		}
 	}
 }
