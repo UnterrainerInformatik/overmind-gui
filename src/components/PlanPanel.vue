@@ -60,7 +60,9 @@ export default {
   name: 'PlanPanel',
 
   props: {
-    item: {}
+    item: {},
+    size: {},
+    offset: {}
   },
 
   data: () => ({
@@ -88,7 +90,7 @@ export default {
           ]
         }
       }).then(() => {
-        this.getPlans(true, 1000, 0)
+        this.$emit('reload', true, this.size, this.offset)
       })
     }
   }

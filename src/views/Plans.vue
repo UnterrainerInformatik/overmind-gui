@@ -24,7 +24,7 @@
     </v-btn-toggle>
     <v-container fluid class="ma-0 pa-0">
       <span v-for="(item, i) in raw.entries" :key="i">
-        <PlanPanel :item="item"></PlanPanel>
+        <PlanPanel :item="item" :size="size" :offset="offset" @reload="getPlans"></PlanPanel>
       </span>
     </v-container>
   </div>

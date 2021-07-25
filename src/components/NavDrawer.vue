@@ -90,6 +90,12 @@ export default {
         role: null,
         subs: [
           {
+            link: '/app/switches',
+            icon: 'play_arrow',
+            key: 'pageTitle.switches',
+            role: null
+          },
+          {
             link: '/app/plans',
             icon: 'today',
             key: 'pageTitle.plans',
