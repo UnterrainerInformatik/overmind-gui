@@ -52,7 +52,7 @@ export default {
 
           if (element.eventPath.endsWith('.click')) {
             const e = {
-              type: element.eventPath.startsWith('on.') ? 'on' : 'off'
+              subType: element.eventPath.startsWith('on.') ? 'on' : 'off'
             }
             Object.assign(e, element)
             this.filtered.push(e)
