@@ -28,7 +28,7 @@
       <div
         class="ma-1 pa-0 text-caption text-md-subtitle-1 text-lg-subtitle-1 text-xl-subtitle-1"
       >
-        {{ $t('sensors.' + item.type) }}
+        {{ $t('sensors.' + item.subType) }}
       </div>
 
     </v-toolbar>
