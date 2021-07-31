@@ -12,23 +12,19 @@
         "
         fab
         x-small
-        @click="triggerEvent(item.sensorApplianceId, item.sensorPath, item.eventPath)"
-        ><v-icon>play_arrow</v-icon></v-btn
+        @click="console.log('huhu')"
+        ><v-icon>menu</v-icon></v-btn
       >
       <div
         class="ma-1 pa-0 text-caption text-md-subtitle-1 text-lg-subtitle-1 text-xl-subtitle-1"
       >
-        {{ item.sensorApplianceName }}
+        {{ item.name }}
       </div>
       <div
         class="ma-1 pa-0 text-caption text-md-subtitle-1 text-lg-subtitle-1 text-xl-subtitle-1"
+        v-for="(mode, i) in item.modes" :key="i"
       >
-        {{ $t('sensors.' + item.sensorPath) }}
-      </div>
-      <div
-        class="ma-1 pa-0 text-caption text-md-subtitle-1 text-lg-subtitle-1 text-xl-subtitle-1"
-      >
-        {{ $t('sensors.' + item.subType) }}
+        [{{mode.description}}, {{mode.sensorPath}}, {{mode.eventPath}}]
       </div>
 
     </v-toolbar>
@@ -46,7 +42,8 @@ export default {
   name: 'SwitchPanel',
 
   props: {
-    item: {}
+    item: {},
+    map: {}
   },
 
   data: () => ({
@@ -60,6 +57,7 @@ export default {
 
   methods: {
     async triggerEvent (id, sensorPath, eventPath) {
+      console.log('triggerEvent')
       return post('uinf', 'triggerEvent', () => { return undefined }, () => {
         return {
           applianceId: id,
