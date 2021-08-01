@@ -67,8 +67,6 @@ export default {
             map.set(key, value)
           }
           appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
-          console.log('appliances')
-          console.log(appliances)
           this.filtered = appliances
           this.loading = false
         })

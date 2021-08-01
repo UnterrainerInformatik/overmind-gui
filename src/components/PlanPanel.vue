@@ -1,6 +1,5 @@
 <template>
   <v-card
-    hover
     dense
     class="ma-2 mx-0 pa-0 flex-grow-1 flex-shrink-1 d-flex flex-column"
   >
