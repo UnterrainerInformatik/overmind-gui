@@ -24,6 +24,7 @@ const store = {
         crontabs: '/setup/crontabs',
         logs: '/setup/logs',
         appliances: '/setup/appliances',
+        applianceDescriptions: '/setup/appliancedescriptions',
         plans: '/plans',
         orderedPlans: '/orderedplans',
         execute: '/execute',

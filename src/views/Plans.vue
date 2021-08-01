@@ -62,7 +62,6 @@ export default {
   methods: {
     async getPlans (showLoadingProgress, size, offset, additionalParams) {
       this.loading = showLoadingProgress
-      console.log('getPlans')
       return getList('uinf', 'orderedPlans', size, offset, () => { return undefined }, () => { return undefined }, additionalParams + (this.onlyEnabled ? '&enabled=true' : '')).then((response) => {
         if (!response || !response.entries) {
           return
