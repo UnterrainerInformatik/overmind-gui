@@ -10,7 +10,7 @@
             ($vuetify.theme.dark ? ' lighten-3' : ' darken-3')
         "
         fab
-        x-small
+        small
         @click="togglePlan(item.id)"
         ><v-icon>power_settings_new</v-icon></v-btn
       >
