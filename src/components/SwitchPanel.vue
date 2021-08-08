@@ -11,7 +11,7 @@
             v-bind="attrs"
             v-on="on"
             fab
-            x-small
+            small
             ><v-icon>menu</v-icon></v-btn
           >
         </template>
@@ -22,16 +22,14 @@
           "
         >
           <v-list-item dense class="pr-0" v-for="(mode, i) in item.modes" :key="i">
-            <v-list-item-content>
-              <v-list-item-subtitle>
-                {{ mode.description }}
-              </v-list-item-subtitle>
+            <v-list-item-content hover>
+              {{ mode.description }}
             </v-list-item-content>
             <v-list-item-action>
               <v-btn
                 :class="'ma-0 pa-0 ml-n2 mr-3 warning' + themeClass()"
                 fab
-                x-small
+                small
                 @click="triggerEvent(item.id, mode.sensorPath, mode.eventPath)"
               >
                 <v-icon>touch_app</v-icon>
@@ -75,7 +73,7 @@ export default {
 
   methods: {
     themeClass () {
-      return (this.$vuetify.theme.dark ? ' lighten-3 grey--text text--darken-2' : ' darken-3 grey--text text--lighten-1')
+      return (this.$vuetify.theme.dark ? ' ' : ' ')
     },
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
