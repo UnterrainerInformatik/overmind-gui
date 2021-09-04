@@ -96,6 +96,12 @@ export default {
             role: null
           },
           {
+            link: '/app/windowContacts',
+            icon: 'today',
+            key: 'pageTitle.windowContacts',
+            role: null
+          },
+          {
             link: '/app/plans',
             icon: 'today',
             key: 'pageTitle.plans',

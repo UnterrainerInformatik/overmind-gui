@@ -40,6 +40,14 @@
 				"active": "Aktiv",
 				"all": "Alle"
 			}
+		},
+		"windowContacts": {
+			"basement": "Keller",
+			"closed": "geschlossen",
+			"floor": "Stock",
+			"groundFloor": "Erdgeschoß",
+			"opened": "geöffnet",
+			"tilted": "gekippt"
 		}
 	},
 	"pageTitle": {
@@ -47,7 +55,8 @@
 		"logout": "Abmelden",
 		"plans": "Pläne",
 		"preferences": "Einstellungen",
-		"switches": "Schalter"
+		"switches": "Schalter",
+		"windowContacts": "Fensterkontakte"
 	},
 	"sensors": {
 		"motion": "Bewegungsmelder",
@@ -74,7 +83,8 @@
 		"pageTitle": {
 			"about": "Informationen über unsere Firma und dieses Programm",
 			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind",
-			"switches": "Schalter anzeigen und betätigen"
+			"switches": "Schalter anzeigen und betätigen",
+			"windowContacts": "Fenster- und Türkontakte und deren momentaner Zustand"
 		}
 	}
 }

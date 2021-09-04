@@ -24,7 +24,7 @@ const store = {
         crontabs: '/setup/crontabs',
         logs: '/setup/logs',
         appliances: '/setup/appliances',
-        applianceDescriptions: '/setup/appliancedescriptions',
+        guiSwitches: '/setup/guiswitches',
         plans: '/plans',
         orderedPlans: '/orderedplans',
         execute: '/execute',
@@ -33,7 +33,8 @@ const store = {
         reload: '/setup/reload',
         applianceToMappings: '/setup/appliancetomappings',
         mappingEntries: '/setup/mappingentries',
-        usedSwitches: '/usedswitches'
+        usedSwitches: '/usedswitches',
+        guiWindowContacts: '/setup/guiwindowcontacts'
       }
     }
   }),
