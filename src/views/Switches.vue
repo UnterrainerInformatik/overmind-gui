@@ -11,6 +11,7 @@
 <script type="js">
 // @ is an alias to /src
 import SwitchPanel from '@/components/SwitchPanel.vue'
+import jsUtils from '@/utils/jsUtils'
 import { getList, getById } from '@/utils/axiosUtils'
 
 export default {
@@ -40,44 +41,35 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return getList('uinf', 'applianceDescriptions', 10000, 0, () => { return undefined }, () => { return undefined }).then((response) => {
+      return getList('uinf', 'guiSwitches', 10000, 0, () => { return undefined }, () => { return undefined }).then((response) => {
         if (response == null || response === undefined) {
           return Promise.resolve()
         }
         response.entries.forEach(element => {
-          allPromises.push(getById('uinf', 'appliances', element.applianceId, () => { return undefined }, () => { return undefined }).then((response) => {
-            if (response == null || response === undefined) {
+          allPromises.push(getById('uinf', 'appliances', element.applianceId, () => { return undefined }, () => { return undefined }).then((resp) => {
+            if (resp == null || resp === undefined) {
               return
             }
-            element.applianceName = response.name
+            element.applianceName = resp.name
             descriptions.push(element)
           }))
         })
       }).then(() => {
         Promise.allSettled(allPromises).then(() => {
           descriptions.sort((a, b) => (a.applianceName > b.applianceName) ? 1 : (a.order > b.order) ? 1 : -1)
-          const map = new Map()
           const appliances = []
-          const grouped = this.groupBy(descriptions, 'applianceId')
+          const grouped = jsUtils.groupBy(descriptions, 'applianceId')
           for (const [key, value] of Object.entries(grouped)) {
             if (value.length === 0) {
               continue
             }
             appliances.push({ id: key, name: value[0].applianceName, modes: value })
-            map.set(key, value)
           }
           appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
           this.filtered = appliances
           this.loading = false
         })
       })
-    },
-    groupBy (inputArray, key) {
-      return inputArray.reduce((accumulator, element) => {
-        const v = key instanceof Function ? key(element) : element[key];
-        (accumulator[v] = accumulator[v] || []).push(element)
-        return accumulator
-      }, {})
     }
   },
 
