@@ -83,10 +83,10 @@ export default {
 
   methods: {
     opened (contact) {
-      return contact.applianceState.open && contact.applianceState.tilt <= 0
+      return contact.applianceState.open && contact.applianceState.tilt <= 5
     },
     tilted (contact) {
-      return contact.applianceState.open && contact.applianceState.tilt > 0
+      return contact.applianceState.open && contact.applianceState.tilt > 5
     },
     closed (contact) {
       return !contact.applianceState.open
