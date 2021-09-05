@@ -8,7 +8,7 @@
       :open-delay="openDelay"
       :disabled="!tooltips"
       v-for="(contact, i) in item.contacts"
-          :key="i"
+      :key="i"
     >
       <template v-slot:activator="{ on, attrs }">
         <v-toolbar
@@ -60,9 +60,6 @@
             <v-row class="ma-0 pa-0 align-center">
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ contact.description }}</span>
-              </v-col>
-              <v-col>
-                <span>{{ contact.appliance.state.luminosityLevel }}</span>
               </v-col>
               <v-col class="text-right">
                 <v-row class="ma-0 pa-0 justify-end">
