@@ -55,16 +55,16 @@
           </v-col>
           <v-col class="text-right">
             <v-row class="ma-0 pa-0 justify-end">
-              <v-cell>
-                <v-row class="ma-0 pa-0">
-                  <v-col class="ma-0 pa-0 text-left">
+              <v-col>
+                <v-row class="ma-0 pa-0 justify-end">
+                  <v-col cols="6" md="4" class="ma-0 pa-0 text-left">
                     <span class="text-subtitle-2"
                       >{{ $t('page.windowContacts.lastTimeOnline') }}:</span
                     >
                   </v-col>
                 </v-row>
-                <v-row class="ma-0 pa-0">
-                  <v-col class="ma-0 pa-0">
+                <v-row class="ma-0 pa-0 justify-end">
+                  <v-col cols="6" md="4" class="ma-0 pa-0 text-left">
                     <span class="text-body-2">
                       {{
                         dateUtils.isoToDatePadded(
@@ -83,7 +83,7 @@
                     >
                   </v-col>
                 </v-row>
-              </v-cell>
+              </v-col>
             </v-row>
           </v-col>
         </v-row>
