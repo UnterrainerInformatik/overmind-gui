@@ -46,6 +46,7 @@
 			"closed": "geschlossen",
 			"floor": "Stock",
 			"groundFloor": "Erdgeschoß",
+			"lastTimeOnline": "Letzte Meldung",
 			"opened": "geöffnet",
 			"tilted": "gekippt"
 		}

@@ -69,8 +69,8 @@ export default {
             if (resp == null || resp === undefined) {
               return
             }
-            element.applianceName = resp.name
-            element.applianceState = JSON.parse(resp.state)
+            element.appliance = resp
+            element.appliance.state = JSON.parse(resp.state)
             descriptions.push(element)
           }))
         })

@@ -48,7 +48,46 @@
         </template>
         <div v-html="$t('page.windowContacts.closed')"></div>
       </v-tooltip>
-      <span class="ml-2">{{ contact.description }}</span>
+      <v-container fluid class="ma-0 pa-0">
+        <v-row class="ma-0 pa-0 align-center">
+          <v-col class="ma-0 pa-0">
+            <span class="ml-2">{{ contact.description }}</span>
+          </v-col>
+          <v-col class="text-right">
+            <v-row class="ma-0 pa-0 justify-end">
+              <v-cell>
+                <v-row class="ma-0 pa-0">
+                  <v-col class="ma-0 pa-0 text-left">
+                    <span class="text-subtitle-2"
+                      >{{ $t('page.windowContacts.lastTimeOnline') }}:</span
+                    >
+                  </v-col>
+                </v-row>
+                <v-row class="ma-0 pa-0">
+                  <v-col class="ma-0 pa-0">
+                    <span class="text-body-2">
+                      {{
+                        dateUtils.isoToDatePadded(
+                          contact.appliance.lastTimeOnline,
+                          $i18n.locale
+                        )
+                      }}</span
+                    >
+                    <span class="text-body-2">
+                      ({{
+                        dateUtils.isoToTime(
+                          contact.appliance.lastTimeOnline,
+                          $i18n.locale
+                        )
+                      }})</span
+                    >
+                  </v-col>
+                </v-row>
+              </v-cell>
+            </v-row>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-toolbar>
   </v-card>
 </template>
@@ -58,6 +97,7 @@
 </style>
 
 <script lang="js">
+import dateUtils from '@/utils/dateUtils'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -69,6 +109,7 @@ export default {
   },
 
   data: () => ({
+    dateUtils
   }),
 
   computed: {
@@ -83,13 +124,13 @@ export default {
 
   methods: {
     opened (contact) {
-      return contact.applianceState.open && contact.applianceState.tilt <= 5
+      return contact.appliance.state.open && contact.appliance.state.tilt <= 5
     },
     tilted (contact) {
-      return contact.applianceState.open && contact.applianceState.tilt > 5
+      return contact.appliance.state.open && contact.appliance.state.tilt > 5
     },
     closed (contact) {
-      return !contact.applianceState.open
+      return !contact.appliance.state.open
     },
     getColorFor (contact) {
       if (this.opened(contact)) {
