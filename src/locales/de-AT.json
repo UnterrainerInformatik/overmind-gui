@@ -22,7 +22,7 @@
 		"dark": "Dark Theme",
 		"help": "Help Tooltips",
 		"language": "Language",
-		"plans": "Pläne"
+		"menu": "Menü"
 	},
 	"page": {
 		"about": {
@@ -35,6 +35,18 @@
 			"version": "Version",
 			"web": "Webseite"
 		},
+		"appliances": {
+			"CONTACT_SENSOR": "Kontakt-Sensor",
+			"DEBUGGER": "Debugger",
+			"GROUP_PARALLEL": "Parallele Gruppe",
+			"LIGHTS": "Licht",
+			"MOTION_SENSOR": "Bewegungsmelder",
+			"PLAN_MANIPULATOR": "Plan-Manipulator",
+			"PLUG": "Dose",
+			"SHUTTERS": "Rollos",
+			"SWITCH": "Schalter",
+			"undefined": "Nicht verfügbar"
+		},
 		"plans": {
 			"viewToggle": {
 				"active": "Aktiv",
@@ -43,16 +55,20 @@
 		},
 		"windowContacts": {
 			"basement": "Keller",
+			"bright": "hell",
 			"closed": "geschlossen",
+			"dark": "dunkel",
 			"floor": "Stock",
 			"groundFloor": "Erdgeschoß",
 			"lastTimeOnline": "Letzte Meldung",
 			"opened": "geöffnet",
-			"tilted": "gekippt"
+			"tilted": "gekippt",
+			"twilight": "dämmernd"
 		}
 	},
 	"pageTitle": {
 		"about": "Über uns",
+		"appliances": "Geräte",
 		"logout": "Abmelden",
 		"plans": "Pläne",
 		"preferences": "Einstellungen",
@@ -78,11 +94,12 @@
 			"dark": "Zwischen heller und dunkler Einstellung wechseln",
 			"help": "Ein oder ausschalten der<br />kontextbezogenen Hilfs-Tooltips",
 			"logout": "Abmelden oder Benutzer wechseln",
-			"plans": "Alle Pläne einsehen",
+			"menu": "Seite wählen",
 			"preferences": "Verschiedene Einstellungen"
 		},
 		"pageTitle": {
 			"about": "Informationen über unsere Firma und dieses Programm",
+			"appliances": "Zeigt alle verfügbaren Geräte und deren Informationen an",
 			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind",
 			"switches": "Schalter anzeigen und betätigen",
 			"windowContacts": "Fenster- und Türkontakte und deren momentaner Zustand"

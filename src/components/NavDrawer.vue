@@ -85,8 +85,8 @@ export default {
   data: () => ({
     mnu: [
       {
-        icon: 'calendar_today',
-        key: 'mnu.plans',
+        icon: 'touch_app',
+        key: 'mnu.menu',
         role: null,
         subs: [
           {
@@ -97,13 +97,19 @@ export default {
           },
           {
             link: '/app/windowContacts',
-            icon: 'today',
+            icon: 'meeting_room',
             key: 'pageTitle.windowContacts',
             role: null
           },
           {
+            link: '/app/appliances',
+            icon: 'devices_other',
+            key: 'pageTitle.appliances',
+            role: null
+          },
+          {
             link: '/app/plans',
-            icon: 'today',
+            icon: 'home',
             key: 'pageTitle.plans',
             role: null
           }
