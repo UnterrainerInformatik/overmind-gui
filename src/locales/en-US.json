@@ -46,6 +46,7 @@
 			"closed": "closed",
 			"floor": "Floor",
 			"groundFloor": "Ground Floor",
+			"lastTimeOnline": "Last Time Online",
 			"opened": "opened",
 			"tilted": "tilted"
 		}
