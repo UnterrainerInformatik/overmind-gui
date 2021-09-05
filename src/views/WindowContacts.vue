@@ -19,7 +19,6 @@
           </v-card-title>
           <WindowContactPanel
             :item="item"
-            @reload="getUsedWindowContacts"
           ></WindowContactPanel>
         </v-card>
       </span>

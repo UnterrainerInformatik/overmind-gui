@@ -35,6 +35,18 @@
 			"version": "Version",
 			"web": "Webpage"
 		},
+		"appliances": {
+			"CONTACT_SENSOR": "Contact-Sensor",
+			"DEBUGGER": "Debugger",
+			"GROUP_PARALLEL": "Parallel Group",
+			"LIGHTS": "Lights",
+			"MOTION_SENSOR": "Motion-Sensor",
+			"PLAN_MANIPULATOR": "Plan-Manipulator",
+			"PLUG": "Plug",
+			"SHUTTERS": "Shutters",
+			"SWITCH": "Switch",
+			"undefined": "Undefined"
+		},
 		"plans": {
 			"viewToggle": {
 				"active": "active",

@@ -24,7 +24,7 @@
             :disabled="!tooltips"
           >
             <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on.stop="on"
+              <v-icon class="ml-n2" v-bind="attrs" v-on="on"
                 >brightness_high</v-icon
               ></template
             >
