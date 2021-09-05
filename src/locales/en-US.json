@@ -22,7 +22,7 @@
 		"dark": "Dark Theme",
 		"help": "Help Tooltips",
 		"language": "Language",
-		"plans": "Plans"
+		"menu": "Menu"
 	},
 	"page": {
 		"about": {
@@ -43,16 +43,20 @@
 		},
 		"windowContacts": {
 			"basement": "Basement",
+			"bright": "bright",
 			"closed": "closed",
+			"dark": "dark",
 			"floor": "Floor",
 			"groundFloor": "Ground Floor",
 			"lastTimeOnline": "Last Time Online",
 			"opened": "opened",
-			"tilted": "tilted"
+			"tilted": "tilted",
+			"twilight": "twilight"
 		}
 	},
 	"pageTitle": {
 		"about": "About",
+		"appliances": "Devices",
 		"logout": "Logout",
 		"plans": "Plans",
 		"preferences": "Preferences",
@@ -78,11 +82,12 @@
 			"dark": "Switch between light- and dark-theme",
 			"help": "Turn display of the<br />help-tooltips on/off",
 			"logout": "",
-			"plans": "See all plans",
+			"menu": "Choose your page",
 			"preferences": ""
 		},
 		"pageTitle": {
 			"about": "Information about our company and this program",
+			"appliances": "Shows all available devices and their states",
 			"plans": "The plans currently running or on standby",
 			"switches": "Show switches and allow to press them",
 			"windowContacts": "Window- and door-contacts and their respective state"

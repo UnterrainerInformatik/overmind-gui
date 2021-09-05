@@ -24,6 +24,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/WindowContacts.vue')
   },
   {
+    path: '/app/appliances',
+    name: 'appliances',
+    component: () => import('../views/Appliances.vue')
+  },
+  {
     path: '/app/colortest',
     name: 'colortest',
     component: () => import('../views/ColorTest.vue')
