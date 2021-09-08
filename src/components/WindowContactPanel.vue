@@ -61,9 +61,9 @@
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ contact.description }}</span>
               </v-col>
-              <v-col class="text-right">
+              <v-col class="ma-0 pa-0 text-right">
                 <v-row class="ma-0 pa-0 justify-end">
-                  <v-col>
+                  <v-col class="ma-0 pa-0">
                     <v-row class="ma-0 pa-0 justify-end">
                       <v-col cols="8" md="4" lg="3" class="ma-0 pa-0 text-left">
                         <span class="text-caption font-weight-bold text-no-wrap"

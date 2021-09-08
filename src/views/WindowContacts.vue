@@ -69,7 +69,16 @@ export default {
               return
             }
             element.appliance = resp
-            element.appliance.state = JSON.parse(resp.state)
+            try {
+              element.appliance.state = JSON.parse(resp.state)
+            } catch (Error) {
+              delete element.config
+            }
+            try {
+              element.appliance.config = JSON.parse(resp.config)
+            } catch (Error) {
+              delete element.config
+            }
             descriptions.push(element)
           }))
         })
