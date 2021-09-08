@@ -149,10 +149,10 @@ export default {
       return contact.appliance.state.luminosityLevel === 'dark'
     },
     opened (contact) {
-      return contact.appliance.state.open && contact.appliance.state.tilt < 5
+      return contact.appliance.state.open && contact.appliance.state.tilt < 2
     },
     tilted (contact) {
-      return contact.appliance.state.open && contact.appliance.state.tilt >= 5
+      return contact.appliance.state.open && contact.appliance.state.tilt >= 2
     },
     closed (contact) {
       return !contact.appliance.state.open
