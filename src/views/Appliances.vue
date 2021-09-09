@@ -14,6 +14,7 @@
 // @ is an alias to /src
 import AppliancePanel from '@/components/AppliancePanel.vue'
 import { getList } from '@/utils/axiosUtils'
+import overmindUtils from '@/utils/overmindUtils'
 
 export default {
   name: 'Appliances',
@@ -24,7 +25,8 @@ export default {
 
   data: () => ({
     raw: {},
-    appliances: {},
+    appMap: new Map(),
+    appliances: [],
     map: null,
     onlyActive: false,
     countAll: 0,
@@ -40,31 +42,21 @@ export default {
   methods: {
     async getAppliances (showLoadingProgress) {
       this.loading = showLoadingProgress
+
       const appliances = []
-      return getList('uinf', 'appliances', 10000, 0, () => { return undefined }, () => { return undefined }).then((response) => {
-        if (response == null || response === undefined) {
-          return Promise.resolve()
-        }
+      return getList('uinf', 'appliances', 10000, 0).then((response) => {
         response.entries.forEach(element => {
-          if (element.state) {
-            try {
-              element.state = JSON.parse(element.state)
-            } catch (Error) {
-              delete element.state
-            }
-          }
-          if (element.config) {
-            try {
-              element.config = JSON.parse(element.config)
-            } catch (Error) {
-              delete element.config
-            }
-          }
+          overmindUtils.parseState(element)
+          overmindUtils.parseConfig(element)
           appliances.push(element)
         })
       }).then(() => {
         appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
         this.appliances = appliances
+        this.appMap = new Map()
+        for (const element of this.appliances) {
+          this.appMap.set(element.id, element)
+        }
         this.loading = false
       })
     }

@@ -41,15 +41,9 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return getList('uinf', 'guiSwitches', 10000, 0, () => { return undefined }, () => { return undefined }).then((response) => {
-        if (response == null || response === undefined) {
-          return Promise.resolve()
-        }
+      return getList('uinf', 'guiSwitches', 10000, 0).then((response) => {
         response.entries.forEach(element => {
-          allPromises.push(getById('uinf', 'appliances', element.applianceId, () => { return undefined }, () => { return undefined }).then((resp) => {
-            if (resp == null || resp === undefined) {
-              return
-            }
+          allPromises.push(getById('uinf', 'appliances', element.applianceId).then((resp) => {
             element.applianceName = resp.name
             descriptions.push(element)
           }))

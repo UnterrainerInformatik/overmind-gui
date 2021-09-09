@@ -75,7 +75,7 @@ export default {
 
   methods: {
     async togglePlan (id) {
-      return post('uinf', 'execute', () => { return undefined }, () => {
+      return post('uinf', 'execute', () => {
         return {
           applianceId: 20,
           actorPath: 'actor',

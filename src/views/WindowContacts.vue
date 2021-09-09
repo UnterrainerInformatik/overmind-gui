@@ -31,6 +31,7 @@
 import WindowContactPanel from '@/components/WindowContactPanel.vue'
 import jsUtils from '@/utils/jsUtils'
 import { getList, getById } from '@/utils/axiosUtils'
+import overmindUtils from '@/utils/overmindUtils'
 
 export default {
   name: 'WindowContacts',
@@ -40,11 +41,7 @@ export default {
   },
 
   data: () => ({
-    raw: {},
     filtered: {},
-    map: null,
-    onlyActive: false,
-    countAll: 0,
     loading: true
   }),
 
@@ -59,26 +56,12 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return getList('uinf', 'guiWindowContacts', 10000, 0, () => { return undefined }, () => { return undefined }).then((response) => {
-        if (response == null || response === undefined) {
-          return Promise.resolve()
-        }
+      return getList('uinf', 'guiWindowContacts', 10000, 0).then((response) => {
         response.entries.forEach(element => {
-          allPromises.push(getById('uinf', 'appliances', element.applianceId, () => { return undefined }, () => { return undefined }).then((resp) => {
-            if (resp == null || resp === undefined) {
-              return
-            }
+          allPromises.push(getById('uinf', 'appliances', element.applianceId).then((resp) => {
+            overmindUtils.parseState(resp)
+            overmindUtils.parseConfig(resp)
             element.appliance = resp
-            try {
-              element.appliance.state = JSON.parse(resp.state)
-            } catch (Error) {
-              delete element.config
-            }
-            try {
-              element.appliance.config = JSON.parse(resp.config)
-            } catch (Error) {
-              delete element.config
-            }
             descriptions.push(element)
           }))
         })

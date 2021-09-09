@@ -61,7 +61,18 @@
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ contact.description }}</span>
               </v-col>
-              <v-col class="ma-0 pa-0 text-right">
+              <v-col cols="1" class="ma-0 pa-0">
+                <span
+                  v-if="
+                    contact.appliance &&
+                      contact.appliance.state &&
+                      contact.appliance.state.temperature
+                  "
+                  class="text-button"
+                  >{{ contact.appliance.state.temperature }}°C</span
+                >
+              </v-col>
+              <v-col class="ma-0 pa-0">
                 <v-row class="ma-0 pa-0 justify-end">
                   <v-col class="ma-0 pa-0">
                     <v-row class="ma-0 pa-0 justify-end">
@@ -98,6 +109,21 @@
                     </v-row>
                   </v-col>
                 </v-row>
+              </v-col>
+              <v-col cols="1" class="ma-0 pa-0 text-right">
+                <v-btn
+                  fab
+                  x-small
+                  v-if="
+                    contact.appliance &&
+                      contact.appliance.config &&
+                      contact.appliance.config.address
+                  "
+                  class="warning"
+                  @click="openInNewTab(contact.appliance.config.address)"
+                >
+                  <v-icon>open_in_new</v-icon>
+                </v-btn>
               </v-col>
             </v-row>
           </v-container>
@@ -178,6 +204,9 @@ export default {
       if (this.closed(contact)) {
         return 'closed'
       }
+    },
+    openInNewTab (address) {
+      window.open(address, '_blank')
     }
   }
 

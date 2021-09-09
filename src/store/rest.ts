@@ -34,7 +34,8 @@ const store = {
         applianceToMappings: '/setup/appliancetomappings',
         mappingEntries: '/setup/mappingentries',
         usedSwitches: '/usedswitches',
-        guiWindowContacts: '/setup/guiwindowcontacts'
+        guiWindowContacts: '/setup/guiwindowcontacts',
+        initialize: '/setupappliance'
       }
     }
   }),
