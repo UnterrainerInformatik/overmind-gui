@@ -77,7 +77,7 @@ export default {
     },
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
-      return post('uinf', 'triggerEvent', () => { return undefined }, () => {
+      return post('uinf', 'triggerEvent', () => {
         return {
           applianceId: id,
           sensorPath: sensorPath,

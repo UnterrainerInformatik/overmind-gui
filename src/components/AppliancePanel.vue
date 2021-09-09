@@ -3,9 +3,9 @@
     dense
     class="ma-2 mx-0 pa-0 flex-grow-1 flex-shrink-1 d-flex flex-column"
   >
-    <v-expansion-panels accordion hover class="ma-0 pa-0 darken-1">
+    <v-expansion-panels accordion hover class="ma-0 pa-0">
       <v-expansion-panel class="ma-0 pa-0">
-        <v-expansion-panel-header class="my-0 py-0">
+        <v-expansion-panel-header :class="'my-0 py-0 secondary ' + (this.$vuetify.theme.dark ? 'darken-1' : '')">
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
             <template v-slot:activator="{ on, attrs }">
               <v-icon class="ml-n2" v-bind="attrs" v-on="on">{{
@@ -19,7 +19,10 @@
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ item.name }}</span>
               </v-col>
-              <v-col class="ma-0 pa-0 mr-3 text-right">
+              <v-col class="ma-0 pa-0">
+                <span v-if="item.state && item.state.temperature" class="text-button">{{ item.state.temperature }}°C</span>
+              </v-col>
+              <v-col class="ma-0 pa-0 mr-9 text-right">
                 <v-row v-if="item.lastTimeOnline" class="ma-0 pa-0 justify-end">
                   <v-col class="ma-0 pa-0">
                     <v-row class="ma-0 pa-0 justify-end">
@@ -60,7 +63,19 @@
             </v-row>
           </v-container>
         </v-expansion-panel-header>
-        <v-expansion-panel-content>
+        <v-expansion-panel-content :class="'secondary' + (this.$vuetify.theme.dark ? '' : ' lighten-1')">
+          <v-row class="mt-1">
+            <v-col>
+              <v-btn v-if="item.config && item.config.address" class="warning" @click="openInNewTab(item.config.address)">
+                <v-icon>open_in_new</v-icon>
+              </v-btn>
+            </v-col>
+            <v-col>
+              <v-btn v-if="item.config && item.config.address" :disabled="disabled" :class="color" @click="initializeAppliance(item)">
+                <v-icon>flag</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
           <v-row>
             <v-col>
               <span v-if="item.config"><pre>{{ `config: ${JSON.stringify(item.config, undefined, 2)}` }}</pre></span>
@@ -82,6 +97,7 @@
 <script lang="js">
 import dateUtils from '@/utils/dateUtils'
 import { mapGetters } from 'vuex'
+import { getList } from '@/utils/axiosUtils'
 
 export default {
   name: 'AppliancePanel',
@@ -92,7 +108,9 @@ export default {
   },
 
   data: () => ({
-    dateUtils
+    dateUtils,
+    disabled: false,
+    color: 'warning'
   }),
 
   computed: {
@@ -129,6 +147,46 @@ export default {
         default:
           return 'adb'
       }
+    },
+    openInNewTab (address) {
+      window.open(address, '_blank')
+    },
+    blink (item, color) {
+      this.color = color
+      this.setTimeoutChain([
+        () => {
+          this.color = 'warning'
+        },
+        () => {
+          this.color = color
+        },
+        () => {
+          this.color = 'warning'
+        },
+        () => {
+          this.color = color
+        },
+        () => {
+          this.color = 'warning'
+        }
+      ], 500)
+    },
+    setTimeoutChain (functionArray, deltaMillis) {
+      let dm = deltaMillis
+      for (const func of functionArray) {
+        setTimeout(func, dm)
+        dm += deltaMillis
+      }
+    },
+    initializeAppliance (item) {
+      this.disabled = true
+      getList('uinf', 'initialize', 1, 0, `id=${item.id}`).then(() => {
+        this.blink(item, 'success')
+        this.disabled = false
+      }).catch(() => {
+        this.blink(item, 'error')
+        this.disabled = false
+      })
     }
   }
 

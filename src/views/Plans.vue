@@ -62,10 +62,7 @@ export default {
   methods: {
     async getPlans (showLoadingProgress, size, offset, additionalParams) {
       this.loading = showLoadingProgress
-      return getList('uinf', 'orderedPlans', size, offset, () => { return undefined }, () => { return undefined }, additionalParams + (this.onlyEnabled ? '&enabled=true' : '')).then((response) => {
-        if (!response || !response.entries) {
-          return
-        }
+      return getList('uinf', 'orderedPlans', size, offset, additionalParams + (this.onlyEnabled ? '&enabled=true' : '')).then((response) => {
         this.raw = response
         this.loading = false
       })
