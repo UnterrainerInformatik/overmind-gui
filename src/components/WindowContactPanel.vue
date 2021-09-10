@@ -61,7 +61,7 @@
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ contact.description }}</span>
               </v-col>
-              <v-col cols="1" class="ma-0 pa-0">
+              <v-col cols="2" class="ma-0 pa-0">
                 <span
                   v-if="
                     contact.appliance &&
@@ -72,7 +72,7 @@
                   >{{ contact.appliance.state.temperature }}°C</span
                 >
               </v-col>
-              <v-col class="ma-0 pa-0">
+              <v-col class="ma-0 pa-0 hidden-sm-and-down">
                 <v-row class="ma-0 pa-0 justify-end">
                   <v-col class="ma-0 pa-0">
                     <v-row class="ma-0 pa-0 justify-end">
@@ -110,7 +110,38 @@
                   </v-col>
                 </v-row>
               </v-col>
-              <v-col cols="1" class="ma-0 pa-0 text-right">
+              <v-col cols="2" class="ma-0 pa-0 text-right">
+                <v-btn
+                  fab
+                  x-small
+                  v-if="
+                    contact.appliance &&
+                      contact.appliance.state &&
+                      contact.appliance.state.batteryLevel
+                  "
+                  :class="
+                    'ma-0 pa-0 mr-1 ' +
+                      overmindUtils.getBatteryColor(contact.appliance.state.batteryLevel)
+                  "
+                  @click="() => {}"
+                >
+                  <v-row class="ma-0 pa-0">
+                    <v-col class="ma-0 pa-0">
+                      <v-row class="ma-0 pa-0">
+                        <v-col class="ma-0 pa-0">
+                          <v-icon small>{{
+                            overmindUtils.getBatteryIcon(contact.appliance.state.batteryLevel)
+                          }}</v-icon>
+                        </v-col>
+                      </v-row>
+                      <v-row class="ma-0 pa-0">
+                        <v-col class="ma-0 pa-0">
+                          {{ contact.appliance.state.batteryLevel }}
+                        </v-col>
+                      </v-row>
+                    </v-col>
+                  </v-row>
+                </v-btn>
                 <v-btn
                   fab
                   x-small
@@ -119,8 +150,8 @@
                       contact.appliance.config &&
                       contact.appliance.config.address
                   "
-                  class="warning"
-                  @click="openInNewTab(contact.appliance.config.address)"
+                  class="ma-0 pa-0 warning"
+                  @click="overmindUtils.openInNewTab(contact.appliance.config.address)"
                 >
                   <v-icon>open_in_new</v-icon>
                 </v-btn>
@@ -140,6 +171,7 @@
 
 <script lang="js">
 import dateUtils from '@/utils/dateUtils'
+import overmindUtils from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
 
 export default {
@@ -151,7 +183,8 @@ export default {
   },
 
   data: () => ({
-    dateUtils
+    dateUtils,
+    overmindUtils
   }),
 
   computed: {
@@ -204,9 +237,6 @@ export default {
       if (this.closed(contact)) {
         return 'closed'
       }
-    },
-    openInNewTab (address) {
-      window.open(address, '_blank')
     }
   }
 
