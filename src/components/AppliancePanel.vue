@@ -5,11 +5,16 @@
   >
     <v-expansion-panels accordion hover class="ma-0 pa-0">
       <v-expansion-panel class="ma-0 pa-0">
-        <v-expansion-panel-header :class="'my-0 py-0 secondary ' + (this.$vuetify.theme.dark ? 'darken-1' : '')">
+        <v-expansion-panel-header
+          :class="
+            'my-0 py-0 secondary ' +
+              (this.$vuetify.theme.dark ? 'darken-1' : '')
+          "
+        >
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
             <template v-slot:activator="{ on, attrs }">
               <v-icon class="ml-n2" v-bind="attrs" v-on="on">{{
-                getIconFor(item)
+                overmindUtils.getIconFor(item)
               }}</v-icon></template
             >
             <div v-html="$t('page.appliances.' + item.type)"></div>
@@ -20,13 +25,22 @@
                 <span class="ml-2 text-caption">{{ item.name }}</span>
               </v-col>
               <v-col class="ma-0 pa-0">
-                <span v-if="item.state && item.state.temperature" class="text-button">{{ item.state.temperature }}°C</span>
+                <span
+                  v-if="item.state && item.state.temperature"
+                  class="text-button"
+                  >{{ item.state.temperature }}°C</span
+                >
               </v-col>
-              <v-col class="ma-0 pa-0 mr-9 text-right">
-                <v-row v-if="item.lastTimeOnline" class="ma-0 pa-0 justify-end">
-                  <v-col class="ma-0 pa-0">
+              <v-col class="ma-0 pa-0 hidden-sm-and-down text-right">
+                <v-row class="ma-0 pa-0 justify-end">
+                  <v-col v-if="item.lastTimeOnline" class="ma-0 pa-0">
                     <v-row class="ma-0 pa-0 justify-end">
-                      <v-col cols="8" md="4" lg="3" class="ma-0 pa-0 text-left">
+                      <v-col
+                        cols="8"
+                        md="4"
+                        lg="3"
+                        class="ma-0 pa-0 text-left text-no-wrap"
+                      >
                         <span class="text-caption font-weight-bold text-no-wrap"
                           >{{ $t('page.windowContacts.lastTimeOnline') }}:</span
                         >
@@ -60,30 +74,99 @@
                   </v-col>
                 </v-row>
               </v-col>
+              <v-col cols="2" class="ma-0 pa-0 text-right">
+                <v-btn
+                  fab
+                  x-small
+                  v-if="item.state && item.state.batteryLevel"
+                  :class="
+                    'ma-0 pa-0 mr-1 ' +
+                      overmindUtils.getBatteryColor(item.state.batteryLevel)
+                  "
+                  @click="() => {}"
+                >
+                  <v-row class="ma-0 pa-0">
+                    <v-col class="ma-0 pa-0">
+                      <v-row class="ma-0 pa-0">
+                        <v-col class="ma-0 pa-0">
+                          <v-icon small>{{
+                            overmindUtils.getBatteryIcon(
+                              item.state.batteryLevel
+                            )
+                          }}</v-icon>
+                        </v-col>
+                      </v-row>
+                      <v-row class="ma-0 pa-0">
+                        <v-col class="ma-0 pa-0">
+                          {{ item.state.batteryLevel }}
+                        </v-col>
+                      </v-row>
+                    </v-col>
+                  </v-row>
+                </v-btn>
+              </v-col>
             </v-row>
           </v-container>
         </v-expansion-panel-header>
-        <v-expansion-panel-content :class="'secondary' + (this.$vuetify.theme.dark ? '' : ' lighten-1')">
-          <v-row class="mt-1">
-            <v-col>
-              <v-btn v-if="item.config && item.config.address" class="warning" @click="openInNewTab(item.config.address)">
-                <v-icon>open_in_new</v-icon>
-              </v-btn>
-            </v-col>
-            <v-col>
-              <v-btn v-if="item.config && item.config.address" :disabled="disabled" :class="color" @click="initializeAppliance(item)">
-                <v-icon>flag</v-icon>
-              </v-btn>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <span v-if="item.config"><pre>{{ `config: ${JSON.stringify(item.config, undefined, 2)}` }}</pre></span>
-            </v-col>
-            <v-col>
-              <span v-if="item.state"><pre>{{ `state: ${JSON.stringify(item.state, undefined, 2)}` }}</pre></span>
-            </v-col>
-          </v-row>
+        <v-expansion-panel-content
+          :class="'secondary' + (this.$vuetify.theme.dark ? '' : ' lighten-1')"
+        >
+          <v-expansion-panels accordion hover class="ma-0 pa-0 mt-2">
+            <v-expansion-panel class="ma-0 pa-0">
+              <v-expansion-panel-header
+                :class="
+                  'my-0 py-0 secondary ' +
+                    (this.$vuetify.theme.dark ? 'darken-2' : 'darken-1')
+                "
+              >
+                <span class="my-1">
+                    <v-btn
+                      fab
+                      small
+                      v-if="item.config && item.config.address"
+                      class="mr-4 warning"
+                      @click.stop="
+                        overmindUtils.openInNewTab(item.config.address)
+                      "
+                    >
+                      <v-icon>open_in_new</v-icon>
+                    </v-btn>
+                    <v-btn
+                      fab
+                      small
+                      v-if="item.config && item.config.address"
+                      :disabled="disabled"
+                      :class="color"
+                      @click.stop="initializeAppliance(item)"
+                    >
+                      <v-icon>update</v-icon>
+                    </v-btn>
+                </span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content
+                :class="
+                  'mt-1 secondary' + (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
+                "
+              >
+                <v-row>
+                  <v-col>
+                    <span v-if="item.config"
+                      ><pre>{{
+                        `config: ${JSON.stringify(item.config, undefined, 2)}`
+                      }}</pre></span
+                    >
+                  </v-col>
+                  <v-col>
+                    <span v-if="item.state"
+                      ><pre>{{
+                        `state: ${JSON.stringify(item.state, undefined, 2)}`
+                      }}</pre></span
+                    >
+                  </v-col>
+                </v-row>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>
@@ -96,6 +179,7 @@
 
 <script lang="js">
 import dateUtils from '@/utils/dateUtils'
+import overmindUtils from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
 import { getList } from '@/utils/axiosUtils'
 
@@ -109,6 +193,7 @@ export default {
 
   data: () => ({
     dateUtils,
+    overmindUtils,
     disabled: false,
     color: 'warning'
   }),
@@ -124,36 +209,19 @@ export default {
   },
 
   methods: {
-    getIconFor (item) {
-      switch (item.type) {
-        case 'SHUTTERS':
-          return 'camera'
-        case 'LIGHTS':
-          return 'lightbulb'
-        case 'DEBUGGER':
-          return 'bug_report'
-        case 'GROUP_PARALLEL':
-          return 'groups'
-        case 'PLAN_MANIPULATOR':
-          return 'adb'
-        case 'SWITCH':
-          return 'toggle_on'
-        case 'CONTACT_SENSOR':
-          return 'meeting_room'
-        case 'MOTION_SENSOR':
-          return 'vibration'
-        case 'PLUG':
-          return 'power'
-        default:
-          return 'adb'
-      }
-    },
-    openInNewTab (address) {
-      window.open(address, '_blank')
+    initializeAppliance (item) {
+      this.disabled = true
+      getList('uinf', 'initialize', 1, 0, `id=${item.id}`).then(() => {
+        this.blink(item, 'success')
+        this.disabled = false
+      }).catch(() => {
+        this.blink(item, 'error')
+        this.disabled = false
+      })
     },
     blink (item, color) {
       this.color = color
-      this.setTimeoutChain([
+      overmindUtils.setTimeoutChain([
         () => {
           this.color = 'warning'
         },
@@ -170,23 +238,6 @@ export default {
           this.color = 'warning'
         }
       ], 500)
-    },
-    setTimeoutChain (functionArray, deltaMillis) {
-      let dm = deltaMillis
-      for (const func of functionArray) {
-        setTimeout(func, dm)
-        dm += deltaMillis
-      }
-    },
-    initializeAppliance (item) {
-      this.disabled = true
-      getList('uinf', 'initialize', 1, 0, `id=${item.id}`).then(() => {
-        this.blink(item, 'success')
-        this.disabled = false
-      }).catch(() => {
-        this.blink(item, 'error')
-        this.disabled = false
-      })
     }
   }
 
