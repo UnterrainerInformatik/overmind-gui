@@ -60,7 +60,6 @@
 			"dark": "dark",
 			"floor": "Floor",
 			"groundFloor": "Ground Floor",
-			"lastTimeOnline": "Last Time Online",
 			"opened": "opened",
 			"tilted": "tilted",
 			"twilight": "twilight"
@@ -76,6 +75,7 @@
 		"windowContacts": "Window-Contacts"
 	},
 	"sensors": {
+		"lastTimeOnline": "Last Time Online",
 		"motion": "Motion Sensor",
 		"off": "Upper",
 		"on": "Lower",
