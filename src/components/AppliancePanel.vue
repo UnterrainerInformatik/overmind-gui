@@ -32,78 +32,16 @@
                 >
               </v-col>
               <v-col class="ma-0 pa-0 hidden-sm-and-down text-right">
-                <v-row class="ma-0 pa-0 justify-end">
-                  <v-col v-if="item.lastTimeOnline" class="ma-0 pa-0">
-                    <v-row class="ma-0 pa-0 justify-end">
-                      <v-col
-                        cols="8"
-                        md="4"
-                        lg="3"
-                        class="ma-0 pa-0 text-left text-no-wrap"
-                      >
-                        <span class="text-caption font-weight-bold text-no-wrap"
-                          >{{ $t('page.windowContacts.lastTimeOnline') }}:</span
-                        >
-                      </v-col>
-                    </v-row>
-                    <v-row class="ma-0 pa-0 justify-end">
-                      <v-col
-                        cols="8"
-                        md="4"
-                        lg="3"
-                        class="ma-0 pa-0 text-left text-no-wrap"
-                      >
-                        <span class="text-caption">
-                          {{
-                            dateUtils.isoToDatePadded(
-                              item.lastTimeOnline,
-                              $i18n.locale
-                            )
-                          }}</span
-                        >
-                        <span class="text-caption">
-                          ({{
-                            dateUtils.isoToTime(
-                              item.lastTimeOnline,
-                              $i18n.locale
-                            )
-                          }})</span
-                        >
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </v-row>
+                <LastTimeOnlineDisplay
+                  v-if="item.lastTimeOnline"
+                  :value="item.lastTimeOnline"
+                ></LastTimeOnlineDisplay>
               </v-col>
               <v-col cols="2" class="ma-0 pa-0 text-right">
-                <v-btn
-                  fab
-                  x-small
+                <BatteryIndicator
                   v-if="item.state && item.state.batteryLevel"
-                  :class="
-                    'ma-0 pa-0 mr-1 ' +
-                      overmindUtils.getBatteryColor(item.state.batteryLevel)
-                  "
-                  @click="() => {}"
-                >
-                  <v-row class="ma-0 pa-0">
-                    <v-col class="ma-0 pa-0">
-                      <v-row class="ma-0 pa-0">
-                        <v-col class="ma-0 pa-0">
-                          <v-icon small>{{
-                            overmindUtils.getBatteryIcon(
-                              item.state.batteryLevel
-                            )
-                          }}</v-icon>
-                        </v-col>
-                      </v-row>
-                      <v-row class="ma-0 pa-0">
-                        <v-col class="ma-0 pa-0">
-                          {{ item.state.batteryLevel }}
-                        </v-col>
-                      </v-row>
-                    </v-col>
-                  </v-row>
-                </v-btn>
+                  :level="item.state.batteryLevel"
+                ></BatteryIndicator>
               </v-col>
             </v-row>
           </v-container>
@@ -120,32 +58,33 @@
                 "
               >
                 <span class="my-1">
-                    <v-btn
-                      fab
-                      small
-                      v-if="item.config && item.config.address"
-                      class="mr-4 warning"
-                      @click.stop="
-                        overmindUtils.openInNewTab(item.config.address)
-                      "
-                    >
-                      <v-icon>open_in_new</v-icon>
-                    </v-btn>
-                    <v-btn
-                      fab
-                      small
-                      v-if="item.config && item.config.address"
-                      :disabled="disabled"
-                      :class="color"
-                      @click.stop="initializeAppliance(item)"
-                    >
-                      <v-icon>update</v-icon>
-                    </v-btn>
+                  <v-btn
+                    fab
+                    small
+                    v-if="item.config && item.config.address"
+                    class="mr-4 warning"
+                    @click.stop="
+                      overmindUtils.openInNewTab(item.config.address)
+                    "
+                  >
+                    <v-icon>open_in_new</v-icon>
+                  </v-btn>
+                  <v-btn
+                    fab
+                    small
+                    v-if="item.config && item.config.address"
+                    :disabled="disabled"
+                    :class="color"
+                    @click.stop="initializeAppliance(item)"
+                  >
+                    <v-icon>update</v-icon>
+                  </v-btn>
                 </span>
               </v-expansion-panel-header>
               <v-expansion-panel-content
                 :class="
-                  'mt-1 secondary' + (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
+                  'mt-1 secondary' +
+                    (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
                 "
               >
                 <v-row>
@@ -178,10 +117,11 @@
 </style>
 
 <script lang="js">
-import dateUtils from '@/utils/dateUtils'
 import overmindUtils from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
 import { getList } from '@/utils/axiosUtils'
+import BatteryIndicator from '@/components/BatteryIndicator.vue'
+import LastTimeOnlineDisplay from '@/components/LastTimeOnlineDisplay.vue'
 
 export default {
   name: 'AppliancePanel',
@@ -191,8 +131,12 @@ export default {
     map: {}
   },
 
+  components: {
+    BatteryIndicator,
+    LastTimeOnlineDisplay
+  },
+
   data: () => ({
-    dateUtils,
     overmindUtils,
     disabled: false,
     color: 'warning'

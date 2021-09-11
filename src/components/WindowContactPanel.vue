@@ -61,7 +61,7 @@
               <v-col class="ma-0 pa-0">
                 <span class="ml-2 text-caption">{{ contact.description }}</span>
               </v-col>
-              <v-col cols="2" class="ma-0 pa-0">
+              <v-col cols="3" class="ma-0 pa-0">
                 <span
                   v-if="
                     contact.appliance &&
@@ -73,75 +73,20 @@
                 >
               </v-col>
               <v-col class="ma-0 pa-0 hidden-sm-and-down">
-                <v-row class="ma-0 pa-0 justify-end">
-                  <v-col class="ma-0 pa-0">
-                    <v-row class="ma-0 pa-0 justify-end">
-                      <v-col cols="8" md="4" lg="3" class="ma-0 pa-0 text-left">
-                        <span class="text-caption font-weight-bold text-no-wrap"
-                          >{{ $t('page.windowContacts.lastTimeOnline') }}:</span
-                        >
-                      </v-col>
-                    </v-row>
-                    <v-row class="ma-0 pa-0 justify-end">
-                      <v-col
-                        cols="8"
-                        md="4"
-                        lg="3"
-                        class="ma-0 pa-0 text-left text-no-wrap"
-                      >
-                        <span class="text-caption">
-                          {{
-                            dateUtils.isoToDatePadded(
-                              contact.appliance.lastTimeOnline,
-                              $i18n.locale
-                            )
-                          }}</span
-                        >
-                        <span class="text-caption">
-                          ({{
-                            dateUtils.isoToTime(
-                              contact.appliance.lastTimeOnline,
-                              $i18n.locale
-                            )
-                          }})</span
-                        >
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </v-row>
+                <LastTimeOnlineDisplay
+                  v-if="contact.appliance && contact.appliance.lastTimeOnline"
+                  :value="contact.appliance.lastTimeOnline"
+                ></LastTimeOnlineDisplay>
               </v-col>
-              <v-col cols="2" class="ma-0 pa-0 text-right">
-                <v-btn
-                  fab
-                  x-small
+              <v-col cols="3" sm="4" class="ma-0 pa-0 text-right">
+                <BatteryIndicator
                   v-if="
                     contact.appliance &&
                       contact.appliance.state &&
                       contact.appliance.state.batteryLevel
                   "
-                  :class="
-                    'ma-0 pa-0 mr-1 ' +
-                      overmindUtils.getBatteryColor(contact.appliance.state.batteryLevel)
-                  "
-                  @click="() => {}"
-                >
-                  <v-row class="ma-0 pa-0">
-                    <v-col class="ma-0 pa-0">
-                      <v-row class="ma-0 pa-0">
-                        <v-col class="ma-0 pa-0">
-                          <v-icon small>{{
-                            overmindUtils.getBatteryIcon(contact.appliance.state.batteryLevel)
-                          }}</v-icon>
-                        </v-col>
-                      </v-row>
-                      <v-row class="ma-0 pa-0">
-                        <v-col class="ma-0 pa-0">
-                          {{ contact.appliance.state.batteryLevel }}
-                        </v-col>
-                      </v-row>
-                    </v-col>
-                  </v-row>
-                </v-btn>
+                  :level="contact.appliance.state.batteryLevel"
+                ></BatteryIndicator>
                 <v-btn
                   fab
                   x-small
@@ -151,7 +96,9 @@
                       contact.appliance.config.address
                   "
                   class="ma-0 pa-0 warning"
-                  @click="overmindUtils.openInNewTab(contact.appliance.config.address)"
+                  @click="
+                    overmindUtils.openInNewTab(contact.appliance.config.address)
+                  "
                 >
                   <v-icon>open_in_new</v-icon>
                 </v-btn>
@@ -170,9 +117,10 @@
 </style>
 
 <script lang="js">
-import dateUtils from '@/utils/dateUtils'
 import overmindUtils from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
+import BatteryIndicator from '@/components/BatteryIndicator.vue'
+import LastTimeOnlineDisplay from '@/components/LastTimeOnlineDisplay.vue'
 
 export default {
   name: 'WindowContactPanel',
@@ -182,8 +130,12 @@ export default {
     map: {}
   },
 
+  components: {
+    BatteryIndicator,
+    LastTimeOnlineDisplay
+  },
+
   data: () => ({
-    dateUtils,
     overmindUtils
   }),
 

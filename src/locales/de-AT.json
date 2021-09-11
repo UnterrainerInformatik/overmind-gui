@@ -60,7 +60,6 @@
 			"dark": "dunkel",
 			"floor": "Stock",
 			"groundFloor": "Erdgeschoß",
-			"lastTimeOnline": "Letzte Meldung",
 			"opened": "geöffnet",
 			"tilted": "gekippt",
 			"twilight": "dämmernd"
@@ -76,6 +75,7 @@
 		"windowContacts": "Fensterkontakte"
 	},
 	"sensors": {
+		"lastTimeOnline": "Letzte Meldung",
 		"motion": "Bewegungsmelder",
 		"off": "Oben",
 		"on": "Unten",
