@@ -89,18 +89,20 @@
               >
                 <v-row>
                   <v-col>
-                    <span v-if="item.config"
-                      ><pre>{{
-                        `config: ${JSON.stringify(item.config, undefined, 2)}`
-                      }}</pre></span
-                    >
+                    <v-form-base
+                      v-if="item.config"
+                      :model="item.config"
+                      :col="{ xs: 12, sm: 6 }"
+                      class="border-frame"
+                    />
                   </v-col>
                   <v-col>
-                    <span v-if="item.state"
-                      ><pre>{{
-                        `state: ${JSON.stringify(item.state, undefined, 2)}`
-                      }}</pre></span
-                    >
+                    <v-form-base
+                      v-if="item.state"
+                      :model="item.state"
+                      :col="{ xs: 12, sm: 6 }"
+                      class="border-frame"
+                    />
                   </v-col>
                 </v-row>
               </v-expansion-panel-content>
@@ -122,6 +124,7 @@ import { mapGetters } from 'vuex'
 import { getList } from '@/utils/axiosUtils'
 import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import LastTimeOnlineDisplay from '@/components/LastTimeOnlineDisplay.vue'
+import VFormBase from 'vuetify-form-base'
 
 export default {
   name: 'AppliancePanel',
@@ -133,7 +136,8 @@ export default {
 
   components: {
     BatteryIndicator,
-    LastTimeOnlineDisplay
+    LastTimeOnlineDisplay,
+    VFormBase
   },
 
   data: () => ({
