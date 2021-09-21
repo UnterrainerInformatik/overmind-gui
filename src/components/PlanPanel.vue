@@ -53,7 +53,7 @@
 </style>
 
 <script lang="js">
-import { post } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 
 export default {
   name: 'PlanPanel',
@@ -75,7 +75,7 @@ export default {
 
   methods: {
     async togglePlan (id) {
-      return post('uinf', 'execute', () => {
+      return axiosUtils.post('uinf', 'execute', () => {
         return {
           applianceId: 20,
           actorPath: 'actor',

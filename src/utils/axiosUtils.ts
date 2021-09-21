@@ -1,10 +1,10 @@
 import Vue from 'vue'
 import store from '@/store'
-import { error } from './loggingUtils'
-import { getDeepProperty } from './objectUtils'
+import log from './loggingUtils'
+import objectUtils from '@/utils/objectUtils'
 
 function buildBaseUrl (server: string): string {
-  const config = getDeepProperty(server, store.getters['rest/config'].servers)
+  const config = objectUtils.getDeepProperty(server, store.getters['rest/config'].servers)
   return `${config.protocol}://${config.address}:${config.port}`
 }
 
@@ -18,7 +18,7 @@ export async function appendErrorCatcher (wrapped: Promise<any>): Promise<any> {
     if (err != null && err.response != null && err.response.data != null && err.response.data.message != null) {
       msg = err.response.data.message
     }
-    error(msg, 'communication', status)
+    log.error(msg, 'communication', status)
     throw new Error('Internal Error.')
   })
 }
@@ -114,7 +114,7 @@ async function internalPost (server: string, endpointPath: string, dataProvider)
  * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
  */
 export async function getResponse (server: string, endpointPath: string): Promise<any> {
-  return internalRestCall(internalGet(server, getDeepProperty(endpointPath, store.getters['rest/config'].endpoint), false))
+  return internalRestCall(internalGet(server, objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint), false))
 }
 
 /**
@@ -124,7 +124,7 @@ export async function getResponse (server: string, endpointPath: string): Promis
  * @param id the ID of the object to retrieve
  */
 export async function getById (server: string, endpointPath: string, id: string | number): Promise<any> {
-  return internalRestCall(internalGet(server, `${getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`, false))
+  return internalRestCall(internalGet(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`, false))
 }
 
 /**
@@ -136,7 +136,7 @@ export async function getById (server: string, endpointPath: string, id: string 
  * @param additionalQueryParams a string containing additional query parameters (like 'scanId=5&searchName=hallo' for example)
  */
 export async function getList (server: string, endpointPath: string, size: number, offset: number, additionalQueryParams: string): Promise<any> {
-  return internalRestCall(internalGet(server, `${getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}?size=${size}&offset=${offset}${additionalQueryParams != null ? '&' + additionalQueryParams : ''}`, true))
+  return internalRestCall(internalGet(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}?size=${size}&offset=${offset}${additionalQueryParams != null ? '&' + additionalQueryParams : ''}`, true))
 }
 
 /**
@@ -146,7 +146,7 @@ export async function getList (server: string, endpointPath: string, size: numbe
  * @param id the ID of the object to retrieve
  */
 export async function del (server: string, endpointPath: string, id: string | number): Promise<any> {
-  return internalRestCall(internalDelete(server, `${getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`))
+  return internalRestCall(internalDelete(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`))
 }
 
 /**
@@ -157,7 +157,7 @@ export async function del (server: string, endpointPath: string, id: string | nu
  * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
  */
 export async function put (server: string, endpointPath: string, id: string | number, dataProvider: () => object): Promise<any> {
-  return internalRestCall(internalPut(server, `${getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`, dataProvider))
+  return internalRestCall(internalPut(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}/${id}`, dataProvider))
 }
 
 /**
@@ -167,5 +167,5 @@ export async function put (server: string, endpointPath: string, id: string | nu
  * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
  */
 export async function post (server: string, endpointPath: string, dataProvider: () => object): Promise<any> {
-  return internalRestCall(internalPost(server, `${getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`, dataProvider))
+  return internalRestCall(internalPost(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`, dataProvider))
 }

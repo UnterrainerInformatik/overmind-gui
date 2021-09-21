@@ -13,7 +13,7 @@
 <script type="js">
 // @ is an alias to /src
 import AppliancePanel from '@/components/AppliancePanel.vue'
-import { getList } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 import overmindUtils from '@/utils/overmindUtils'
 
 export default {
@@ -44,7 +44,7 @@ export default {
       this.loading = showLoadingProgress
 
       const appliances = []
-      return getList('uinf', 'appliances', 10000, 0).then((response) => {
+      return axiosUtils.getList('uinf', 'appliances', 10000, 0).then((response) => {
         response.entries.forEach(element => {
           overmindUtils.parseState(element)
           overmindUtils.parseConfig(element)

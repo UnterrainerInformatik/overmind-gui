@@ -121,7 +121,7 @@
 <script lang="js">
 import overmindUtils from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
-import { getList } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import LastTimeOnlineDisplay from '@/components/LastTimeOnlineDisplay.vue'
 import VFormBase from 'vuetify-form-base'
@@ -159,7 +159,7 @@ export default {
   methods: {
     initializeAppliance (item) {
       this.disabled = true
-      getList('uinf', 'initialize', 1, 0, `id=${item.id}`).then(() => {
+      axiosUtils.getList('uinf', 'initialize', 1, 0, `id=${item.id}`).then(() => {
         this.blink(item, 'success')
         this.disabled = false
       }).catch(() => {
