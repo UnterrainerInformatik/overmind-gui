@@ -52,7 +52,7 @@
 </style>
 
 <script lang="js">
-import { post } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 
 export default {
   name: 'SwitchPanel',
@@ -77,7 +77,7 @@ export default {
     },
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
-      return post('uinf', 'triggerEvent', () => {
+      return axiosUtils.post('uinf', 'triggerEvent', () => {
         return {
           applianceId: id,
           sensorPath: sensorPath,

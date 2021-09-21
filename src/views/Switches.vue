@@ -12,7 +12,7 @@
 // @ is an alias to /src
 import SwitchPanel from '@/components/SwitchPanel.vue'
 import jsUtils from '@/utils/jsUtils'
-import { getList, getById } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 
 export default {
   name: 'Switches',
@@ -41,9 +41,9 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return getList('uinf', 'guiSwitches', 10000, 0).then((response) => {
+      return axiosUtils.getList('uinf', 'guiSwitches', 10000, 0).then((response) => {
         response.entries.forEach(element => {
-          allPromises.push(getById('uinf', 'appliances', element.applianceId).then((resp) => {
+          allPromises.push(axiosUtils.getById('uinf', 'appliances', element.applianceId).then((resp) => {
             element.applianceName = resp.name
             descriptions.push(element)
           }))

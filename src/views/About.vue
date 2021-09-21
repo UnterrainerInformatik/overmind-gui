@@ -74,7 +74,7 @@
 
 <script lang="js">
 import { mapGetters } from 'vuex'
-import { getResponse } from '@/utils/axiosUtils'
+import axiosUtils from '@/utils/axiosUtils'
 
 export default {
   name: 'About',
@@ -94,7 +94,7 @@ export default {
   },
 
   async mounted () {
-    getResponse('uinf', 'application.version', (value) => { this.loading = value }, (response) => { this.result = response })
+    axiosUtils.getResponse('uinf', 'application.version', (value) => { this.loading = value }, (response) => { this.result = response })
   }
 }
 </script>
