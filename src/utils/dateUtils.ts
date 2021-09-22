@@ -1,5 +1,5 @@
 
-export default {
+class DateUtils {
   /**
   * Returns the week number for this date.
   * https://stackoverflow.com/questions/9045868/javascript-date-getweek
@@ -8,7 +8,7 @@ export default {
   * For 'USA, Sunday' `dowOffset` is `0`. If `dowOffset` is 1 (Monday - default), the week returned is the ISO 8601 week number.
   * @return {number}
   */
-  getWeek: function (date, dowOffset = 1) {
+  public getWeek (date, dowOffset = 1) {
     /* getWeek() was developed by Nick Baicoianu at MeanFreePath: http://www.meanfreepath.com */
     const newYear = new Date(date.getFullYear(), 0, 1)
     let day = newYear.getDay() - dowOffset // the day of week the year begins on
@@ -30,63 +30,63 @@ export default {
     } else {
       return Math.floor((daynum + day - 1) / 7)
     }
-  },
+  }
 
-  isoToDateLong: function (d, locale) {
+  public isoToDateLong (d, locale) {
     return new Date(d + 'Z').toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'numeric',
       day: 'numeric'
     })
-  },
+  }
 
-  isoToDateLongPadded: function (d, locale) {
+  public isoToDateLongPadded (d, locale) {
     return new Date(d + 'Z').toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     })
-  },
+  }
 
-  isoToDate: function (d, locale) {
+  public isoToDate (d, locale) {
     return new Date(d + 'Z').toLocaleDateString(locale)
-  },
+  }
 
-  isoToDatePadded: function (d, locale) {
+  public isoToDatePadded (d, locale) {
     return new Date(d + 'Z').toLocaleDateString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     })
-  },
+  }
 
-  isoToTime: function (d, locale) {
+  public isoToTime (d, locale) {
     return new Date(d + 'Z').toLocaleTimeString(locale)
-  },
+  }
 
-  getUtcOf: function (d) {
+  public getUtcOf (d) {
     return new Date(d.toUTCString().slice(0, -4))
-  },
+  }
 
-  getUtc: function () {
+  public getUtc () {
     return this.getUtcOf(new Date())
-  },
+  }
 
-  pad: function (d) {
+  public pad (d) {
     return ('00' + d).slice(-2)
-  },
+  }
 
-  getIsoDateOf: function (s) {
+  public getIsoDateOf (s) {
     return `${s.getFullYear()}-${this.pad(s.getMonth() + 1)}-${this.pad(s.getDate())}`
-  },
+  }
 
-  getIsoTimeOf: function (s) {
+  public getIsoTimeOf (s) {
     return `${('00' + s.getHours()).slice(-2)}:${('00' + s.getMinutes()).slice(-2)}`
-  },
+  }
 
-  roundTimeToQuater: function (time, down = true) {
+  public roundTimeToQuater (time, down = true) {
     const roundTo = 15 // minutes
     const roundDownTime = roundTo * 60 * 1000
 
@@ -95,3 +95,5 @@ export default {
       : time + (roundDownTime - (time % roundDownTime))
   }
 }
+
+export default new DateUtils()

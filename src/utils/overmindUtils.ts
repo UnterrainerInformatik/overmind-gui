@@ -1,7 +1,6 @@
 
-export default {
-
-  parseConfig: function (element) {
+class OvermindUtils {
+  public parseConfig (element) {
     if (element.config) {
       try {
         element.config = JSON.parse(element.config)
@@ -9,9 +8,9 @@ export default {
         delete element.config
       }
     }
-  },
+  }
 
-  parseState: function (element) {
+  public parseState (element) {
     if (element.state) {
       try {
         element.state = JSON.parse(element.state)
@@ -19,13 +18,13 @@ export default {
         delete element.state
       }
     }
-  },
+  }
 
-  openInNewTab: function (address) {
+  public openInNewTab (address) {
     window.open(address, '_blank')
-  },
+  }
 
-  getIconFor: function (item) {
+  public getIconFor (item) {
     switch (item.type) {
       case 'SHUTTERS':
         return 'camera'
@@ -48,14 +47,15 @@ export default {
       default:
         return 'adb'
     }
-  },
+  }
 
-  setTimeoutChain: function (functionArray, deltaMillis) {
+  public setTimeoutChain (functionArray, deltaMillis) {
     let dm = deltaMillis
     for (const func of functionArray) {
       setTimeout(func, dm)
       dm += deltaMillis
     }
   }
-
 }
+
+export default new OvermindUtils()

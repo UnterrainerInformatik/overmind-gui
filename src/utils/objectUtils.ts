@@ -1,7 +1,7 @@
 import log from './loggingUtils'
 
-export default {
-  getProperty: function (name, o) {
+class ObjectUtils {
+  public getProperty (name, o) {
     if (name === null || name === '') {
       log.warning('The property name cannot be null or empty.', 'internal')
       return null
@@ -15,9 +15,9 @@ export default {
     }
     log.warning(`Could not find property [${name}] in given object.`, 'internal')
     return null
-  },
+  }
 
-  getDeepProperty: function (path, o) {
+  public getDeepProperty (path, o) {
     if (path === null || path === '') {
       log.warning('The property path cannot be null or empty.', 'internal')
       return null
@@ -37,3 +37,5 @@ export default {
     return obj
   }
 }
+
+export default new ObjectUtils()
