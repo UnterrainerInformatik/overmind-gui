@@ -1,5 +1,14 @@
 
 class JsUtils {
+  private static instanceField: JsUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new JsUtils())
+    }
+    return this.instanceField
+  }
+
   public groupBy (inputArray, key) {
     return inputArray.reduce((accumulator, element) => {
       const v = key instanceof Function ? key(element) : element[key]
@@ -73,4 +82,4 @@ class JsUtils {
   }
 }
 
-export default new JsUtils()
+export const singleton = JsUtils.getInstance()

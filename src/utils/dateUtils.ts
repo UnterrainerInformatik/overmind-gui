@@ -1,5 +1,22 @@
-
 class DateUtils {
+  private static instanceField: DateUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new DateUtils())
+    }
+    return this.instanceField
+  }
+
+  public static readonly unitsInMinutes = [
+    1 * 60 * 24 * 365,
+    1 * 60 * 24 * 30,
+    1 * 60 * 24 * 7,
+    1 * 60 * 24,
+    1 * 60,
+    1
+  ]
+
   /**
   * Returns the week number for this date.
   * https://stackoverflow.com/questions/9045868/javascript-date-getweek
@@ -96,4 +113,4 @@ class DateUtils {
   }
 }
 
-export default new DateUtils()
+export const singleton = DateUtils.getInstance()

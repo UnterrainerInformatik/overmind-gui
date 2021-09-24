@@ -53,7 +53,7 @@
 </style>
 
 <script lang="js">
-import axiosUtils from '@/utils/axiosUtils'
+import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
   name: 'PlanPanel',
@@ -75,7 +75,7 @@ export default {
 
   methods: {
     async togglePlan (id) {
-      return axiosUtils.post('uinf', 'execute', () => {
+      return plansService.execute(() => {
         return {
           applianceId: 20,
           actorPath: 'actor',

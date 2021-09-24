@@ -1,5 +1,14 @@
 
 class OvermindUtils {
+  private static instanceField: OvermindUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new OvermindUtils())
+    }
+    return this.instanceField
+  }
+
   public parseConfig (element) {
     if (element.config) {
       try {
@@ -58,4 +67,4 @@ class OvermindUtils {
   }
 }
 
-export default new OvermindUtils()
+export const singleton = OvermindUtils.getInstance()

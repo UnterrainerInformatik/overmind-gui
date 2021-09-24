@@ -74,7 +74,7 @@
 
 <script lang="js">
 import { mapGetters } from 'vuex'
-import axiosUtils from '@/utils/axiosUtils'
+import { singleton as applicationService } from '@/utils/webservices/applicationService'
 
 export default {
   name: 'About',
@@ -94,7 +94,10 @@ export default {
   },
 
   async mounted () {
-    axiosUtils.getResponse('uinf', 'application.version', (value) => { this.loading = value }, (response) => { this.result = response })
+    applicationService.getVersion().then((response) => {
+      this.result = response
+      this.loading = false
+    })
   }
 }
 </script>

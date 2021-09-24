@@ -1,9 +1,18 @@
 import Vue from 'vue'
 import store from '@/store'
-import log from './loggingUtils'
-import objectUtils from '@/utils/objectUtils'
+import { singleton as log } from '@/utils/loggingUtils'
+import { singleton as objectUtils } from '@/utils/objectUtils'
 
-class AxiosUtils {
+export class AxiosUtils {
+  private static instanceField: AxiosUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new AxiosUtils())
+    }
+    return this.instanceField
+  }
+
   private buildBaseUrl (server: string): string {
     const config = objectUtils.getDeepProperty(server, store.getters['rest/config'].servers)
     return `${config.protocol}://${config.address}:${config.port}`
@@ -136,8 +145,8 @@ class AxiosUtils {
    * @param offset the number of pages to omit before returning the list
    * @param additionalQueryParams a string containing additional query parameters (like 'scanId=5&searchName=hallo' for example)
    */
-  public async getList (server: string, endpointPath: string, size: number, offset: number, additionalQueryParams: string): Promise<any> {
-    return this.internalRestCall(this.internalGet(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}?size=${size}&offset=${offset}${additionalQueryParams != null ? '&' + additionalQueryParams : ''}`, true))
+  public async getList (server: string, endpointPath: string, size?: number, offset?: number, additionalQueryParams?: string): Promise<any> {
+    return this.internalRestCall(this.internalGet(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}?size=${size || Number.MAX_SAFE_INTEGER}&offset=${offset || 0}${additionalQueryParams != null ? '&' + additionalQueryParams : ''}`, true))
   }
 
   /**
@@ -172,4 +181,4 @@ class AxiosUtils {
   }
 }
 
-export default new AxiosUtils()
+export const singleton = AxiosUtils.getInstance()

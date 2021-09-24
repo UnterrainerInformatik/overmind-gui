@@ -13,8 +13,8 @@
 <script type="js">
 // @ is an alias to /src
 import AppliancePanel from '@/components/AppliancePanel.vue'
-import axiosUtils from '@/utils/axiosUtils'
-import overmindUtils from '@/utils/overmindUtils'
+import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
 export default {
   name: 'Appliances',
@@ -44,7 +44,7 @@ export default {
       this.loading = showLoadingProgress
 
       const appliances = []
-      return axiosUtils.getList('uinf', 'appliances', 10000, 0).then((response) => {
+      return appliancesService.getList().then((response) => {
         response.entries.forEach(element => {
           overmindUtils.parseState(element)
           overmindUtils.parseConfig(element)

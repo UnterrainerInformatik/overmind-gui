@@ -27,7 +27,7 @@
 </style>
 
 <script lang="js">
-import dateUtils from '@/utils/dateUtils'
+import { singleton as dateUtils } from '@/utils/dateUtils'
 
 export default {
   name: 'LastTimeOnlineDisplay',
