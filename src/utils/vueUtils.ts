@@ -1,6 +1,15 @@
 import vuetify from '@/plugins/vuetify'
 
 class VueUtils {
+  private static instanceField: VueUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new VueUtils())
+    }
+    return this.instanceField
+  }
+
   public adaptive (array: object[]) {
     switch (vuetify.framework.breakpoint.name) {
       case 'xs':
@@ -98,4 +107,4 @@ class VueUtils {
   }
 }
 
-export default new VueUtils()
+export const singleton = VueUtils.getInstance()

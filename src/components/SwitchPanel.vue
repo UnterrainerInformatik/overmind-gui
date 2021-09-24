@@ -52,7 +52,7 @@
 </style>
 
 <script lang="js">
-import axiosUtils from '@/utils/axiosUtils'
+import { singleton as eventsService } from '@/utils/webservices/eventsService'
 
 export default {
   name: 'SwitchPanel',
@@ -77,7 +77,7 @@ export default {
     },
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
-      return axiosUtils.post('uinf', 'triggerEvent', () => {
+      return eventsService.trigger(() => {
         return {
           applianceId: id,
           sensorPath: sensorPath,

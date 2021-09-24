@@ -29,9 +29,10 @@
 <script type="js">
 // @ is an alias to /src
 import WindowContactPanel from '@/components/WindowContactPanel.vue'
-import jsUtils from '@/utils/jsUtils'
-import axiosUtils from '@/utils/axiosUtils'
-import overmindUtils from '@/utils/overmindUtils'
+import { singleton as jsUtils } from '@/utils/jsUtils'
+import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
+import { singleton as guiWindowContactsService } from '@/utils/webservices/guiWindowContactsService'
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
 export default {
   name: 'WindowContacts',
@@ -56,9 +57,9 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return axiosUtils.getList('uinf', 'guiWindowContacts', 10000, 0).then((response) => {
+      return guiWindowContactsService.getList().then((response) => {
         response.entries.forEach(element => {
-          allPromises.push(axiosUtils.getById('uinf', 'appliances', element.applianceId).then((resp) => {
+          allPromises.push(appliancesService.getById(element.applianceId).then((resp) => {
             overmindUtils.parseState(resp)
             overmindUtils.parseConfig(resp)
             element.appliance = resp

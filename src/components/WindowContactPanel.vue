@@ -117,7 +117,7 @@
 </style>
 
 <script lang="js">
-import overmindUtils from '@/utils/overmindUtils'
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { mapGetters } from 'vuex'
 import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import LastTimeOnlineDisplay from '@/components/LastTimeOnlineDisplay.vue'

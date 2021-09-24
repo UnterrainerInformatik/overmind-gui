@@ -1,6 +1,15 @@
 import store from '@/store'
 
 class LoggingUtils {
+  private static instanceField: LoggingUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new LoggingUtils())
+    }
+    return this.instanceField
+  }
+
   /**
    * Logs a message to the snackbar.
    * @param message the message to log
@@ -49,4 +58,4 @@ class LoggingUtils {
   }
 }
 
-export default new LoggingUtils()
+export const singleton = LoggingUtils.getInstance()

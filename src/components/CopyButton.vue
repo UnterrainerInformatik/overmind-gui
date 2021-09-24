@@ -9,7 +9,7 @@
 </style>
 
 <script lang="js">
-import loggingUtils from '@/utils/loggingUtils'
+import { singleton as log } from '@/utils/loggingUtils'
 
 export default {
   name: 'CopyButton',
@@ -34,9 +34,9 @@ export default {
 
       try {
         document.execCommand('copy')
-        loggingUtils.success('\'' + this.value + '\'', 'copyPaste')
+        log.success('\'' + this.value + '\'', 'copyPaste')
       } catch (err) {
-        loggingUtils.error('\'' + this.value + '\'', 'copyPaste')
+        log.error('\'' + this.value + '\'', 'copyPaste')
       }
 
       // Unselect the range.

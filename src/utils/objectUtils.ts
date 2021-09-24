@@ -1,6 +1,15 @@
-import log from './loggingUtils'
+import { singleton as log } from '@/utils/loggingUtils'
 
 class ObjectUtils {
+  private static instanceField: ObjectUtils
+
+  public static getInstance () {
+    if (!this.instanceField) {
+      this.instanceField || (this.instanceField = new ObjectUtils())
+    }
+    return this.instanceField
+  }
+
   public getProperty (name, o) {
     if (name === null || name === '') {
       log.warning('The property name cannot be null or empty.', 'internal')
@@ -38,4 +47,4 @@ class ObjectUtils {
   }
 }
 
-export default new ObjectUtils()
+export const singleton = ObjectUtils.getInstance()

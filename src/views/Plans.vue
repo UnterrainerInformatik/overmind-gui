@@ -33,7 +33,7 @@
 <script type="js">
 // @ is an alias to /src
 import PlanPanel from '@/components/PlanPanel.vue'
-import axiosUtils from '@/utils/axiosUtils'
+import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
   name: 'Plans',
@@ -62,7 +62,7 @@ export default {
   methods: {
     async getPlans (showLoadingProgress, size, offset, additionalParams) {
       this.loading = showLoadingProgress
-      return axiosUtils.getList('uinf', 'orderedPlans', size, offset, additionalParams + (this.onlyEnabled ? '&enabled=true' : '')).then((response) => {
+      return plansService.getOrderedPlans(size, offset, additionalParams, this.onlyEnabled).then((response) => {
         this.raw = response
         this.loading = false
       })
