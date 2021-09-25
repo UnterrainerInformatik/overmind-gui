@@ -31,7 +31,7 @@
                   >{{ item.state.temperature }}°C</span
                 >
               </v-col>
-              <v-col class="ma-0 pa-0 hidden-sm-and-down text-right">
+              <v-col class="ma-0 pa-0 hidden-xs text-right">
                 <LastTimeOnlineDisplay
                   v-if="item.lastTimeOnline"
                   :value="item.lastTimeOnline"

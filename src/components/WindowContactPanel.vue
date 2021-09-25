@@ -72,7 +72,7 @@
                   >{{ contact.appliance.state.temperature }}°C</span
                 >
               </v-col>
-              <v-col class="ma-0 pa-0 hidden-sm-and-down">
+              <v-col class="ma-0 pa-0 hidden-xs">
                 <LastTimeOnlineDisplay
                   v-if="contact.appliance && contact.appliance.lastTimeOnline"
                   :value="contact.appliance.lastTimeOnline"
