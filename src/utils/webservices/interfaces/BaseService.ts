@@ -21,6 +21,12 @@ export class BaseService implements CrudService {
     return this.axiosUtils.getList(this.server, this.endpointPath, config.size, config.offset, config.additionalQueryParams)
   }
 
+  getFirst (additionalQueryParams: string): Promise<any> {
+    return this.getList({ size: 1, additionalQueryParams }).then((response) => {
+      return response.entries.length === 0 ? null : response.entries[0]
+    })
+  }
+
   del (id: string | number): Promise<any> {
     return this.axiosUtils.del(this.server, this.endpointPath, id)
   }
