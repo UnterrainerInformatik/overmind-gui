@@ -6,6 +6,8 @@ export interface CrudService {
 
     getList (config?: GetListConfigObject): Promise<any>;
 
+    getFirst (additionalQueryParams: string): Promise<any>;
+
     del (id: string | number): Promise<any>;
 
     put (id: string | number, dataProvider: () => object): Promise<any>;
