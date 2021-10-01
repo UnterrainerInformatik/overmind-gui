@@ -103,6 +103,31 @@ class DateUtils {
     return d.toLocaleTimeString(locale)
   }
 
+  public isoToShortTime (d, locale) {
+    return this.dateToShortTime(new Date(d + 'Z'), locale)
+  }
+
+  public dateToShortTime (d, locale) {
+    return d.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  public isoToShortDateTime (d, locale) {
+    return this.isoToDatePadded(d, locale) + ' ' + this.isoToShortTime(d, locale)
+  }
+
+  public dateToShortDateTime (d, locale) {
+    return this.dateToDatePadded(d, locale) + ' ' + this.dateToShortTime(d, locale)
+  }
+
+  public isSameDay (d1, d2) {
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+  }
+
   public getUtcOf (d) {
     return new Date(d.toUTCString().slice(0, -4))
   }
