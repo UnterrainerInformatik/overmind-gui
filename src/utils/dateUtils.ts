@@ -50,7 +50,11 @@ class DateUtils {
   }
 
   public isoToDateLong (d, locale) {
-    return new Date(d + 'Z').toLocaleDateString(locale, {
+    return this.dateToDateLong(new Date(d + 'Z'), locale)
+  }
+
+  public dateToDateLong (d, locale) {
+    return d.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'numeric',
@@ -59,7 +63,11 @@ class DateUtils {
   }
 
   public isoToDateLongPadded (d, locale) {
-    return new Date(d + 'Z').toLocaleDateString(locale, {
+    return this.dateToDateLongPadded(new Date(d + 'Z'), locale)
+  }
+
+  public dateToDateLongPadded (d, locale) {
+    return d.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: '2-digit',
@@ -68,11 +76,19 @@ class DateUtils {
   }
 
   public isoToDate (d, locale) {
-    return new Date(d + 'Z').toLocaleDateString(locale)
+    return this.dateToDate(new Date(d + 'Z'), locale)
+  }
+
+  public dateToDate (d, locale) {
+    return d.toLocaleDateString(locale)
   }
 
   public isoToDatePadded (d, locale) {
-    return new Date(d + 'Z').toLocaleDateString(locale, {
+    return this.dateToDatePadded(new Date(d + 'Z'), locale)
+  }
+
+  public dateToDatePadded (d, locale) {
+    return d.toLocaleDateString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
@@ -80,7 +96,11 @@ class DateUtils {
   }
 
   public isoToTime (d, locale) {
-    return new Date(d + 'Z').toLocaleTimeString(locale)
+    return this.dateToTime(new Date(d + 'Z'), locale)
+  }
+
+  public dateToTime (d, locale) {
+    return d.toLocaleTimeString(locale)
   }
 
   public getUtcOf (d) {
