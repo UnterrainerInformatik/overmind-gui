@@ -112,6 +112,12 @@ export default {
             icon: 'home',
             key: 'pageTitle.plans',
             role: null
+          },
+          {
+            link: '/app/system',
+            icon: 'settings',
+            key: 'pageTitle.system',
+            role: null
           }
         ]
       }
