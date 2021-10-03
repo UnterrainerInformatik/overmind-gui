@@ -53,6 +53,9 @@
 				"all": "all"
 			}
 		},
+		"system": {
+			"reload": "Reload Appliances"
+		},
 		"windowContacts": {
 			"basement": "Basement",
 			"bright": "bright",
@@ -72,6 +75,7 @@
 		"plans": "Plans",
 		"preferences": "Preferences",
 		"switches": "Switches",
+		"system": "System",
 		"windowContacts": "Window-Contacts"
 	},
 	"sensors": {
@@ -102,6 +106,7 @@
 			"appliances": "Shows all available devices and their states",
 			"plans": "The plans currently running or on standby",
 			"switches": "Show switches and allow to press them",
+			"system": "Change settings and run global actions",
 			"windowContacts": "Window- and door-contacts and their respective state"
 		}
 	}

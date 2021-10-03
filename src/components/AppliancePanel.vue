@@ -160,14 +160,14 @@ export default {
     initializeAppliance (item) {
       this.disabled = true
       appliancesService.initialize(item.id).then(() => {
-        this.blink(item, 'success')
+        this.blink('success')
         this.disabled = false
       }).catch(() => {
-        this.blink(item, 'error')
+        this.blink('error')
         this.disabled = false
       })
     },
-    blink (item, color) {
+    blink (color) {
       this.color = color
       overmindUtils.setTimeoutChain([
         () => {

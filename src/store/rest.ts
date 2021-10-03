@@ -29,13 +29,13 @@ const store = {
         orderedPlans: '/orderedplans',
         execute: '/execute',
         triggerEvent: '/triggerevent',
-        setupAppliance: '/setupAppliance',
         reload: '/setup/reload',
         applianceToMappings: '/setup/appliancetomappings',
         mappingEntries: '/setup/mappingentries',
         usedSwitches: '/usedswitches',
         guiWindowContacts: '/setup/guiwindowcontacts',
-        initialize: '/setupappliance'
+        initialize: '/setupappliance',
+        reloadAppliances: '/setup/reload'
       }
     }
   }),

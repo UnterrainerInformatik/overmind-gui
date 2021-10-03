@@ -53,6 +53,9 @@
 				"all": "Alle"
 			}
 		},
+		"system": {
+			"reload": "Geräte neu laden"
+		},
 		"windowContacts": {
 			"basement": "Keller",
 			"bright": "hell",
@@ -72,6 +75,7 @@
 		"plans": "Pläne",
 		"preferences": "Einstellungen",
 		"switches": "Schalter",
+		"system": "System",
 		"windowContacts": "Fensterkontakte"
 	},
 	"sensors": {
@@ -102,6 +106,7 @@
 			"appliances": "Zeigt alle verfügbaren Geräte und deren Informationen an",
 			"plans": "Die Pläne, die zur Zeit laufen oder auf standby sind",
 			"switches": "Schalter anzeigen und betätigen",
+			"system": "Einstellungen ändern und globale Aktionen durchführen",
 			"windowContacts": "Fenster- und Türkontakte und deren momentaner Zustand"
 		}
 	}

@@ -29,6 +29,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/Appliances.vue')
   },
   {
+    path: '/app/system',
+    name: 'system',
+    component: () => import('../views/System.vue')
+  },
+  {
     path: '/app/colortest',
     name: 'colortest',
     component: () => import('../views/ColorTest.vue')
