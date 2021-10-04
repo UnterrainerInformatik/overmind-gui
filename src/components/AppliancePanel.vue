@@ -13,9 +13,11 @@
         >
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
             <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on="on">{{
-                overmindUtils.getIconFor(item)
-              }}</v-icon></template
+              <v-avatar class="ml-n4" :color="getColorFor(item)" size="42">
+                <v-icon v-bind="attrs" v-on="on">{{
+                  overmindUtils.getIconFor(item)
+                }}</v-icon>
+              </v-avatar></template
             >
             <div v-html="$t('page.appliances.' + item.type)"></div>
           </v-tooltip>
@@ -186,6 +188,17 @@ export default {
           this.color = 'warning'
         }
       ], 500)
+    },
+    getColorFor (item) {
+      switch (item.type) {
+        case 'MOTION_SENSOR':
+          return item.state.motion
+            ? 'error'
+            : 'warning'
+        case 'CONTACT_SENSOR':
+          return overmindUtils.getOpenColorFor(item)
+      }
+      return 'transparent'
     }
   }
 

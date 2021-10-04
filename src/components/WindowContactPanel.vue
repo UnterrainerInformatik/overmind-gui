@@ -15,46 +15,19 @@
           dense
           v-bind="attrs"
           v-on="on"
-          :class="'ma-0 mt-1 pa-0 darken-1 ' + getColorFor(contact)"
+          :class="'ma-0 mt-1 pa-0 darken-1 ' + overmindUtils.getOpenColorFor(contact.appliance)"
         >
           <v-tooltip
-            v-if="bright(contact)"
             top
             :open-delay="openDelay"
             :disabled="!tooltips"
           >
             <template v-slot:activator="{ on, attrs }">
               <v-icon class="ml-n2" v-bind="attrs" v-on="on"
-                >brightness_high</v-icon
+                >{{ overmindUtils.getOpenIconFor(contact.appliance) }}</v-icon
               ></template
             >
-            <div v-html="$t('page.windowContacts.bright')"></div>
-          </v-tooltip>
-          <v-tooltip
-            v-if="twilight(contact)"
-            top
-            :open-delay="openDelay"
-            :disabled="!tooltips"
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on="on"
-                >brightness_medium</v-icon
-              ></template
-            >
-            <div v-html="$t('page.windowContacts.twilight')"></div>
-          </v-tooltip>
-          <v-tooltip
-            v-if="dark(contact)"
-            top
-            :open-delay="openDelay"
-            :disabled="!tooltips"
-          >
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on="on"
-                >brightness_low</v-icon
-              >
-            </template>
-            <div v-html="$t('page.windowContacts.dark')"></div>
+            <div v-html="$t('page.windowContacts.' + overmindUtils.getOpenStateFor(contact.appliance))"></div>
           </v-tooltip>
           <v-container fluid class="ma-0 pa-0">
             <v-row class="ma-0 pa-0 align-center">
@@ -107,7 +80,7 @@
           </v-container>
         </v-toolbar>
       </template>
-      <div v-html="$t('page.windowContacts.' + getOpenStateFor(contact))"></div>
+      <div v-html="$t('page.windowContacts.' + overmindUtils.getOpenStateFor(contact.appliance))"></div>
     </v-tooltip>
   </v-card>
 </template>
@@ -150,46 +123,6 @@ export default {
   },
 
   methods: {
-    bright (contact) {
-      return contact.appliance.state.luminosityLevel === 'bright'
-    },
-    twilight (contact) {
-      return contact.appliance.state.luminosityLevel === 'twilight'
-    },
-    dark (contact) {
-      return contact.appliance.state.luminosityLevel === 'dark'
-    },
-    opened (contact) {
-      return contact.appliance.state.open && contact.appliance.state.tilt < 2
-    },
-    tilted (contact) {
-      return contact.appliance.state.open && contact.appliance.state.tilt >= 2
-    },
-    closed (contact) {
-      return !contact.appliance.state.open
-    },
-    getColorFor (contact) {
-      if (this.opened(contact)) {
-        return 'error'
-      }
-      if (this.tilted(contact)) {
-        return 'warning'
-      }
-      if (this.closed(contact)) {
-        return 'success'
-      }
-    },
-    getOpenStateFor (contact) {
-      if (this.opened(contact)) {
-        return 'opened'
-      }
-      if (this.tilted(contact)) {
-        return 'tilted'
-      }
-      if (this.closed(contact)) {
-        return 'closed'
-      }
-    }
   }
 
 }
