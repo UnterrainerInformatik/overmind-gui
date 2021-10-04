@@ -58,6 +58,54 @@ class OvermindUtils {
     }
   }
 
+  public opened (contact) {
+    return contact.state.open && contact.state.tilt < 2
+  }
+
+  public tilted (contact) {
+    return contact.state.open && contact.state.tilt >= 2
+  }
+
+  public closed (contact) {
+    return !contact.state.open
+  }
+
+  public getOpenColorFor (contact) {
+    if (this.opened(contact)) {
+      return 'error'
+    }
+    if (this.tilted(contact)) {
+      return 'warning'
+    }
+    if (this.closed(contact)) {
+      return 'success'
+    }
+  }
+
+  public getOpenIconFor (contact) {
+    switch (contact.state.luminosityLevel) {
+      case 'bright':
+        return 'brightness_high'
+      case 'twilight':
+        return 'brightness_medium'
+      case 'dark':
+        return 'brightness_low'
+    }
+    return ''
+  }
+
+  public getOpenStateFor (contact) {
+    if (this.opened(contact)) {
+      return 'opened'
+    }
+    if (this.tilted(contact)) {
+      return 'tilted'
+    }
+    if (this.closed(contact)) {
+      return 'closed'
+    }
+  }
+
   public setTimeoutChain (functionArray, deltaMillis) {
     let dm = deltaMillis
     for (const func of functionArray) {
