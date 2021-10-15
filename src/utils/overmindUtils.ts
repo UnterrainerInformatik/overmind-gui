@@ -56,6 +56,8 @@ class OvermindUtils {
       case 'RELAY_DUAL':
       case 'RELAY':
         return 'power'
+      case 'STATE_CHECKER':
+        return 'radar'
       default:
         return 'adb'
     }
