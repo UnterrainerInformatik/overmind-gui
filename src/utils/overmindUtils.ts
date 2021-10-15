@@ -37,7 +37,8 @@ class OvermindUtils {
     switch (item.type) {
       case 'SHUTTERS':
         return 'camera'
-      case 'LIGHTS':
+      case 'DIMMER':
+      case 'BULB_RGB':
         return 'lightbulb'
       case 'DEBUGGER':
         return 'bug_report'
@@ -52,7 +53,11 @@ class OvermindUtils {
       case 'MOTION_SENSOR':
         return 'vibration'
       case 'PLUG':
+      case 'RELAY_DUAL':
+      case 'RELAY':
         return 'power'
+      case 'STATE_CHECKER':
+        return 'radar'
       default:
         return 'adb'
     }

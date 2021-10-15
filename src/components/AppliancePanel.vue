@@ -197,6 +197,19 @@ export default {
             : 'warning'
         case 'CONTACT_SENSOR':
           return overmindUtils.getOpenColorFor(item)
+        case 'PLUG':
+        case 'RELAY':
+        case 'DIMMER':
+        case 'BULB_RGB':
+          return item.state.state.toLowerCase() === 'on' ? 'success' : 'error'
+        case 'RELAY_DUAL':
+          if (item.state.relay1.state.toLowerCase() === 'on' && item.state.relay2.state.toLowerCase() === 'on') {
+            return 'success'
+          }
+          if (item.state.relay1.state.toLowerCase() !== 'on' && item.state.relay2.state.toLowerCase() !== 'on') {
+            return 'error'
+          }
+          return 'warning'
       }
       return 'transparent'
     }
