@@ -44,12 +44,10 @@ export default {
 
   data: () => ({
     raw: {},
-    onlyActive: false,
-    countAll: 0,
     offset: 0,
     size: 1000,
-    viewToggle: 0,
-    onlyEnabled: true,
+    viewToggle: 1,
+    onlyEnabled: false,
     loading: true
   }),
 
