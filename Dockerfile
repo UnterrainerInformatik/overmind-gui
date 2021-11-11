@@ -4,9 +4,8 @@ COPY ./package.json ./
 
 RUN apk add --update python3 make g++ && \
     npm install -g npm@8.1.3 && \
-    npm install -g node-gyp
-
-RUN npm install
+    npm install -g node-gyp && \
+    npm install
 COPY . .
 RUN npm run build
 
