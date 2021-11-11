@@ -1,8 +1,7 @@
 FROM node:lts-alpine as builder
 WORKDIR '/app'
 COPY ./package.json ./
-RUN apk add --update python make g++\
-   && rm -rf /var/cache/apk/*
+RUN apk add --update python3 make g++
 RUN npm install 
 COPY . . 
 RUN npm run build
