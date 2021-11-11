@@ -1,10 +1,8 @@
-FROM node:lts-alpine as builder
+FROM node:12-alpine as builder
 WORKDIR '/app'
 COPY ./package.json ./
-RUN apk add --update python make g++\
-   && rm -rf /var/cache/apk/*
-RUN npm install 
-COPY . . 
+
+COPY . .
 RUN npm run build
 
 FROM nginx:stable-alpine
