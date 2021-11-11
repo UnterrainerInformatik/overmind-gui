@@ -1,8 +1,8 @@
 <template>
   <div class="home">
-    <v-container fluid class="ma-0 pa-0">
-      <span v-for="(item, i) in filtered" :key="i">
-        <SwitchPanel :item="item" @reload="getUsedSwitches"></SwitchPanel>
+    <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
+      <span v-for="(item, i) in items" :key="i">
+          <KioskSwitchPanel :item="item" @reload="getUsedSwitches"></KioskSwitchPanel>
       </span>
     </v-container>
   </div>
@@ -10,22 +10,23 @@
 
 <script type="js">
 // @ is an alias to /src
-import SwitchPanel from '@/components/SwitchPanel.vue'
+import { mapActions } from 'vuex'
+import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import { singleton as jsUtils } from '@/utils/jsUtils'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as guiSwitchesService } from '@/utils/webservices/guiSwitchesService'
 
 export default {
-  name: 'Switches',
+  name: 'kioskOverview',
 
   components: {
-    SwitchPanel
+    KioskSwitchPanel
   },
 
   data: () => ({
     raw: {},
     filtered: {},
-    onlyActive: false,
+    items: [],
     loading: true
   }),
 
@@ -61,13 +62,27 @@ export default {
           }
           appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
           this.filtered = appliances
+        }).then(() => {
+          this.items = []
+          for (const item of this.filtered) {
+            for (const mode of item.modes) {
+              const newItem = Object.assign({}, item)
+              delete newItem.modes
+              newItem.mode = mode
+              this.items.push(newItem)
+            }
+          }
           this.loading = false
         })
       })
-    }
+    },
+    ...mapActions('gui', {
+      kioskMode: 'kioskMode'
+    })
   },
 
   mounted () {
+    this.kioskMode(true)
     this.getUsedSwitches(true)
     this.interval = setInterval(() => this.getUsedSwitches(false), 10000)
   }

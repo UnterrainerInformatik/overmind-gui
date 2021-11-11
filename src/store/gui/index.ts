@@ -11,12 +11,16 @@ const store = {
   },
 
   state: () => ({
+    kioskMode: false,
     modalLoading: false,
     drawerVisible: false,
     lastMdAndUp: true
   }),
 
   mutations: {
+    kioskMode (state, value) {
+      state.kioskMode = value
+    },
     modalLoading (state, value) {
       state.modalLoading = value
     },
@@ -32,6 +36,10 @@ const store = {
   },
 
   actions: {
+    kioskMode (context, value) {
+      context.commit('kioskMode', value)
+      return Promise.resolve()
+    },
     modalLoading (context, value) {
       context.commit('modalLoading', value)
       return Promise.resolve()
@@ -53,6 +61,9 @@ const store = {
   },
 
   getters: {
+    kioskMode: state => {
+      return state.kioskMode
+    },
     modalLoading: state => {
       return state.modalLoading
     },

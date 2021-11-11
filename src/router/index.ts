@@ -9,6 +9,11 @@ const routes: Array<RouteConfig> = [
     redirect: '/app/switches'
   },
   {
+    path: '/app/kioskoverview',
+    name: 'kioskOverview',
+    component: () => import('../views/KioskOverview.vue')
+  },
+  {
     path: '/app/plans',
     name: 'plans',
     component: () => import('../views/Plans.vue')

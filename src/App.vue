@@ -2,6 +2,7 @@
   <div id="main">
     <v-app>
       <v-navigation-drawer
+        v-if="!kioskMode"
         v-cloak
         color="secondary"
         app
@@ -13,7 +14,15 @@
         <NavDrawer></NavDrawer>
       </v-navigation-drawer>
 
-      <v-app-bar v-cloak app clipped-left short dense color="primary">
+      <v-app-bar
+        v-cloak
+        app
+        clipped-left
+        short
+        dense
+        v-if="!kioskMode"
+        color="primary"
+      >
         <v-app-bar-nav-icon
           @click="toggleDrawerVisible"
           class="hidden-md-and-up"
@@ -98,6 +107,9 @@ export default {
     },
     ...mapGetters({
       lastMdAndUp: 'lastMdAndUp'
+    }),
+    ...mapGetters('gui', {
+      kioskMode: 'kioskMode'
     }),
     ...mapGetters('gui/tooltips', {
       tooltips: 'tooltips',
