@@ -1,11 +1,12 @@
-FROM node:lts-alpine as builder
+FROM node:17-alpine as builder
 WORKDIR '/app'
 COPY ./package.json ./
 
-RUN apk add --update python3 make g++ && \
-    npm install -g npm@8.1.3 && \
-    npm install -g node-gyp && \
-    npm install
+RUN apk add --update python3 make g++
+RUN npm install -g npm@8.1.3
+RUN npm install -g node-gyp
+RUN npm install
+
 COPY . .
 RUN npm run build
 
