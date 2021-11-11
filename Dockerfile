@@ -1,10 +1,6 @@
-FROM node:17-alpine as builder
+FROM node:12-alpine as builder
 WORKDIR '/app'
 COPY ./package.json ./
-
-RUN apk add --update python2 make g++
-RUN npm install -g node-gyp
-RUN npm install
 
 COPY . .
 RUN npm run build
