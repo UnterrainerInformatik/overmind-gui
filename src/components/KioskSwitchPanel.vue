@@ -1,12 +1,21 @@
 <template>
-  <v-card
-    class="ma-1 pa-0 darken-1 success"
-    max-width="180"
-    @click="triggerEvent(item.id, item.mode.sensorPath, item.mode.eventPath)"
-  >
-    <v-card-title class="">{{ item.name }}</v-card-title>
-    <v-card-text>{{ item.mode.description }}</v-card-text>
-  </v-card>
+  <v-hover v-slot="{ hover }">
+    <v-card
+      outlined
+      :class="'ma-1 pa-0 success ' + (hover ? '' : 'darken-1')"
+      max-width="180"
+    >
+      <v-card
+        class="ma-0 black noFocus"
+        @click="
+          triggerEvent(item.id, item.mode.sensorPath, item.mode.eventPath)
+        "
+      >
+        <v-card-title class="">{{ item.name }}</v-card-title>
+        <v-card-text>{{ item.mode.description }}</v-card-text>
+      </v-card>
+    </v-card>
+  </v-hover>
 </template>
 
 <style lang="scss">
@@ -53,3 +62,11 @@ export default {
 
 }
 </script>
+
+<style lang="scss">
+@import 'index.scss';
+
+.noFocus:focus::before {
+  opacity: 0 !important;
+}
+</style>
