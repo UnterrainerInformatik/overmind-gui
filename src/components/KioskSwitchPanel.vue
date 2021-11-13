@@ -39,7 +39,6 @@ export default {
     },
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
-      /*
       return eventsService.trigger(() => {
         return {
           applianceId: id,
@@ -49,7 +48,6 @@ export default {
       }).then(() => {
         this.$emit('reload', true)
       })
-      */
     }
   }
 
