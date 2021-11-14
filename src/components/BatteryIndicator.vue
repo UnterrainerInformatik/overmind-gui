@@ -5,7 +5,7 @@
     v-if="level"
     :class="
       'ma-0 pa-0 mr-1 ' +
-        getBatteryColor(level)
+        getBatteryColor(Math.round(level))
     "
     @click="() => {}"
   >

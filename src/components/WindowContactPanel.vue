@@ -15,19 +15,25 @@
           dense
           v-bind="attrs"
           v-on="on"
-          :class="'ma-0 mt-1 pa-0 darken-1 ' + overmindUtils.getOpenColorFor(contact.appliance)"
+          :class="
+            'ma-0 mt-1 pa-0 darken-1 ' +
+            overmindUtils.getOpenColorFor(contact.appliance)
+          "
         >
-          <v-tooltip
-            top
-            :open-delay="openDelay"
-            :disabled="!tooltips"
-          >
+          <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
             <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on="on"
-                >{{ overmindUtils.getOpenIconFor(contact.appliance) }}</v-icon
-              ></template
+              <v-icon class="ml-n2" v-bind="attrs" v-on="on">{{
+                overmindUtils.getOpenIconFor(contact.appliance)
+              }}</v-icon></template
             >
-            <div v-html="$t('page.windowContacts.' + overmindUtils.getOpenStateFor(contact.appliance))"></div>
+            <div
+              v-html="
+                $t(
+                  'page.windowContacts.' +
+                    overmindUtils.getOpenStateFor(contact.appliance)
+                )
+              "
+            ></div>
           </v-tooltip>
           <v-container fluid class="ma-0 pa-0">
             <v-row class="ma-0 pa-0 align-center">
@@ -38,11 +44,15 @@
                 <span
                   v-if="
                     contact.appliance &&
-                      contact.appliance.state &&
-                      contact.appliance.state.temperature
+                    contact.appliance.state &&
+                    contact.appliance.state.temperatures &&
+                    contact.appliance.state.temperatures[0] &&
+                    contact.appliance.state.temperatures[0].temperature
                   "
                   class="text-button"
-                  >{{ contact.appliance.state.temperature }}°C</span
+                  >{{
+                    contact.appliance.state.temperatures[0].temperature
+                  }}°C</span
                 >
               </v-col>
               <v-col class="ma-0 pa-0 hidden-xs">
@@ -55,18 +65,25 @@
                 <BatteryIndicator
                   v-if="
                     contact.appliance &&
-                      contact.appliance.state &&
-                      contact.appliance.state.batteryLevel
+                    contact.appliance.state &&
+                    contact.appliance.state.batteries &&
+                    contact.appliance.state.batteries[0] &&
+                    contact.appliance.state.batteries[0].batteryLevel
                   "
-                  :level="contact.appliance.state.batteryLevel"
+                  :level="
+                    Math.round(
+                      contact.appliance.state.batteries[0].batteryLevel *
+                        100
+                    )
+                  "
                 ></BatteryIndicator>
                 <v-btn
                   fab
                   x-small
                   v-if="
                     contact.appliance &&
-                      contact.appliance.config &&
-                      contact.appliance.config.address
+                    contact.appliance.config &&
+                    contact.appliance.config.address
                   "
                   class="ma-0 pa-0 warning"
                   @click="
@@ -80,7 +97,14 @@
           </v-container>
         </v-toolbar>
       </template>
-      <div v-html="$t('page.windowContacts.' + overmindUtils.getOpenStateFor(contact.appliance))"></div>
+      <div
+        v-html="
+          $t(
+            'page.windowContacts.' +
+              overmindUtils.getOpenStateFor(contact.appliance)
+          )
+        "
+      ></div>
     </v-tooltip>
   </v-card>
 </template>

@@ -8,7 +8,7 @@
         <v-expansion-panel-header
           :class="
             'my-0 py-0 secondary ' +
-              (this.$vuetify.theme.dark ? 'darken-1' : '')
+            (this.$vuetify.theme.dark ? 'darken-1' : '')
           "
         >
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
@@ -41,8 +41,15 @@
               </v-col>
               <v-col cols="2" class="ma-0 pa-0 text-right">
                 <BatteryIndicator
-                  v-if="item.state && item.state.batteryLevel"
-                  :level="item.state.batteryLevel"
+                  v-if="
+                    item.state &&
+                    item.state.batteries &&
+                    item.state.batteries[0] &&
+                    item.state.batteries[0].batteryLevel
+                  "
+                  :level="
+                    Math.round(item.state.batteries[0].batteryLevel * 100)
+                  "
                 ></BatteryIndicator>
               </v-col>
             </v-row>
@@ -56,7 +63,7 @@
               <v-expansion-panel-header
                 :class="
                   'my-0 py-0 secondary ' +
-                    (this.$vuetify.theme.dark ? 'darken-2' : 'darken-1')
+                  (this.$vuetify.theme.dark ? 'darken-2' : 'darken-1')
                 "
               >
                 <span class="my-1">
@@ -86,7 +93,7 @@
               <v-expansion-panel-content
                 :class="
                   'mt-1 secondary' +
-                    (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
+                  (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
                 "
               >
                 <v-row>
@@ -192,7 +199,10 @@ export default {
     getColorFor (item) {
       switch (item.type) {
         case 'MOTION_SENSOR':
-          return item.state.motion
+          if (!item || !item.state || !item.state.motions || !item.state.motions[0] || !item.state.motions[0].motion) {
+            return 'warning'
+          }
+          return item.state.motions[0].motion
             ? 'error'
             : 'warning'
         case 'CONTACT_SENSOR':
@@ -201,12 +211,18 @@ export default {
         case 'RELAY':
         case 'DIMMER':
         case 'BULB_RGB':
-          return item.state.state.toLowerCase() === 'on' ? 'success' : 'error'
+          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
+            return 'error'
+          }
+          return item.state.relays[0].state.toLowerCase() === 'on' ? 'success' : 'error'
         case 'RELAY_DUAL':
-          if (item.state.relay1.state.toLowerCase() === 'on' && item.state.relay2.state.toLowerCase() === 'on') {
+          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !!item.state.relays[1].state) {
+            return 'error'
+          }
+          if (item.state.relays[0].state.toLowerCase() === 'on' && item.state.relays[1].state.toLowerCase() === 'on') {
             return 'success'
           }
-          if (item.state.relay1.state.toLowerCase() !== 'on' && item.state.relay2.state.toLowerCase() !== 'on') {
+          if (item.state.relays[0].state.toLowerCase() !== 'on' && item.state.relays[1].state.toLowerCase() !== 'on') {
             return 'error'
           }
           return 'warning'

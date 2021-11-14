@@ -36,14 +36,19 @@
 			"web": "Webpage"
 		},
 		"appliances": {
+			"BULB_RGB": "RGB-Bulb",
 			"CONTACT_SENSOR": "Contact-Sensor",
 			"DEBUGGER": "Debugger",
+			"DIMMER": "Dimmer",
 			"GROUP_PARALLEL": "Parallel Group",
 			"LIGHTS": "Lights",
 			"MOTION_SENSOR": "Motion-Sensor",
 			"PLAN_MANIPULATOR": "Plan-Manipulator",
 			"PLUG": "Plug",
+			"RELAY": "Relay",
+			"RELAY_DUAL": "2-Relay",
 			"SHUTTERS": "Shutters",
+			"STATE_CHECKER": "State-Checker",
 			"SWITCH": "Switch",
 			"undefined": "Undefined"
 		},
