@@ -42,6 +42,7 @@ class OvermindUtils {
         return 'lightbulb'
       case 'DEBUGGER':
         return 'bug_report'
+      case 'GROUP_SERIAL':
       case 'GROUP_PARALLEL':
         return 'groups'
       case 'PLAN_MANIPULATOR':
@@ -64,15 +65,15 @@ class OvermindUtils {
   }
 
   public opened (contact) {
-    return contact.state.open && contact.state.tilt < 2
+    return contact && contact.state && contact.state.closures && contact.state.closures[0] && contact.state.closures[0].open && contact.state.closures[0].tilt < 2
   }
 
   public tilted (contact) {
-    return contact.state.open && contact.state.tilt >= 2
+    return contact && contact.state && contact.state.closures && contact.state.closures[0] && contact.state.closures[0].open && contact.state.closures[0].tilt >= 2
   }
 
   public closed (contact) {
-    return !contact.state.open
+    return !contact || !contact.state || !contact.state.closures || !contact.state.closures[0] || !contact.state.closures[0].open
   }
 
   public getOpenColorFor (contact) {
@@ -88,7 +89,10 @@ class OvermindUtils {
   }
 
   public getOpenIconFor (contact) {
-    switch (contact.state.luminosityLevel) {
+    if (!contact.state.luminosities || !contact.state.luminosities[0]) {
+      return ''
+    }
+    switch (contact.state.luminosities[0].luminosityLevel) {
       case 'bright':
         return 'brightness_high'
       case 'twilight':
