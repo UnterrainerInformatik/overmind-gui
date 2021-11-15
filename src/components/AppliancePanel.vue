@@ -28,9 +28,14 @@
               </v-col>
               <v-col class="ma-0 pa-0">
                 <span
-                  v-if="item.state && item.state.temperature"
+                  v-if="
+                    item.state &&
+                    item.state.temperatures &&
+                    item.state.temperatures[0] &&
+                    item.state.temperatures[0].temperature
+                  "
                   class="text-button"
-                  >{{ item.state.temperature }}°C</span
+                  >{{ item.state.temperatures[0].temperature }}°C</span
                 >
               </v-col>
               <v-col class="ma-0 pa-0 hidden-xs text-right">

@@ -20,21 +20,20 @@
             overmindUtils.getOpenColorFor(contact.appliance)
           "
         >
-          <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
-            <template v-slot:activator="{ on, attrs }">
-              <v-icon class="ml-n2" v-bind="attrs" v-on="on">{{
-                overmindUtils.getOpenIconFor(contact.appliance)
-              }}</v-icon></template
-            >
-            <div
-              v-html="
-                $t(
-                  'page.windowContacts.' +
-                    overmindUtils.getOpenStateFor(contact.appliance)
-                )
-              "
-            ></div>
-          </v-tooltip>
+          <v-icon class="ml-n2">{{
+            overmindUtils.getOpenIconFor(contact.appliance)
+          }}</v-icon>
+          <v-icon
+            v-if="
+              contact.appliance &&
+              contact.appliance.state &&
+              contact.appliance.state.luminosities &&
+              contact.appliance.state.luminosities[0] &&
+              contact.appliance.state.luminosities[0].luminosityLevel
+            "
+            class="ml-n2"
+            >{{ overmindUtils.getLuminosityIconFor(contact.appliance) }}</v-icon
+          >
           <v-container fluid class="ma-0 pa-0">
             <v-row class="ma-0 pa-0 align-center">
               <v-col class="ma-0 pa-0">
@@ -72,8 +71,7 @@
                   "
                   :level="
                     Math.round(
-                      contact.appliance.state.batteries[0].batteryLevel *
-                        100
+                      contact.appliance.state.batteries[0].batteryLevel * 100
                     )
                   "
                 ></BatteryIndicator>
@@ -102,6 +100,9 @@
           $t(
             'page.windowContacts.' +
               overmindUtils.getOpenStateFor(contact.appliance)
+          ) + ' - ' + $t(
+            'page.windowContacts.' +
+              overmindUtils.getLuminosityLevelFor(contact.appliance)
           )
         "
       ></div>
