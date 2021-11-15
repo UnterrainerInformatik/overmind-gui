@@ -2,7 +2,7 @@
   <v-hover v-slot="{ hover }">
     <v-card
       outlined
-      :class="'ma-1 pa-0 success ' + (hover ? '' : 'darken-1')"
+      :class="'ma-2 pa-0 success ' + (hover ? '' : 'darken-1')"
       max-width="180"
     >
       <v-card

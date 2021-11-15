@@ -68,6 +68,7 @@
 			"dark": "dark",
 			"floor": "Floor",
 			"groundFloor": "Ground Floor",
+			"none": "no data available",
 			"opened": "opened",
 			"tilted": "tilted",
 			"twilight": "twilight"

@@ -88,17 +88,36 @@ class OvermindUtils {
     }
   }
 
-  public getOpenIconFor (contact) {
-    if (!contact.state.luminosities || !contact.state.luminosities[0]) {
-      return ''
+  public getLuminosityLevelFor (contact) {
+    if (!contact || !contact.state || !contact.state.luminosities || !contact.state.luminosities[0] || !contact.state.luminosities[0].luminosityLevel) {
+      return 'none'
     }
-    switch (contact.state.luminosities[0].luminosityLevel) {
+    return contact.state.luminosities[0].luminosityLevel
+  }
+
+  public getLuminosityIconFor (contact) {
+    switch (this.getLuminosityLevelFor(contact)) {
+      case 'none':
+        return ''
       case 'bright':
-        return 'brightness_high'
+        return 'brightness_1'
       case 'twilight':
-        return 'brightness_medium'
+        return 'brightness_2'
       case 'dark':
-        return 'brightness_low'
+        return 'brightness_3'
+    }
+    return ''
+  }
+
+  public getOpenIconFor (contact) {
+    if (this.opened(contact)) {
+      return 'brightness_high'
+    }
+    if (this.tilted(contact)) {
+      return 'brightness_medium'
+    }
+    if (this.closed(contact)) {
+      return 'brightness_low'
     }
     return ''
   }
@@ -113,6 +132,7 @@ class OvermindUtils {
     if (this.closed(contact)) {
       return 'closed'
     }
+    return ''
   }
 
   public setTimeoutChain (functionArray, deltaMillis) {
