@@ -2,17 +2,21 @@
   <v-hover v-slot="{ hover }">
     <v-card
       outlined
-      :class="'ma-2 pa-0 success ' + (hover ? '' : 'darken-1')"
+      :class="'ma-1 pa-0 success ' + (hover ? '' : 'darken-1')"
       max-width="180"
     >
       <v-card
-        class="ma-0 black noFocus"
+        :class="'elevation-0 ma-1 noFocus' + ($vuetify.theme.dark ? (' grey darken-' + (hover ? '3' : '4')) : (' grey lighten-' + (hover ? '2' : '1')))"
         @click="
           triggerEvent(item.id, item.mode.sensorPath, item.mode.eventPath)
         "
       >
-        <v-card-title class="">{{ item.name }}</v-card-title>
-        <v-card-text>{{ item.mode.description }}</v-card-text>
+        <v-card-title
+          ><v-avatar class="" :color="'success darken-' + (hover ? '0' : '1')" size="42">
+            <v-icon>power_settings_new</v-icon>
+          </v-avatar>
+        </v-card-title>
+        <v-card-text :class="$vuetify.theme.dark ? 'grey--text' : 'black--text'">{{ item.mode.description }}</v-card-text>
       </v-card>
     </v-card>
   </v-hover>

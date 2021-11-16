@@ -1,25 +1,15 @@
 <template>
-  <v-row class="ma-0 pa-0 justify-end">
-    <v-col class="ma-0 pa-0">
-      <v-row class="ma-0 pa-0 justify-end">
-        <v-col cols="8" md="4" lg="3" class="ma-0 pa-0 text-left">
-          <span class="text-caption font-weight-bold text-no-wrap"
-            >{{ $t('sensors.lastTimeOnline') }}:</span
-          >
-        </v-col>
-      </v-row>
-      <v-row class="ma-0 pa-0 justify-end">
-        <v-col cols="8" md="4" lg="3" class="ma-0 pa-0 text-left text-no-wrap">
-          <span class="text-caption">
-            {{ dateUtils.isoToDatePadded(value, $i18n.locale) }}</span
-          >
-          <span class="text-caption">
-            ({{ dateUtils.isoToTime(value, $i18n.locale) }})</span
-          >
-        </v-col>
-      </v-row>
-    </v-col>
-  </v-row>
+<v-card :class="'success elevation-0 ' + ($vuetify.theme.dark ? 'darken-1' : 'darken-3')" width="70" min-width="70" outlined>
+  <v-card :class="'ma-0 secondary text-center elevation-0 ' + ($vuetify.theme.dark ? 'darken-1 text--lighten-1' : 'text--darken-3') + ' grey--text'">
+    <span class="text-caption text-no-wrap">{{
+      dateUtils.isoToDatePadded(value, $i18n.locale)
+    }}</span>
+    <br />
+    <span class="text-caption text-no-wrap">
+      {{ dateUtils.isoToTime(value, $i18n.locale) }}</span
+    >
+  </v-card>
+</v-card>
 </template>
 
 <style lang="scss">

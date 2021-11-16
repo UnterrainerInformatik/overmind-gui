@@ -8,7 +8,7 @@
         <v-expansion-panel-header
           :class="
             'my-0 py-0 secondary ' +
-            (this.$vuetify.theme.dark ? 'darken-1' : '')
+            ($vuetify.theme.dark ? 'darken-1' : '')
           "
         >
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
@@ -38,7 +38,7 @@
                   >{{ item.state.temperatures[0].temperature }}°C</span
                 >
               </v-col>
-              <v-col class="ma-0 pa-0 hidden-xs text-right">
+              <v-col cols="2" class="ma-0 pa-0 hidden-xs text-right">
                 <LastTimeOnlineDisplay
                   v-if="item.lastTimeOnline"
                   :value="item.lastTimeOnline"
@@ -61,14 +61,14 @@
           </v-container>
         </v-expansion-panel-header>
         <v-expansion-panel-content
-          :class="'secondary' + (this.$vuetify.theme.dark ? '' : ' lighten-1')"
+          :class="'secondary' + ($vuetify.theme.dark ? '' : ' lighten-1')"
         >
           <v-expansion-panels accordion hover class="ma-0 pa-0 mt-2">
             <v-expansion-panel class="ma-0 pa-0">
               <v-expansion-panel-header
                 :class="
                   'my-0 py-0 secondary ' +
-                  (this.$vuetify.theme.dark ? 'darken-2' : 'darken-1')
+                  ($vuetify.theme.dark ? 'darken-2' : 'darken-1')
                 "
               >
                 <span class="my-1">
@@ -98,7 +98,7 @@
               <v-expansion-panel-content
                 :class="
                   'mt-1 secondary' +
-                  (this.$vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
+                  ($vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
                 "
               >
                 <v-row>
