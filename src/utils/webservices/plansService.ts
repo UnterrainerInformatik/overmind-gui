@@ -4,7 +4,7 @@ export class PlansService extends BaseService {
   private static instanceField: PlansService
 
   constructor () {
-    super('uinf', 'appliances')
+    super('uinf', 'plans')
   }
 
   public static getInstance () {
@@ -20,6 +20,12 @@ export class PlansService extends BaseService {
 
   public async getOrderedPlans (size?: number, offset?: number, additionalQueryParams?: string, enabledOnly?: boolean) {
     return this.axiosUtils.getList(this.server, 'orderedPlans', size, offset, additionalQueryParams + (enabledOnly ? '&enabled=true' : ''))
+  }
+
+  public async isPlanEnabled (id: number) {
+    return this.getById(id).then((response) => {
+      return response && response.enabled
+    })
   }
 }
 

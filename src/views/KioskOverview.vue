@@ -1,9 +1,13 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
-      <span v-for="(item, i) in items" :key="i">
-          <KioskSwitchPanel :item="item" @reload="getUsedSwitches"></KioskSwitchPanel>
-      </span>
+      <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
+      <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
     </v-container>
   </div>
 </template>
@@ -12,9 +16,6 @@
 // @ is an alias to /src
 import { mapActions } from 'vuex'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
-import { singleton as jsUtils } from '@/utils/jsUtils'
-import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
-import { singleton as guiSwitchesService } from '@/utils/webservices/guiSwitchesService'
 
 export default {
   name: 'kioskOverview',
@@ -24,10 +25,13 @@ export default {
   },
 
   data: () => ({
-    raw: {},
-    filtered: {},
-    items: [],
-    loading: true
+    allHereGoneItem: {},
+    allAsleepItem: {},
+    shuttersGroundFloor: {},
+    tv: {},
+    snuggling: {},
+    bioTrash: {},
+    patioOpened: {}
   }),
 
   watch: {
@@ -37,44 +41,56 @@ export default {
   },
 
   methods: {
-    async getUsedSwitches (showLoadingProgress) {
-      this.loading = showLoadingProgress
-      const descriptions = []
-      const allPromises = []
-      return guiSwitchesService.getList().then((response) => {
-        response.entries.forEach(element => {
-          allPromises.push(appliancesService.getById(element.applianceId).then((resp) => {
-            element.applianceName = resp.name
-            descriptions.push(element)
-          }))
-        })
-      }).then(() => {
-        Promise.allSettled(allPromises).then(() => {
-          descriptions.sort((a, b) => (a.applianceName > b.applianceName) ? 1 : (a.order > b.order) ? 1 : -1)
-          const appliances = []
-          const grouped = jsUtils.groupBy(descriptions, 'applianceId')
-          for (const [key, value] of Object.entries(grouped)) {
-            if (value.length === 0) {
-              continue
-            }
-            value.sort((a, b) => (a.description > b.description) ? 1 : -1)
-            appliances.push({ id: key, name: value[0].applianceName, modes: value })
-          }
-          appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
-          this.filtered = appliances
-        }).then(() => {
-          this.items = []
-          for (const item of this.filtered) {
-            for (const mode of item.modes) {
-              const newItem = Object.assign({}, item)
-              delete newItem.modes
-              newItem.mode = mode
-              this.items.push(newItem)
-            }
-          }
-          this.loading = false
-        })
-      })
+    async reload () {
+      this.allHereGoneItem = {
+        planId: 22,
+        sensorPath: 'switch1',
+        eventPath: 'off.click',
+        description: 'Alle weg / da',
+        enabledPlanForActivation: 65
+      }
+      this.allAsleepItem = {
+        planId: 72,
+        sensorPath: 'switch1',
+        eventPath: 'off.click',
+        description: 'Alle schlafen',
+        enabledPlanForActivation: 70
+      }
+      this.shuttersGroundFloor = {
+        planId: 73,
+        sensorPath: 'switch2',
+        eventPath: 'off.click',
+        description: 'Rollos Erdgeschoß runter',
+        enabledPlanForActivation: 64
+      }
+      this.tv = {
+        planId: 73,
+        sensorPath: 'switch1',
+        eventPath: 'off.click',
+        description: 'TV',
+        enabledPlanForActivation: 73
+      }
+      this.snuggling = {
+        planId: 12,
+        sensorPath: 'switch1',
+        eventPath: 'on.click',
+        description: 'Kinderzimmer kuscheln',
+        enabledPlanForActivation: 59
+      }
+      this.bioTrash = {
+        planId: 73,
+        sensorPath: 'switch1',
+        eventPath: 'on.holdStart',
+        description: 'Biomüll auf',
+        enabledPlanForActivation: 71
+      }
+      this.patioOpened = {
+        planId: 71,
+        sensorPath: 'switch1',
+        eventPath: 'on.click',
+        description: 'Terrassentüre auf',
+        enabledPlanForActivation: 66
+      }
     },
     ...mapActions('gui', {
       kioskMode: 'kioskMode'
@@ -83,8 +99,7 @@ export default {
 
   mounted () {
     this.kioskMode(true)
-    this.getUsedSwitches(true)
-    this.interval = setInterval(() => this.getUsedSwitches(false), 10000)
+    this.reload()
   }
 }
 </script>

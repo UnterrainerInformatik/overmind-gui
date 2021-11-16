@@ -69,7 +69,7 @@ export default {
 
   mounted () {
     this.getPlans(true, this.size, this.offset)
-    this.interval = setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
+    setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
   }
 }
 </script>
