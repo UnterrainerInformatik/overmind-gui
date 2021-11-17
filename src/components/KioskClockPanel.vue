@@ -1,14 +1,12 @@
 <template>
   <KioskPanel borderColor="secondary">
     <template v-slot:title>
-      <v-avatar color="secondary"
-        size="42"
-      >
+      <v-avatar color="secondary" size="42">
         <v-icon>schedule</v-icon>
       </v-avatar>
     </template>
     <template>
-      {{ dateUtils.dateToDateLong(date, $i18n.locale) }}<br>
+      {{ dateUtils.dateToDateLong(date, $i18n.locale) }}<br />
       {{ dateUtils.dateToTime(date, $i18n.locale) }}
     </template>
   </KioskPanel>
