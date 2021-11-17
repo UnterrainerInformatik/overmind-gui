@@ -9,6 +9,8 @@
           : (enabled ? 'error ' : 'success ') + (hover ? '' : 'darken-1'))
       "
       max-width="180px"
+      v-bind="$attrs"
+      v-on="$listeners"
     >
       <v-card
         :class="
