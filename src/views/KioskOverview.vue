@@ -1,6 +1,7 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
+      <KioskClockPanel></KioskClockPanel>
       <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
@@ -16,11 +17,14 @@
 // @ is an alias to /src
 import { mapActions } from 'vuex'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
+import KioskClockPanel from '@/components/KioskClockPanel.vue'
+import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
   name: 'kioskOverview',
 
   components: {
+    KioskClockPanel,
     KioskSwitchPanel
   },
 
@@ -47,51 +51,66 @@ export default {
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'Alle weg / da',
-        enabledPlanForActivation: 65
+        isEnabled: () => {
+          return plansService.isPlanEnabled(65)
+        }
       }
       this.allAsleepItem = {
         planId: 72,
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'Alle schlafen',
-        enabledPlanForActivation: 70
+        isEnabled: () => {
+          return plansService.isPlanEnabled(70)
+        }
       }
       this.shuttersGroundFloor = {
         planId: 73,
         sensorPath: 'switch2',
         eventPath: 'off.click',
         description: 'Rollos Erdgeschoß runter',
-        enabledPlanForActivation: 64
+        isEnabled: () => {
+          return plansService.isPlanEnabled(64)
+        }
       }
       this.tv = {
         planId: 73,
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'TV',
-        enabledPlanForActivation: 73
+        isEnabled: () => {
+          return plansService.isPlanEnabled(73)
+        }
       }
       this.snuggling = {
         planId: 12,
         sensorPath: 'switch1',
         eventPath: 'on.click',
         description: 'Kinderzimmer kuscheln',
-        enabledPlanForActivation: 59
+        isEnabled: () => {
+          return plansService.isPlanEnabled(59)
+        }
       }
       this.bioTrash = {
         planId: 73,
         sensorPath: 'switch1',
         eventPath: 'on.holdStart',
         description: 'Biomüll auf',
-        enabledPlanForActivation: 71
+        isEnabled: () => {
+          return plansService.isPlanEnabled(71)
+        }
       }
       this.patioOpened = {
         planId: 71,
         sensorPath: 'switch1',
         eventPath: 'on.click',
         description: 'Terrassentüre auf',
-        enabledPlanForActivation: 66
+        isEnabled: () => {
+          return plansService.isPlanEnabled(66)
+        }
       }
     },
+
     ...mapActions('gui', {
       kioskMode: 'kioskMode'
     })
