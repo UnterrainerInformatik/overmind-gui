@@ -2,6 +2,7 @@
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <KioskClockPanel></KioskClockPanel>
+      <KioskWeatherPanel></KioskWeatherPanel>
       <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
@@ -18,6 +19,7 @@
 import { mapActions } from 'vuex'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
+import KioskWeatherPanel from '@/components/KioskWeatherPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -25,6 +27,7 @@ export default {
 
   components: {
     KioskClockPanel,
+    KioskWeatherPanel,
     KioskSwitchPanel
   },
 
