@@ -21,7 +21,7 @@ import KioskPanel from '@/components/KioskPanel.vue'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 
 export default {
-  name: 'KioskSwitchPanel',
+  name: 'KioskClockPanel',
 
   props: {
   },
