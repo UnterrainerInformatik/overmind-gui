@@ -1,6 +1,7 @@
 FROM node:12-alpine as builder
 WORKDIR '/app'
 COPY ./package.json ./
+RUN node --version && npm --version
 
 COPY . .
 RUN npm run build
