@@ -42,6 +42,8 @@
     </template>
     <template>
       {{ weather.day['1'].symbol_description }}
+      <br>
+      ({{ makeShortDateTime(weather.day['1'].date, weather.day['1'].local_time) }})
     </template>
   </KioskPanel>
 </template>
@@ -52,6 +54,7 @@
 
 <script lang="js">
 import KioskPanel from '@/components/KioskPanel.vue'
+import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
 
 export default {
@@ -65,6 +68,7 @@ export default {
   },
 
   data: () => ({
+    dateUtils,
     weather: null
   }),
 
@@ -75,6 +79,13 @@ export default {
   },
 
   methods: {
+    parseDate (date, time) {
+      return new Date(date.substring(0, 4) + '-' + date.substring(4, 6) + '-' + date.substring(6, 8) + ' ' + time + ':00.000')
+    },
+    makeShortDateTime (date, time) {
+      const d = this.parseDate(date, time)
+      return dateUtils.dateToShortDateTime(d, this.$i18n.locale)
+    },
     update () {
       localizedDataService.getByIdentifier('daswetter').then((response) => {
         if (response == null) {
