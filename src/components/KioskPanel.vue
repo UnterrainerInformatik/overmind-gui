@@ -12,14 +12,7 @@
       v-bind="$attrs"
       v-on="$listeners"
     >
-      <v-card
-        :class="
-          'fill-height elevation-0 ma-0 noFocus' +
-          ($vuetify.theme.dark
-            ? ' grey darken-' + (hover ? '3' : '4')
-            : ' grey lighten-' + (hover ? '2' : '1'))
-        "
-      >
+      <v-card :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled, hover)">
         <v-card-title
           ><slot
             name="title"
@@ -60,6 +53,27 @@ export default {
   },
 
   methods: {
+    getBgColor (enabled, hover) {
+      let c = 'success'
+      if (enabled) {
+        c = 'error'
+      }
+      if (this.isEnabled == null || this.isEnabled === undefined) {
+        c = 'grey'
+        if (this.$vuetify.theme.dark) {
+          c += ' darken-' + (hover ? '3' : '4')
+        } else {
+          c += ' darken-' + (hover ? '1' : '')
+        }
+      } else {
+        if (this.$vuetify.theme.dark) {
+          c += ' darken-' + (hover ? '2' : '3')
+        } else {
+          c += ' lighten-' + (hover ? '' : '1')
+        }
+      }
+      return c
+    },
     calculateEnabledState () {
       if (typeof this.isEnabled !== 'function') {
         return

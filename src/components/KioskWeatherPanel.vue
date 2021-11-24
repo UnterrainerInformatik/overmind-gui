@@ -1,5 +1,5 @@
 <template>
-  <KioskPanel v-if="weather" borderColor="secondary" min-width="225">
+  <KioskPanel v-if="weather" borderColor="secondary" min-width="235">
     <template v-slot:title>
       <v-avatar color="secondary" size="90">
         <v-img
