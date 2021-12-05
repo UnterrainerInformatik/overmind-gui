@@ -11,6 +11,7 @@ services:
       - HTTP_HOST=0.0.0.0
     volumes:
       - "/app/deploy/overmind-gui/nginx.conf:/etc/nginx/nginx.conf"
+      - "/app/deploy/cms-gui/config.js:/usr/share/nginx/html/config.js"
     command: ["nginx", "-g", "daemon off;"]
     labels:
       - "traefik.enable=true"
