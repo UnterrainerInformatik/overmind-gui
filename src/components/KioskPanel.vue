@@ -6,7 +6,7 @@
         'ma-1 pa-0 ' +
         (borderColor
           ? borderColor
-          : (enabled ? 'error ' : 'success ') + (hover ? '' : 'darken-1'))
+          : (enabled ? 'on ' : 'off ') + (hover ? '' : 'darken-1'))
       "
       max-width="180px"
       v-bind="$attrs"
@@ -54,12 +54,12 @@ export default {
 
   methods: {
     getBgColor (enabled, hover) {
-      let c = 'success'
+      let c = 'off'
       if (enabled) {
-        c = 'error'
+        c = 'on'
       }
       if (this.isEnabled == null || this.isEnabled === undefined) {
-        c = 'grey'
+        c = 'disabled'
         if (this.$vuetify.theme.dark) {
           c += ' darken-' + (hover ? '3' : '4')
         } else {
@@ -67,7 +67,7 @@ export default {
         }
       } else {
         if (this.$vuetify.theme.dark) {
-          c += ' darken-' + (hover ? '2' : '3')
+          c += ' darken-' + (hover ? '3' : '4')
         } else {
           c += ' lighten-' + (hover ? '' : '1')
         }
