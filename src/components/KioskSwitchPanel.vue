@@ -17,7 +17,9 @@
       </v-avatar>
     </template>
     <template>
-      {{ item.description }}
+      <span class="text-body-1">
+        {{ item.description }}
+      </span>
     </template>
   </KioskPanel>
 </template>
