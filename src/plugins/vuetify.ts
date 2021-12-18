@@ -75,7 +75,10 @@ export default new Vuetify({
         success: '#2b4d2c',
         info: '#244661',
         warning: '#a16f32',
-        error: '#7d3939'
+        error: '#7d3939',
+        on: '#707000',
+        off: '#000065',
+        disabled: '#757575'
       },
       light: {
         primary: '#505050',
@@ -84,7 +87,10 @@ export default new Vuetify({
         success: '#7BAB7C',
         info: '#7CC5FF',
         warning: '#d99445',
-        error: '#ff6b6b'
+        error: '#ff6b6b',
+        on: '#e0e040',
+        off: '#536DFE',
+        disabled: '#757575'
       }
     }
   }

@@ -6,8 +6,18 @@
       </v-avatar>
     </template>
     <template>
-      {{ dateUtils.dateToDateLong(date, $i18n.locale) }}<br />
-      {{ dateUtils.dateToTime(date, $i18n.locale) }}
+      <v-row>
+        <v-col>
+          {{ dateUtils.dateToDateLong(date, $i18n.locale) }}<br />
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <span class="text-h4">
+            {{ dateUtils.dateToTime(date, $i18n.locale) }}
+          </span>
+        </v-col>
+      </v-row>
     </template>
   </KioskPanel>
 </template>

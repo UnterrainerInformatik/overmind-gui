@@ -2,11 +2,12 @@
   <KioskPanel
     :isEnabled="item.isEnabled"
     @click="triggerEvent(item.planId, item.sensorPath, item.eventPath)"
+    class="noFocus"
   >
     <template v-slot:title="state">
       <v-avatar
         :color="
-          (state.enabled ? 'error ' : 'success ') +
+          (state.enabled ? 'on ' : 'off ') +
           ' darken-' +
           (state.hover ? '0' : '1')
         "
@@ -66,4 +67,8 @@ export default {
 
 <style lang="scss">
 @import 'index.scss';
+
+.noFocus:focus::before {
+  opacity: 0 !important;
+}
 </style>
