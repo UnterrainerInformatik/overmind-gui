@@ -8,8 +8,7 @@
       <v-avatar
         :color="
           (state.enabled ? 'on ' : 'off ') +
-          ' darken-' +
-          (state.hover ? '0' : '1')
+          ' darken-1'
         "
         size="42"
       >

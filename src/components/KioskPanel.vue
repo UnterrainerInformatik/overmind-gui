@@ -1,31 +1,28 @@
 <template>
-  <v-hover v-if="enabled !== null" v-slot="{ hover }">
     <v-card
       outlined
       :class="
         'ma-1 pa-0 ' +
         (borderColor
           ? borderColor
-          : (enabled ? 'on ' : 'off ') + (hover ? '' : 'darken-1'))
+          : (enabled ? 'on ' : 'off ') + 'darken-1')
       "
       max-width="180px"
       v-bind="$attrs"
       v-on="$listeners"
     >
-      <v-card :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled, hover)">
+      <v-card :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)">
         <v-card-title
           ><slot
             name="title"
             v-bind:enabled="enabled"
-            v-bind:hover="hover"
           ></slot
         ></v-card-title>
         <v-card-text :class="$vuetify.theme.dark ? 'grey--text' : 'black--text'"
-          ><slot v-bind:enabled="enabled" v-bind:hover="hover"></slot
+          ><slot v-bind:enabled="enabled"></slot
         ></v-card-text>
       </v-card>
     </v-card>
-  </v-hover>
 </template>
 
 <style lang="scss">
@@ -53,7 +50,7 @@ export default {
   },
 
   methods: {
-    getBgColor (enabled, hover) {
+    getBgColor (enabled) {
       let c = 'off'
       if (enabled) {
         c = 'on'
@@ -61,15 +58,13 @@ export default {
       if (this.isEnabled == null || this.isEnabled === undefined) {
         c = 'disabled'
         if (this.$vuetify.theme.dark) {
-          c += ' darken-' + (hover ? '3' : '4')
-        } else {
-          c += ' darken-' + (hover ? '1' : '')
+          c += ' darken-4'
         }
       } else {
         if (this.$vuetify.theme.dark) {
-          c += ' darken-' + (hover ? '3' : '4')
+          c += ' darken-4'
         } else {
-          c += ' lighten-' + (hover ? '' : '1')
+          c += ' lighten-1'
         }
       }
       return c
