@@ -2,6 +2,7 @@ import store from '@/store'
 
 class LoggingUtils {
   private static instanceField: LoggingUtils
+  private activated = false
 
   public static getInstance () {
     if (!this.instanceField) {
@@ -18,6 +19,9 @@ class LoggingUtils {
    * @param status the status-code (integer) (may be omitted)
    */
   public log (message, group, level, status) {
+    if (!this.activated) {
+      return
+    }
     store.dispatch('gui/snackbar/snackbarEnqueue', {
       color: `${level}`,
       headingTKey: `message.${level}.heading`,
