@@ -3,6 +3,12 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <KioskClockPanel></KioskClockPanel>
       <KioskWeatherPanel></KioskWeatherPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kioskfloorplan"></KioskLinkPanel>
+      <!--
+      <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskfloorplan"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkWindows')" route="/app/kioskfloorplan"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkBatteries')" route="/app/kioskfloorplan"></KioskLinkPanel>
+      -->
       <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
@@ -17,6 +23,7 @@
 <script type="js">
 // @ is an alias to /src
 import { mapActions } from 'vuex'
+import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWeatherPanel from '@/components/KioskWeatherPanel.vue'
@@ -26,6 +33,7 @@ export default {
   name: 'kioskOverview',
 
   components: {
+    KioskLinkPanel,
     KioskClockPanel,
     KioskWeatherPanel,
     KioskSwitchPanel

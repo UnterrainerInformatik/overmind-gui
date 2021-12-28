@@ -52,6 +52,13 @@
 			"SWITCH": "Schalter",
 			"undefined": "Nicht verfügbar"
 		},
+		"kiosk": {
+			"linkBack": "zurück",
+			"linkBatteries": "Übersicht Batterien",
+			"linkLights": "Übersicht Licht",
+			"linkMovement": "Übersicht Bewegungsmelder",
+			"linkWindows": "Übersicht Fenster und Türen"
+		},
 		"plans": {
 			"viewToggle": {
 				"active": "Aktiv",

@@ -36,7 +36,8 @@ export default {
 
   props: {
     isEnabled: {},
-    borderColor: {}
+    borderColor: {},
+    bgColor: {}
   },
 
   data: () => ({
@@ -51,6 +52,10 @@ export default {
 
   methods: {
     getBgColor (enabled) {
+      if (this.bgColor) {
+        return this.bgColor
+      }
+
       let c = 'off'
       if (enabled) {
         c = 'on'
