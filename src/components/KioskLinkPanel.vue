@@ -1,0 +1,63 @@
+<template>
+  <KioskPanel
+    class="noFocus"
+    borderColor="success"
+    bgColor="success darken-3"
+    :to="route"
+  >
+    <template v-slot:title>
+      <v-avatar
+        color="success darken-2"
+        size="42"
+      >
+        <v-icon>link</v-icon>
+      </v-avatar>
+    </template>
+    <template>
+      <span class="text-body-1">
+        {{ text }}
+      </span>
+    </template>
+  </KioskPanel>
+</template>
+
+<style lang="scss">
+@import 'index.scss';
+</style>
+
+<script lang="js">
+import KioskPanel from '@/components/KioskPanel.vue'
+
+export default {
+  name: 'KioskLinkPanel',
+
+  props: {
+    text: {},
+    route: {}
+  },
+
+  components: {
+    KioskPanel
+  },
+
+  data: () => ({
+  }),
+
+  computed: {
+  },
+
+  watch: {
+  },
+
+  methods: {
+  }
+}
+</script>
+
+<style lang="scss">
+@import 'index.scss';
+
+.noFocus:focus::before {
+  opacity: 0 !important;
+}
+</style>

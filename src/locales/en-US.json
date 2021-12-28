@@ -52,6 +52,13 @@
 			"SWITCH": "Switch",
 			"undefined": "Undefined"
 		},
+		"kiosk": {
+			"linkBack": "back",
+			"linkBatteries": "Overview Batteries",
+			"linkLights": "Overview Lights",
+			"linkMovement": "Overview Motion Sensors",
+			"linkWindows": "Overview Windows And Doors"
+		},
 		"plans": {
 			"viewToggle": {
 				"active": "active",
