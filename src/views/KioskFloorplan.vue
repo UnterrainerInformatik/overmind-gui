@@ -5,12 +5,12 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <div style="position: relative;" width="1276" height="464">
-        <canvas class="noFocus" ref="canvas" width="1276" height="464"
+      <div style="position: relative;" :width="imgWidth" :height="imgHeight">
+        <canvas class="noFocus" ref="canvas" :width="imgWidth" :height="imgHeight"
           style="position:absolute; pointer-events:none;"
           >Your browser does not support the HTML5 canvas tag.
         </canvas>
-        <img width="1276" height="464"
+        <img :width="imgWidth" :height="imgHeight"
           class="noFocus"
           :src="require('@/assets/plan.png')"
           alt="Map of the building"
@@ -187,7 +187,6 @@ export default {
         coords: [870, 63, 1011, 63, 1012, 231, 870, 230]
       }
     ],
-    canvas: null,
     ctx: null,
     colorOn: 'rgba(160, 160, 0, 0.1)',
     colorOff: 'rgba(60, 60, 255, 0.1)',
@@ -195,7 +194,11 @@ export default {
     colorTransparent: 'rgba(0, 0, 0, 0)',
     appMap: new Map(),
     appliances: [],
-    loading: true
+    loading: true,
+    fullImgWidth: 1276,
+    fullImgHeight: 464,
+    imgWidth: 1000,
+    imgHeight: 363
   }),
 
   watch: {
@@ -236,12 +239,13 @@ export default {
       }
     },
     redraw () {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      const scale = this.imgWidth / this.fullImgWidth
+      this.ctx.clearRect(0, 0, this.imgWidth, this.imgHeight)
       for (const area of this.areas) {
         this.ctx.beginPath()
-        this.ctx.moveTo(area.coords[0], area.coords[1])
+        this.ctx.moveTo(area.coords[0] * scale, area.coords[1] * scale)
         for (let item = 2; item < area.coords.length - 1; item += 2) {
-          this.ctx.lineTo(area.coords[item], area.coords[item + 1])
+          this.ctx.lineTo(area.coords[item] * scale, area.coords[item + 1] * scale)
         }
         this.ctx.closePath()
         const app = this.appMap.get(area.appId)
@@ -342,8 +346,8 @@ export default {
 
   mounted () {
     this.kioskMode(true)
-    this.canvas = this.$refs.canvas
-    this.ctx = this.canvas.getContext('2d')
+    const canvas = this.$refs.canvas
+    this.ctx = canvas.getContext('2d')
     this.getAppliances(true)
     this.interval = setInterval(() => this.getAppliances(false), 3000)
   }
