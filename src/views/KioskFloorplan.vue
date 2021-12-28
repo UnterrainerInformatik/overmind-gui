@@ -25,7 +25,7 @@
             :alt="area.title"
             :title="area.title"
             href="#"
-            :coords="area.coords.toString()"
+            :coords="area.coords.map((e) => e * (this.imgWidth / this.fullImgWidth)).toString()"
             shape="poly"
           />
         </map>
