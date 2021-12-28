@@ -24,10 +24,8 @@ export default {
   },
 
   data: () => ({
-    raw: {},
     appMap: new Map(),
     appliances: [],
-    map: null,
     onlyActive: false,
     countAll: 0,
     loading: true
