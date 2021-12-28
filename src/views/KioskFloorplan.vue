@@ -5,12 +5,31 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <div style="position: relative;" :width="imgWidth" :height="imgHeight">
-        <canvas class="noFocus" ref="canvas" :width="imgWidth" :height="imgHeight"
-          style="position:absolute; pointer-events:none;"
+      <div style="position: relative" :width="imgWidth" :height="imgHeight">
+        <canvas
+          class="noFocus"
+          ref="canvas"
+          :width="imgWidth"
+          :height="imgHeight"
+          style="position: absolute; pointer-events: none"
           >Your browser does not support the HTML5 canvas tag.
         </canvas>
-        <img :width="imgWidth" :height="imgHeight"
+        <v-avatar
+          size="32"
+          v-for="(area, i) in withBulb()"
+          :key="i"
+          :color="getColor(area)"
+          v-on:click="areaClicked($event, area)"
+          class="noFocus"
+          :style="`position: absolute; pointer-events: none; top: ${
+            area.bulbY * (imgWidth / fullImgWidth)
+          }px; left: ${area.bulbX * (imgWidth / fullImgWidth)}px`"
+        >
+          <v-icon size="20" :color="getColor(area) == 'transparent' ? 'transparent' : 'white'">lightbulb</v-icon>
+        </v-avatar>
+        <img
+          :width="imgWidth"
+          :height="imgHeight"
           class="noFocus"
           :src="require('@/assets/plan.png')"
           alt="Map of the building"
@@ -25,7 +44,9 @@
             :alt="area.title"
             :title="area.title"
             href="#"
-            :coords="area.coords.map((e) => e * (imgWidth / fullImgWidth)).toString()"
+            :coords="
+              area.coords.map((e) => e * (imgWidth / fullImgWidth)).toString()
+            "
             shape="poly"
           />
         </map>
@@ -53,137 +74,189 @@ export default {
       {
         title: '2nd-steven',
         appId: 44,
+        bulbX: 920,
+        bulbY: 264,
         coords: [870, 238, 1011, 238, 1011, 401, 870, 400]
       },
       {
         title: 'cellar-technical',
         appId: 96,
+        bulbX: 75,
+        bulbY: 90,
         coords: [17, 57, 160, 56, 161, 224, 17, 225]
       },
       {
         title: 'cellar-vestibule',
         appId: 0,
+        bulbX: 220,
+        bulbY: 130,
         coords: [166, 148, 268, 149, 268, 223, 166, 224]
       },
       {
         title: 'cellar-stairs',
         appId: 0,
+        bulbX: 200,
+        bulbY: 62,
         coords: [165, 56, 267, 57, 267, 146, 164, 145]
       },
       {
         title: 'cellar-workshop',
         appId: 102,
+        bulbX: 325,
+        bulbY: 85,
         coords: [278, 57, 409, 56, 409, 223, 277, 224]
       },
       {
         title: 'cellar-main-room-computer',
         appId: 1,
         index: 1,
+        bulbX: 100,
+        bulbY: 295,
         coords: [17, 234, 231, 234, 229, 399, 17, 399]
       },
       {
         title: 'cellar-main-room-sewing',
         appId: 1,
         index: 0,
+        bulbX: 300,
+        bulbY: 295,
         coords: [410, 235, 410, 399, 231, 400, 233, 233]
       },
       {
         title: '1st-wardrobe',
         appId: 94,
+        bulbX: 500,
+        bulbY: 50,
         coords: [475, 17, 560, 17, 559, 107, 475, 107]
       },
       {
         title: '1st-toilet',
         appId: 95,
+        bulbX: 565,
+        bulbY: 50,
         coords: [564, 18, 606, 18, 607, 108, 564, 108]
       },
       {
         title: '1st-stairs',
         appId: 108,
+        bulbX: 660,
+        bulbY: 35,
         coords: [610, 17, 704, 17, 703, 108, 610, 109]
       },
       {
         title: '1st-playroom',
         appId: 43,
+        bulbX: 750,
+        bulbY: 55,
         coords: [714, 17, 832, 17, 832, 169, 714, 169]
       },
       {
         title: '1st-vestibule-entrance',
         appId: 107,
+        bulbX: 520,
+        bulbY: 120,
         coords: [476, 111, 569, 111, 569, 170, 476, 170]
       },
       {
         title: '1st-vestibule-playroom',
         appId: 106,
+        bulbX: 640,
+        bulbY: 120,
         coords: [702, 111, 702, 169, 572, 170, 572, 110]
       },
       {
         title: '1st-main-livingroom',
         appId: 32,
         index: 1,
+        bulbX: 540,
+        bulbY: 250,
         coords: [476, 202, 654, 202, 654, 328, 476, 327]
       },
       {
         title: '1st-main-tv-cabinet',
         appId: 48,
+        bulbX: 530,
+        bulbY: 170,
         coords: [476, 178, 653, 177, 653, 199, 476, 199]
       },
       {
         title: '1st-main-diningroom',
         appId: 32,
         index: 0,
+        bulbX: 710,
+        bulbY: 240,
         coords: [748, 207, 766, 207, 768, 327, 657, 327, 657, 180, 748, 179]
       },
       {
         title: '1st-kitchen-sink',
         appId: 58,
+        bulbX: 770,
+        bulbY: 170,
         coords: [751, 178, 831, 178, 832, 204, 751, 204]
       },
       {
         title: '1st-kitchen',
         appId: 42,
+        bulbX: 780,
+        bulbY: 220,
         coords: [769, 207, 832, 206, 832, 328, 770, 328]
       },
       {
         title: '1st-patio-left',
         appId: 33,
         index: 0,
+        bulbX: 730,
+        bulbY: 380,
         coords: [655, 345, 805, 345, 805, 463, 654, 462]
       },
       {
         title: '1st-patio-right',
         appId: 33,
         index: 1,
+        bulbX: 560,
+        bulbY: 380,
         coords: [501, 345, 652, 345, 652, 461, 502, 461]
       },
       {
         title: '2nd-stairs',
         appId: 108,
+        bulbX: 1074,
+        bulbY: 85,
         coords: [1016, 64, 1117, 64, 1117, 162, 1017, 163]
       },
       {
         title: '2nd-vestibule',
         appId: 103,
+        bulbX: 1052,
+        bulbY: 240,
         coords: [1017, 167, 1118, 167, 1118, 286, 1018, 285]
       },
       {
         title: '2nd-bath',
         appId: 40,
+        bulbX: 1170,
+        bulbY: 85,
         coords: [1122, 64, 1256, 64, 1257, 229, 1123, 227]
       },
       {
         title: '2nd-bedroom',
         appId: 90,
+        bulbX: 1170,
+        bulbY: 260,
         coords: [1122, 238, 1256, 238, 1257, 400, 1123, 400]
       },
       {
         title: '2nd-closet',
         appId: 0,
+        bulbX: 1050,
+        bulbY: 290,
         coords: [1016, 288, 1117, 289, 1117, 401, 1017, 401]
       },
       {
         title: '2nd-alex',
         appId: 41,
+        bulbX: 920,
+        bulbY: 105,
         coords: [870, 63, 1011, 63, 1012, 231, 870, 230]
       }
     ],
@@ -208,6 +281,9 @@ export default {
   },
 
   methods: {
+    withBulb () {
+      return this.areas.filter(a => a.bulbX && a.bulbY)
+    },
     areaClicked (e, area) {
       e.preventDefault()
       const app = this.appMap.get(area.appId)
@@ -338,6 +414,23 @@ export default {
           return
       }
       item.mystate = 'none'
+    },
+    getColor (area) {
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        return 'transparent'
+      }
+      let st = app.mystate
+      if (Array.isArray(st)) {
+        st = st[area.index]
+      }
+      if (st === 'on') {
+        return 'on'
+      }
+      if (st === 'off') {
+        return 'off'
+      }
+      return 'transparent'
     },
     ...mapActions('gui', {
       kioskMode: 'kioskMode'
