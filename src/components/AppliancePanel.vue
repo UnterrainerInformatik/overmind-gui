@@ -204,12 +204,12 @@ export default {
     getColorFor (item) {
       switch (item.type) {
         case 'MOTION_SENSOR':
-          if (!item || !item.state || !item.state.motions || !item.state.motions[0] || !item.state.motions[0].motion) {
-            return 'warning'
+          if (!item || !item.state || !item.state.motions || !item.state.motions[0] || item.state.motions[0].motion === undefined) {
+            return 'error'
           }
           return item.state.motions[0].motion
-            ? 'error'
-            : 'warning'
+            ? 'on'
+            : 'off'
         case 'CONTACT_SENSOR':
           return overmindUtils.getOpenColorFor(item)
         case 'PLUG':
@@ -219,16 +219,16 @@ export default {
           if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
             return 'error'
           }
-          return item.state.relays[0].state.toLowerCase() === 'on' ? 'success' : 'error'
+          return item.state.relays[0].state.toLowerCase() === 'on' ? 'on' : 'off'
         case 'RELAY_DUAL':
-          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !!item.state.relays[1].state) {
+          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !item.state.relays[1].state) {
             return 'error'
           }
           if (item.state.relays[0].state.toLowerCase() === 'on' && item.state.relays[1].state.toLowerCase() === 'on') {
-            return 'success'
+            return 'on'
           }
           if (item.state.relays[0].state.toLowerCase() !== 'on' && item.state.relays[1].state.toLowerCase() !== 'on') {
-            return 'error'
+            return 'off'
           }
           return 'warning'
       }

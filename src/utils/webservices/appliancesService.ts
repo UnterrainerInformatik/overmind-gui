@@ -17,6 +17,34 @@ export class AppliancesService extends BaseService {
   public async initialize (id: number | string) {
     return this.axiosUtils.getList(this.server, 'initialize', 1, 0, `id=${id}`)
   }
+
+  public async turnOn (id: number | string, actorPath: string) {
+    return this.axiosUtils.post(this.server, 'execute', () => {
+      return {
+        applianceId: id,
+        actorPath: actorPath,
+        commands: [
+          {
+            name: 'on'
+          }
+        ]
+      }
+    })
+  }
+
+  public async turnOff (id: number | string, actorPath: string) {
+    return this.axiosUtils.post(this.server, 'execute', () => {
+      return {
+        applianceId: id,
+        actorPath: actorPath,
+        commands: [
+          {
+            name: 'off'
+          }
+        ]
+      }
+    })
+  }
 }
 
 export const singleton = AppliancesService.getInstance()
