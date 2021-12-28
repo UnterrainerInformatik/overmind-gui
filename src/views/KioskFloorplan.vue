@@ -5,20 +5,20 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <div>
-        <canvas ref="canvas" width="1276" height="464"
+      <div style="position: relative;" width="1276" height="464">
+        <canvas class="noFocus" ref="canvas" width="1276" height="464"
           style="position:absolute; pointer-events:none;"
           >Your browser does not support the HTML5 canvas tag.
         </canvas>
-        <img
-          width="1276"
-          height="464"
+        <img width="1276" height="464"
+          class="noFocus"
           :src="require('@/assets/plan.png')"
           alt="Map of the building"
           usemap="#image-map"
         />
         <map name="image-map">
           <area
+            class="noFocus"
             v-for="(area, i) in areas"
             :key="i"
             v-on:click="areaClicked($event, area)"
@@ -352,4 +352,8 @@ export default {
 
 <style lang="scss">
 @import 'index.scss';
+
+.noFocus:focus::before {
+  opacity: 0 !important;
+}
 </style>
