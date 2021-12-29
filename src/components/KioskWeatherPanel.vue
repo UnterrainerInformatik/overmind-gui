@@ -1,5 +1,5 @@
 <template>
-  <KioskPanel v-if="weather" borderColor="secondary" min-width="335">
+  <KioskPanel v-if="weather" borderColor="secondary" bgColor="black" min-width="335">
     <template>
       <v-row class="ma-0 pa-0">
         <v-col class="ma-0 pa-0 text-center small">

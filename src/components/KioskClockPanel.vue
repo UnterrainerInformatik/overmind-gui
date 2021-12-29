@@ -1,10 +1,5 @@
 <template>
-  <KioskPanel borderColor="secondary">
-    <template v-slot:title>
-      <v-avatar color="transparent" size="42">
-        <v-icon>schedule</v-icon>
-      </v-avatar>
-    </template>
+  <KioskPanel borderColor="secondary" bgColor="black">
     <template>
       <v-row>
         <v-col>
