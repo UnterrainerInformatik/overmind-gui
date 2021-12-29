@@ -15,7 +15,7 @@
           >Your browser does not support the HTML5 canvas tag.
         </canvas>
         <v-avatar
-          size="32"
+          size="36"
           v-for="(area, i) in withBulb()"
           :key="i"
           :color="getColor(area)"
@@ -72,17 +72,10 @@ export default {
   data: () => ({
     areas: [
       {
-        title: '2nd-steven',
-        appId: 44,
-        bulbX: 920,
-        bulbY: 264,
-        coords: [870, 238, 1011, 238, 1011, 401, 870, 400]
-      },
-      {
         title: 'cellar-technical',
         appId: 96,
         bulbX: 75,
-        bulbY: 90,
+        bulbY: 80,
         coords: [17, 57, 160, 56, 161, 224, 17, 225]
       },
       {
@@ -103,7 +96,7 @@ export default {
         title: 'cellar-workshop',
         appId: 102,
         bulbX: 325,
-        bulbY: 85,
+        bulbY: 80,
         coords: [278, 57, 409, 56, 409, 223, 277, 224]
       },
       {
@@ -132,7 +125,7 @@ export default {
       {
         title: '1st-toilet',
         appId: 95,
-        bulbX: 565,
+        bulbX: 562,
         bulbY: 50,
         coords: [564, 18, 606, 18, 607, 108, 564, 108]
       },
@@ -228,14 +221,14 @@ export default {
         title: '2nd-vestibule',
         appId: 103,
         bulbX: 1052,
-        bulbY: 240,
+        bulbY: 235,
         coords: [1017, 167, 1118, 167, 1118, 286, 1018, 285]
       },
       {
         title: '2nd-bath',
         appId: 40,
         bulbX: 1170,
-        bulbY: 85,
+        bulbY: 80,
         coords: [1122, 64, 1256, 64, 1257, 229, 1123, 227]
       },
       {
@@ -256,8 +249,15 @@ export default {
         title: '2nd-alex',
         appId: 41,
         bulbX: 920,
-        bulbY: 105,
+        bulbY: 100,
         coords: [870, 63, 1011, 63, 1012, 231, 870, 230]
+      },
+      {
+        title: '2nd-steven',
+        appId: 44,
+        bulbX: 920,
+        bulbY: 260,
+        coords: [870, 238, 1011, 238, 1011, 401, 870, 400]
       }
     ],
     ctx: null,

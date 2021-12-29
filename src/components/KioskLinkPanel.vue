@@ -1,13 +1,13 @@
 <template>
   <KioskPanel
     class="noFocus"
-    borderColor="success"
-    bgColor="success darken-3"
+    borderColor="disabled"
+    bgColor="disabled darken-4"
     :to="route"
   >
     <template v-slot:title>
       <v-avatar
-        color="success darken-2"
+        color="disabled darken-2"
         size="42"
       >
         <v-icon>link</v-icon>
