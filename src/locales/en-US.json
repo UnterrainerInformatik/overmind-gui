@@ -57,6 +57,7 @@
 			"linkBatteries": "Overview Batteries",
 			"linkLights": "Overview Lights",
 			"linkMovement": "Overview Motion Sensors",
+			"linkPlugs": "Overview Plugs",
 			"linkWindows": "Overview Windows And Doors"
 		},
 		"plans": {

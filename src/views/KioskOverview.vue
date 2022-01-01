@@ -3,7 +3,8 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <KioskClockPanel></KioskClockPanel>
       <KioskWeatherPanel></KioskWeatherPanel>
-      <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kioskfloorplan"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kiosklights"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkPlugs')" route="/app/kioskplugs"></KioskLinkPanel>
       <!--
       <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskfloorplan"></KioskLinkPanel>
       <KioskLinkPanel :text="$t('page.kiosk.linkWindows')" route="/app/kioskfloorplan"></KioskLinkPanel>
