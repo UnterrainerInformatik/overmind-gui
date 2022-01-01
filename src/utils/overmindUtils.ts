@@ -64,6 +64,51 @@ class OvermindUtils {
     }
   }
 
+  public addOnOffStateTo (item, index) {
+    if (item === undefined) {
+      return
+    }
+
+    switch (item.type) {
+      case 'PLUG':
+      case 'RELAY':
+      case 'DIMMER':
+      case 'BULB_RGB':
+        if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
+          item.onOffState = 'error'
+          return
+        }
+        if (item.state.relays[0].state.toLowerCase() === 'on') {
+          item.onOffState = 'on'
+          return
+        }
+        item.onOffState = 'off'
+        return
+      case 'RELAY_DUAL':
+        if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !item.state.relays[1].state) {
+          item.onOffState = 'error'
+          return
+        }
+        if (item.state.relays[index].state.toLowerCase() === 'on') {
+          if (item.onOffState === undefined) {
+            item.onOffState = []
+          }
+          item.onOffState[index] = 'on'
+          return
+        }
+        if (item.state.relays[index].state.toLowerCase() !== 'on') {
+          if (item.onOffState === undefined) {
+            item.onOffState = []
+          }
+          item.onOffState[index] = 'off'
+          return
+        }
+        item.onOffState = 'error'
+        return
+    }
+    item.onOffState = 'none'
+  }
+
   public opened (contact) {
     return contact && contact.state && contact.state.closures && contact.state.closures[0] && contact.state.closures[0].open && contact.state.closures[0].tilt < 2
   }

@@ -18,14 +18,20 @@
           size="36"
           v-for="(area, i) in withBulb()"
           :key="i"
-          :color="getColor(area)"
+          :color="
+            getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
+          "
           v-on:click="areaClicked($event, area)"
           class="noFocus"
           :style="`position: absolute; pointer-events: none; top: ${
-            area.bulbY * (imgWidth / fullImgWidth)
-          }px; left: ${area.bulbX * (imgWidth / fullImgWidth)}px`"
+            area.iconPos[1] * (imgWidth / fullImgWidth)
+          }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`"
         >
-          <v-icon size="20" :color="getColor(area) == 'transparent' ? 'transparent' : 'white'">lightbulb</v-icon>
+          <v-icon
+            size="20"
+            :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
+            >lightbulb</v-icon
+          >
         </v-avatar>
         <img
           :width="imgWidth"
@@ -63,7 +69,7 @@ import { singleton as appliancesService } from '@/utils/webservices/appliancesSe
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
 export default {
-  name: 'kioskOverview',
+  name: 'kioskLights',
 
   components: {
     KioskLinkPanel
@@ -74,189 +80,163 @@ export default {
       {
         title: 'cellar-technical',
         appId: 96,
-        bulbX: 75,
-        bulbY: 80,
+        iconPos: [75, 80],
         coords: [17, 57, 160, 56, 161, 224, 17, 225]
       },
       {
         title: 'cellar-vestibule',
         appId: 0,
-        bulbX: 220,
-        bulbY: 130,
+        iconPos: [195, 160],
         coords: [166, 148, 268, 149, 268, 223, 166, 224]
       },
       {
         title: 'cellar-stairs',
         appId: 0,
-        bulbX: 200,
-        bulbY: 62,
+        iconPos: [220, 82],
         coords: [165, 56, 267, 57, 267, 146, 164, 145]
       },
       {
         title: 'cellar-workshop',
         appId: 102,
-        bulbX: 325,
-        bulbY: 80,
+        iconPos: [325, 80],
         coords: [278, 57, 409, 56, 409, 223, 277, 224]
       },
       {
         title: 'cellar-main-room-computer',
         appId: 1,
         index: 1,
-        bulbX: 100,
-        bulbY: 295,
+        iconPos: [100, 295],
         coords: [17, 234, 231, 234, 229, 399, 17, 399]
       },
       {
         title: 'cellar-main-room-sewing',
         appId: 1,
         index: 0,
-        bulbX: 300,
-        bulbY: 295,
+        iconPos: [300, 295],
         coords: [410, 235, 410, 399, 231, 400, 233, 233]
       },
       {
         title: '1st-wardrobe',
         appId: 94,
-        bulbX: 500,
-        bulbY: 50,
+        iconPos: [500, 50],
         coords: [475, 17, 560, 17, 559, 107, 475, 107]
       },
       {
         title: '1st-toilet',
         appId: 95,
-        bulbX: 562,
-        bulbY: 50,
+        iconPos: [562, 50],
         coords: [564, 18, 606, 18, 607, 108, 564, 108]
       },
       {
         title: '1st-stairs',
         appId: 108,
-        bulbX: 660,
-        bulbY: 35,
+        iconPos: [656, 35],
         coords: [610, 17, 704, 17, 703, 108, 610, 109]
       },
       {
         title: '1st-playroom',
         appId: 43,
-        bulbX: 750,
-        bulbY: 55,
+        iconPos: [750, 55],
         coords: [714, 17, 832, 17, 832, 169, 714, 169]
       },
       {
         title: '1st-vestibule-entrance',
         appId: 107,
-        bulbX: 520,
-        bulbY: 120,
+        iconPos: [520, 120],
         coords: [476, 111, 569, 111, 569, 170, 476, 170]
       },
       {
         title: '1st-vestibule-playroom',
         appId: 106,
-        bulbX: 640,
-        bulbY: 120,
+        iconPos: [640, 120],
         coords: [702, 111, 702, 169, 572, 170, 572, 110]
       },
       {
         title: '1st-main-livingroom',
         appId: 32,
         index: 1,
-        bulbX: 540,
-        bulbY: 250,
+        iconPos: [540, 250],
         coords: [476, 202, 654, 202, 654, 328, 476, 327]
       },
       {
         title: '1st-main-tv-cabinet',
         appId: 48,
-        bulbX: 530,
-        bulbY: 170,
+        iconPos: [530, 170],
         coords: [476, 178, 653, 177, 653, 199, 476, 199]
       },
       {
         title: '1st-main-diningroom',
         appId: 32,
         index: 0,
-        bulbX: 710,
-        bulbY: 240,
+        iconPos: [710, 240],
         coords: [748, 207, 766, 207, 768, 327, 657, 327, 657, 180, 748, 179]
       },
       {
         title: '1st-kitchen-sink',
         appId: 58,
-        bulbX: 770,
-        bulbY: 170,
+        iconPos: [770, 170],
         coords: [751, 178, 831, 178, 832, 204, 751, 204]
       },
       {
         title: '1st-kitchen',
         appId: 42,
-        bulbX: 780,
-        bulbY: 220,
+        iconPos: [780, 220],
         coords: [769, 207, 832, 206, 832, 328, 770, 328]
       },
       {
         title: '1st-patio-left',
         appId: 33,
         index: 0,
-        bulbX: 730,
-        bulbY: 380,
+        iconPos: [730, 380],
         coords: [655, 345, 805, 345, 805, 463, 654, 462]
       },
       {
         title: '1st-patio-right',
         appId: 33,
         index: 1,
-        bulbX: 560,
-        bulbY: 380,
+        iconPos: [560, 380],
         coords: [501, 345, 652, 345, 652, 461, 502, 461]
       },
       {
         title: '2nd-stairs',
         appId: 108,
-        bulbX: 1074,
-        bulbY: 85,
+        iconPos: [1070, 85],
         coords: [1016, 64, 1117, 64, 1117, 162, 1017, 163]
       },
       {
         title: '2nd-vestibule',
         appId: 103,
-        bulbX: 1052,
-        bulbY: 235,
+        iconPos: [1052, 235],
         coords: [1017, 167, 1118, 167, 1118, 286, 1018, 285]
       },
       {
         title: '2nd-bath',
         appId: 40,
-        bulbX: 1170,
-        bulbY: 80,
+        iconPos: [1170, 80],
         coords: [1122, 64, 1256, 64, 1257, 229, 1123, 227]
       },
       {
         title: '2nd-bedroom',
         appId: 90,
-        bulbX: 1170,
-        bulbY: 260,
+        iconPos: [1170, 260],
         coords: [1122, 238, 1256, 238, 1257, 400, 1123, 400]
       },
       {
         title: '2nd-closet',
         appId: 0,
-        bulbX: 1050,
-        bulbY: 290,
+        iconPos: [1050, 290],
         coords: [1016, 288, 1117, 289, 1117, 401, 1017, 401]
       },
       {
         title: '2nd-alex',
         appId: 41,
-        bulbX: 920,
-        bulbY: 100,
+        iconPos: [920, 100],
         coords: [870, 63, 1011, 63, 1012, 231, 870, 230]
       },
       {
         title: '2nd-steven',
         appId: 44,
-        bulbX: 920,
-        bulbY: 260,
+        iconPos: [920, 260],
         coords: [870, 238, 1011, 238, 1011, 401, 870, 400]
       }
     ],
@@ -264,6 +244,7 @@ export default {
     colorOn: 'rgba(160, 160, 0, 0.1)',
     colorOff: 'rgba(60, 60, 255, 0.1)',
     colorError: 'rgba(255, 0, 0, 0.1)',
+    colorGrey: 'rgba(60, 60, 60, 0.3)',
     colorTransparent: 'rgba(0, 0, 0, 0)',
     appMap: new Map(),
     appliances: [],
@@ -271,7 +252,8 @@ export default {
     fullImgWidth: 1276,
     fullImgHeight: 464,
     imgWidth: 1000,
-    imgHeight: 363
+    imgHeight: 363,
+    colorOverrides: []
   }),
 
   watch: {
@@ -282,16 +264,24 @@ export default {
 
   methods: {
     withBulb () {
-      return this.areas.filter(a => a.bulbX && a.bulbY)
+      return this.areas.filter(a => a.iconPos && a.iconPos[0] && a.iconPos[1])
     },
-    areaClicked (e, area) {
-      e.preventDefault()
+    areaClicked (event, area) {
+      event.preventDefault()
+      if (area.appId === 0) {
+        return
+      }
       const app = this.appMap.get(area.appId)
       if (!app) {
         return
       }
+      if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
+        return
+      }
+      this.colorOverrides.push({ id: area.appId, index: area.index })
+      this.redraw(false)
       const actorPath = this.getActorPathOf(app, area.index)
-      let st = app.mystate
+      let st = app.onOffState
       if (Array.isArray(st)) {
         st = st[area.index]
       }
@@ -314,7 +304,10 @@ export default {
           return 'relay' + (index + 1)
       }
     },
-    redraw () {
+    redraw (reset) {
+      if (reset) {
+        this.colorOverrides = []
+      }
       const scale = this.imgWidth / this.fullImgWidth
       this.ctx.clearRect(0, 0, this.imgWidth, this.imgHeight)
       for (const area of this.areas) {
@@ -325,26 +318,31 @@ export default {
         }
         this.ctx.closePath()
         const app = this.appMap.get(area.appId)
-        this.setMyStateFor(app, area.index)
+        overmindUtils.addOnOffStateTo(app, area.index)
         if (!app) {
           this.ctx.fillStyle = this.colorTransparent
         } else {
-          let st = app.mystate
+          let st = app.onOffState
           if (Array.isArray(st)) {
             st = st[area.index]
           }
-          switch (st) {
-            case 'none':
-              this.ctx.fillStyle = this.colorTransparent
-              break
-            case 'on':
-              this.ctx.fillStyle = this.colorOn
-              break
-            case 'off':
-              this.ctx.fillStyle = this.colorOff
-              break
-            case 'error':
-              this.ctx.fillStyle = this.colorError
+          const override = this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)
+          if (override) {
+            this.ctx.fillStyle = this.colorGrey
+          } else {
+            switch (st) {
+              case 'none':
+                this.ctx.fillStyle = this.colorTransparent
+                break
+              case 'on':
+                this.ctx.fillStyle = this.colorOn
+                break
+              case 'off':
+                this.ctx.fillStyle = this.colorOff
+                break
+              case 'error':
+                this.ctx.fillStyle = this.colorError
+            }
           }
         }
         this.ctx.fill()
@@ -367,60 +365,20 @@ export default {
         for (const element of this.appliances) {
           this.appMap.set(element.id, element)
         }
-        this.redraw()
+        this.redraw(true)
         this.loading = false
       })
-    },
-    setMyStateFor (item, index) {
-      if (item === undefined) {
-        return
-      }
-
-      switch (item.type) {
-        case 'PLUG':
-        case 'RELAY':
-        case 'DIMMER':
-        case 'BULB_RGB':
-          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
-            item.mystate = 'error'
-            return
-          }
-          if (item.state.relays[0].state.toLowerCase() === 'on') {
-            item.mystate = 'on'
-            return
-          }
-          item.mystate = 'off'
-          return
-        case 'RELAY_DUAL':
-          if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !item.state.relays[1].state) {
-            item.mystate = 'error'
-            return
-          }
-          if (item.state.relays[index].state.toLowerCase() === 'on') {
-            if (item.mystate === undefined) {
-              item.mystate = []
-            }
-            item.mystate[index] = 'on'
-            return
-          }
-          if (item.state.relays[index].state.toLowerCase() !== 'on') {
-            if (item.mystate === undefined) {
-              item.mystate = []
-            }
-            item.mystate[index] = 'off'
-            return
-          }
-          item.mystate = 'error'
-          return
-      }
-      item.mystate = 'none'
     },
     getColor (area) {
       const app = this.appMap.get(area.appId)
       if (!app) {
         return 'transparent'
       }
-      let st = app.mystate
+      const override = this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)
+      if (override) {
+        return 'grey'
+      }
+      let st = app.onOffState
       if (Array.isArray(st)) {
         st = st[area.index]
       }
