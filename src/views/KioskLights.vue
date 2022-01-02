@@ -40,6 +40,12 @@ export default {
         coords: [165, 56, 267, 57, 267, 146, 164, 145]
       },
       {
+        title: '2nd-bath-mirror',
+        appId: 0,
+        iconPos: [1120, 90],
+        coords: [1120, 159, 1166, 159, 1166, 91, 1120, 91]
+      },
+      {
         title: '2nd-stairs',
         appId: 108,
         iconPos: [1070, 85],
