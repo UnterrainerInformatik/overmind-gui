@@ -27,6 +27,31 @@ export default {
 
   data: () => ({
     areas: [
+      {
+        title: 'cellar-computer',
+        appId: 0,
+        iconPos: [90, 230]
+      },
+      {
+        title: 'cellar-technical-room',
+        appId: 0,
+        iconPos: [115, 150]
+      },
+      {
+        title: 'cellar-servers',
+        appId: 0,
+        iconPos: [10, 185]
+      },
+      {
+        title: 'cellar-washingmachine-left',
+        appId: 0,
+        iconPos: [10, 125]
+      },
+      {
+        title: 'cellar-washingmachine-right',
+        appId: 0,
+        iconPos: [56, 125]
+      }
     ]
   }),
 
