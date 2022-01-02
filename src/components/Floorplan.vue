@@ -1,6 +1,5 @@
 <template>
   <div
-    v-if="areas"
     style="position: relative"
     :width="imgWidth"
     :height="imgHeight"
@@ -13,28 +12,32 @@
       style="position: absolute; pointer-events: none"
       >Your browser does not support the HTML5 canvas tag.
     </canvas>
-    <v-avatar
-      size="36"
-      v-for="(area, i) in getAreasWithIcon()"
-      :key="i"
-      :color="
-        getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
-      "
-      v-on:click="areaClicked($event, area)"
-      class="noFocus"
-      :style="
-        (hasCoords(area) ? 'pointer-events: none; ' : '') +
-        `position: absolute; top: ${
-          area.iconPos[1] * (imgWidth / fullImgWidth)
-        }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
-      "
-    >
-      <v-icon
-        size="20"
-        :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
-        >lightbulb</v-icon
+    <span v-if="loaded">
+      <v-avatar
+        size="36"
+        v-for="(area, i) in getAreasWithIcon()"
+        :key="i"
+        :color="
+          getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
+        "
+        v-on:click="areaClicked($event, area)"
+        class="noFocus"
+        :style="
+          (hasCoords(area) ? 'pointer-events: none; ' : '') +
+          `position: absolute; top: ${
+            area.iconPos[1] * (imgWidth / fullImgWidth)
+          }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+        "
       >
-    </v-avatar>
+        <v-icon
+          size="20"
+          v-if="!displayWatts(area)"
+          :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
+          >{{ icon }}</v-icon
+        >
+        <span class="small" v-if="displayWatts(area)">{{ formatPower(getPowerOf(area)) }}</span>
+      </v-avatar>
+    </span>
     <img
       :width="imgWidth"
       :height="imgHeight"
@@ -43,7 +46,7 @@
       alt="Map of the building"
       usemap="#image-map"
     />
-    <map name="image-map">
+    <map name="image-map" v-if="loaded">
       <area
         class="noFocus"
         v-for="(area, i) in getAreasWithCoords()"
@@ -73,19 +76,21 @@ export default {
   name: 'Floorplan',
 
   props: {
+    icon: {},
     additionalAreas: {},
     applianceTypeFilter: []
   },
 
   data: () => ({
     areas: [],
+    loaded: false,
     ctx: null,
     colorOn: 'rgba(160, 160, 0, 0.1)',
     colorOff: 'rgba(60, 60, 255, 0.1)',
     colorError: 'rgba(255, 0, 0, 0.1)',
     colorGrey: 'rgba(60, 60, 60, 0.3)',
     colorTransparent: 'rgba(0, 0, 0, 0)',
-    appMap: new Map(),
+    appMap: undefined,
     appliances: [],
     loading: true,
     fullImgWidth: 1276,
@@ -102,6 +107,19 @@ export default {
   },
 
   methods: {
+    displayWatts (area) {
+      return this.isOn(area) && this.getPowerOf(area, area.index) !== undefined
+    },
+    formatPower (p) {
+      return overmindUtils.formatPower(p)
+    },
+    getPowerOf (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return undefined
+      }
+      return overmindUtils.getPowerOf(app, area.index)
+    },
     getAreasWithIcon () {
       return this.areas.filter(a => a.iconPos && a.iconPos[0] && a.iconPos[1])
     },
@@ -159,6 +177,7 @@ export default {
         const item = this.appMap.get(area.appId)
         overmindUtils.addOnOffStateTo(item, area.index)
       }
+      this.loaded = true
       for (const area of this.getAreasWithCoords()) {
         this.ctx.beginPath()
         this.ctx.moveTo(area.coords[0] * scale, area.coords[1] * scale)
@@ -276,6 +295,20 @@ export default {
         return 'off'
       }
       return 'transparent'
+    },
+    isOn (area) {
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        return false
+      }
+      let st = app.onOffState
+      if (Array.isArray(st)) {
+        st = st[area.index]
+      }
+      if (st === 'on') {
+        return true
+      }
+      return false
     }
   },
 
@@ -283,7 +316,7 @@ export default {
     const canvas = this.$refs.canvas
     this.ctx = canvas.getContext('2d')
     this.getAppliances(true)
-    this.interval = setInterval(() => this.getAppliances(false), 3000)
+    this.interval = setInterval(() => this.getAppliances(false), 2000)
   }
 }
 </script>
@@ -293,5 +326,9 @@ export default {
 
 .noFocus:focus::before {
   opacity: 0 !important;
+}
+
+.small {
+  font-size: 11px;
 }
 </style>

@@ -109,6 +109,32 @@ class OvermindUtils {
     item.onOffState = 'none'
   }
 
+  public getPowerOf (item, index) {
+    if (item === undefined) {
+      return
+    }
+
+    let i = 0
+    if (item.type === 'RELAY_DUAL') {
+      i = index
+    }
+    if (!item || !item.state || !item.state.relays || !item.state.relays[i] || !item.state.relays[i].state || item.state.relays[i].power === undefined) {
+      return undefined
+    }
+    return Number.parseFloat(item.state.relays[i].power)
+  }
+
+  public formatPower (p) {
+    if (p < 1) {
+      return '<1 W'
+    }
+    if (p >= 1000) {
+      const sub = Math.round(p / 1000)
+      return Math.floor(p / 1000) + '.' + sub + ' kW'
+    }
+    return Math.round(p) + ' W'
+  }
+
   public opened (contact) {
     return contact && contact.state && contact.state.closures && contact.state.closures[0] && contact.state.closures[0].open && contact.state.closures[0].tilt < 2
   }

@@ -5,7 +5,7 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <Floorplan :additionalAreas="areas" :applianceTypeFilter="['LIGHT']">
+      <Floorplan icon="lightbulb" :additionalAreas="areas" :applianceTypeFilter="['LIGHT']">
       </Floorplan>
     </v-container>
   </div>
