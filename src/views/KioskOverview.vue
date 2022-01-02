@@ -5,8 +5,8 @@
       <KioskWeatherPanel></KioskWeatherPanel>
       <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kiosklights"></KioskLinkPanel>
       <KioskLinkPanel :text="$t('page.kiosk.linkPlugs')" route="/app/kioskplugs"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskmovement"></KioskLinkPanel>
       <!--
-      <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskfloorplan"></KioskLinkPanel>
       <KioskLinkPanel :text="$t('page.kiosk.linkWindows')" route="/app/kioskfloorplan"></KioskLinkPanel>
       <KioskLinkPanel :text="$t('page.kiosk.linkBatteries')" route="/app/kioskfloorplan"></KioskLinkPanel>
       -->

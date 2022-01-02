@@ -24,6 +24,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/KioskPlugs.vue')
   },
   {
+    path: '/app/kioskmovement',
+    name: 'kioskMovement',
+    component: () => import('../views/KioskMovement.vue')
+  },
+  {
     path: '/app/plans',
     name: 'plans',
     component: () => import('../views/Plans.vue')

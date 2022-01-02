@@ -1,9 +1,5 @@
 <template>
-  <div
-    style="position: relative"
-    :width="imgWidth"
-    :height="imgHeight"
-  >
+  <div style="position: relative" :width="imgWidth" :height="imgHeight">
     <canvas
       class="noFocus"
       ref="canvas"
@@ -13,30 +9,43 @@
       >Your browser does not support the HTML5 canvas tag.
     </canvas>
     <span v-if="loaded">
-      <v-avatar
-        size="36"
-        v-for="(area, i) in getAreasWithIcon()"
-        :key="i"
-        :color="
-          getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
-        "
-        v-on:click="areaClicked($event, area)"
-        class="noFocus"
-        :style="
-          (hasCoords(area) ? 'pointer-events: none; ' : '') +
-          `position: absolute; top: ${
-            area.iconPos[1] * (imgWidth / fullImgWidth)
-          }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
-        "
-      >
-        <v-icon
-          size="20"
-          v-if="!displayWatts(area)"
-          :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
-          >{{ icon }}</v-icon
+      <span v-for="(area, i) in getAreasWithIcon()" :key="i">
+        <BatteryIndicator
+          v-if="appMap.get(area.appId)"
+          size="36"
+          :level="Math.round(appMap.get(area.appId).state.batteries[0].batteryLevel * 100)"
+          :style="
+            `position: absolute; top: ${
+              area.iconPos[1] * (imgWidth / fullImgWidth)
+            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+          "
+        ></BatteryIndicator>
+        <v-avatar
+          v-if="!displayBattery(area)"
+          size="36"
+          :color="
+            getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
+          "
+          v-on:click="areaClicked($event, area)"
+          class="noFocus"
+          :style="
+            (hasCoords(area) ? 'pointer-events: none; ' : '') +
+            `position: absolute; top: ${
+              area.iconPos[1] * (imgWidth / fullImgWidth)
+            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+          "
         >
-        <span class="small" v-if="displayWatts(area)">{{ formatPower(getPowerOf(area)) }}</span>
-      </v-avatar>
+          <v-icon
+            size="20"
+            v-if="!displayWatts(area)"
+            :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
+            >{{ icon }}</v-icon
+          >
+          <span class="small" v-if="displayWatts(area)">{{
+            formatPower(getPowerOf(area))
+          }}</span>
+        </v-avatar>
+      </span>
     </span>
     <img
       :width="imgWidth"
@@ -69,16 +78,23 @@
 </style>
 
 <script lang="js">
+import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
 export default {
   name: 'Floorplan',
 
+  components: {
+    BatteryIndicator
+  },
+
   props: {
     icon: {},
     additionalAreas: {},
-    applianceTypeFilter: []
+    applianceTypeFilter: [],
+    classFqnFilter: [],
+    clickableMap: {}
   },
 
   data: () => ({
@@ -107,6 +123,13 @@ export default {
   },
 
   methods: {
+    displayBattery (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return false
+      }
+      return app.batteryDriven
+    },
     displayWatts (area) {
       return this.isOn(area) && this.getPowerOf(area, area.index) !== undefined
     },
@@ -136,6 +159,9 @@ export default {
       }
       const app = this.appMap.get(area.appId)
       if (!app) {
+        return
+      }
+      if (!this.clickableMap) {
         return
       }
       if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
@@ -233,7 +259,7 @@ export default {
         for (const element of this.appliances) {
           this.appMap.set(element.id, element)
         }
-        const filtered = this.appliances.filter((a) => a.enabled && this.applianceTypeFilter.find((e) => e === a.usageType))
+        const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
         if (filtered) {
           filtered.forEach(app => {
             if (app.type === 'RELAY_DUAL') {
@@ -313,6 +339,9 @@ export default {
   },
 
   mounted () {
+    if (this.clickableMap === undefined) {
+      this.clickableMap = true
+    }
     const canvas = this.$refs.canvas
     this.ctx = canvas.getContext('2d')
     this.getAppliances(true)
