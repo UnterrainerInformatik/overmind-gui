@@ -84,6 +84,18 @@ class OvermindUtils {
         }
         item.onOffState = 'off'
         return
+      case 'MOTION_SENSOR':
+        if (!item || !item.state || !item.state.motions || !item.state.motions[0] || item.state.motions[0].motion === undefined) {
+          console.log(item)
+          item.onOffState = 'error'
+          return
+        }
+        if (item.state.motions[0].motion) {
+          item.onOffState = 'on'
+          return
+        }
+        item.onOffState = 'off'
+        return
       case 'RELAY_DUAL':
         if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !item.state.relays[1].state) {
           item.onOffState = 'error'

@@ -1,26 +1,22 @@
 <template>
   <v-btn
     fab
-    x-small
+    max-width="36"
+    max-height="36"
     v-if="level"
-    :class="
-      'ma-0 pa-0 mr-1 ' +
-        getBatteryColor(Math.round(level))
-    "
+    :class="'ma-0 pa-0 mr-1 ' + getBatteryColor(Math.round(level))"
     @click="() => {}"
   >
     <v-row class="ma-0 pa-0">
       <v-col class="ma-0 pa-0">
         <v-row class="ma-0 pa-0">
           <v-col class="ma-0 pa-0">
-            <v-icon small>{{
-              getBatteryIcon(level)
-            }}</v-icon>
+            <v-icon size="14">{{ getBatteryIcon(level) }}</v-icon>
           </v-col>
         </v-row>
         <v-row class="ma-0 pa-0">
-          <v-col class="ma-0 pa-0">
-            {{ level }}
+          <v-col class="ma-0 mt-n1 pa-0 small">
+              {{ level }}
           </v-col>
         </v-row>
       </v-col>
@@ -78,3 +74,11 @@ export default {
 
 }
 </script>
+
+<style lang="scss">
+@import 'index.scss';
+
+.small {
+  font-size: 10px;
+}
+</style>
