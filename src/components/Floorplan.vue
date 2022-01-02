@@ -11,7 +11,7 @@
     <span v-if="loaded">
       <span v-for="(area, i) in getAreasWithIcon()" :key="i">
         <BatteryIndicator
-          v-if="appMap.get(area.appId)"
+          v-if="displayBattery(area) && appMap.get(area.appId)"
           size="36"
           :level="Math.round(appMap.get(area.appId).state.batteries[0].batteryLevel * 100)"
           :style="
