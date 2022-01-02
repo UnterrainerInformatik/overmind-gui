@@ -114,7 +114,6 @@ class OvermindUtils {
       return
     }
 
-    console.log(item)
     let i = 0
     if (item.type === 'RELAY_DUAL') {
       i = index
