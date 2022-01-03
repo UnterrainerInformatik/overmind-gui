@@ -5,6 +5,7 @@
         icon="meeting_room"
         :clickableMap="false"
         :additionalAreas="areas"
+        :strongAreaColors="true"
         :classFqnFilter="[
           'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyDoorWindow2Appliance'
         ]"

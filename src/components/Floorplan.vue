@@ -94,18 +94,19 @@ export default {
     additionalAreas: {},
     applianceTypeFilter: [],
     classFqnFilter: [],
-    clickableMap: {}
+    clickableMap: {},
+    strongAreaColors: {}
   },
 
   data: () => ({
     areas: [],
     loaded: false,
     ctx: null,
-    colorOn: 'rgba(160, 160, 0, 0.1)',
-    colorOff: 'rgba(60, 60, 255, 0.1)',
-    colorError: 'rgba(255, 0, 0, 0.1)',
-    colorGrey: 'rgba(60, 60, 60, 0.3)',
-    colorTransparent: 'rgba(0, 0, 0, 0)',
+    colorOn: ['rgba(160, 160, 0, 0.1)', 'rgba(160, 160, 0, 0.8)'],
+    colorOff: ['rgba(60, 60, 255, 0.1)', 'rgba(60, 60, 255, 0.5)'],
+    colorError: ['rgba(255, 0, 0, 0.1)', 'rgba(255, 0, 0, 0.5)'],
+    colorGrey: ['rgba(60, 60, 60, 0.3)', 'rgba(60, 60, 60, 0.8)'],
+    colorTransparent: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'],
     appMap: undefined,
     appliances: [],
     loading: true,
@@ -223,18 +224,19 @@ export default {
           if (override) {
             this.ctx.fillStyle = this.colorGrey
           } else {
+            const colorIndex = this.strongAreaColors ? 1 : 0
             switch (st) {
               case 'none':
-                this.ctx.fillStyle = this.colorTransparent
+                this.ctx.fillStyle = this.colorTransparent[colorIndex]
                 break
               case 'on':
-                this.ctx.fillStyle = this.colorOn
+                this.ctx.fillStyle = this.colorOn[colorIndex]
                 break
               case 'off':
-                this.ctx.fillStyle = this.colorOff
+                this.ctx.fillStyle = this.colorOff[colorIndex]
                 break
               case 'error':
-                this.ctx.fillStyle = this.colorError
+                this.ctx.fillStyle = this.colorError[colorIndex]
             }
           }
         }
@@ -341,6 +343,9 @@ export default {
   mounted () {
     if (this.clickableMap === undefined) {
       this.clickableMap = true
+    }
+    if (this.strongAreaColors === undefined) {
+      this.strongAreaColors = false
     }
     const canvas = this.$refs.canvas
     this.ctx = canvas.getContext('2d')
