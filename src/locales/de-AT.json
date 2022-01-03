@@ -54,11 +54,11 @@
 		},
 		"kiosk": {
 			"linkBack": "zurück",
-			"linkBatteries": "Übersicht Batterien",
-			"linkLights": "Übersicht Licht",
-			"linkMovement": "Übersicht Bewegungsmelder",
-			"linkPlugs": "Übersicht Steckdosen",
-			"linkWindows": "Übersicht Fenster und Türen"
+			"linkBatteries": "Batterien",
+			"linkContact": "Fenster und Türen",
+			"linkLights": "Licht",
+			"linkMovement": "Bewegungsmelder",
+			"linkPlugs": "Steckdosen"
 		},
 		"plans": {
 			"viewToggle": {

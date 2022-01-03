@@ -1,12 +1,19 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
+      <Floorplan
+        icon="vibration"
+        :clickableMap="false"
+        :additionalAreas="areas"
+        :classFqnFilter="[
+          'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyMotionAppliance'
+        ]"
+      >
+      </Floorplan>
       <KioskLinkPanel
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <Floorplan icon="vibration" :clickableMap="false" :additionalAreas="areas" :classFqnFilter="['info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyMotionAppliance']">
-      </Floorplan>
     </v-container>
   </div>
 </template>

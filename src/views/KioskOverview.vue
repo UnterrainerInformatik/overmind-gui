@@ -3,13 +3,6 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <KioskClockPanel></KioskClockPanel>
       <KioskWeatherPanel></KioskWeatherPanel>
-      <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kiosklights"></KioskLinkPanel>
-      <KioskLinkPanel :text="$t('page.kiosk.linkPlugs')" route="/app/kioskplugs"></KioskLinkPanel>
-      <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskmovement"></KioskLinkPanel>
-      <!--
-      <KioskLinkPanel :text="$t('page.kiosk.linkWindows')" route="/app/kioskfloorplan"></KioskLinkPanel>
-      <KioskLinkPanel :text="$t('page.kiosk.linkBatteries')" route="/app/kioskfloorplan"></KioskLinkPanel>
-      -->
       <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
@@ -17,6 +10,10 @@
       <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
       <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
       <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkLights')" route="/app/kiosklights"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkPlugs')" route="/app/kioskplugs"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkContact')" route="/app/kioskcontact"></KioskLinkPanel>
+      <KioskLinkPanel :text="$t('page.kiosk.linkMovement')" route="/app/kioskmovement"></KioskLinkPanel>
     </v-container>
   </div>
 </template>

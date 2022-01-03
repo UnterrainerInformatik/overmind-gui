@@ -1,12 +1,16 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
+      <Floorplan
+        icon="power"
+        :additionalAreas="areas"
+        :applianceTypeFilter="['PLUG']"
+      >
+      </Floorplan>
       <KioskLinkPanel
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
-      <Floorplan icon="power" :additionalAreas="areas" :applianceTypeFilter="['PLUG']">
-      </Floorplan>
     </v-container>
   </div>
 </template>
