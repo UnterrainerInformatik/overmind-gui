@@ -5,6 +5,7 @@
         icon="vibration"
         :clickableMap="false"
         :additionalAreas="areas"
+        :strongAreaColors="true"
         :classFqnFilter="[
           'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyMotionAppliance'
         ]"
