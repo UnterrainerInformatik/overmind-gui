@@ -4,6 +4,7 @@
       <Floorplan
         icon="lightbulb"
         :additionalAreas="areas"
+        :strongAreaColors="true"
         :applianceTypeFilter="['LIGHT']"
       >
       </Floorplan>
