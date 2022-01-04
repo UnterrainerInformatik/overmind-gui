@@ -11,7 +11,7 @@
     <span v-if="loaded">
       <span v-for="(area, i) in getAreasWithIcon()" :key="i">
         <BatteryIndicator
-          v-if="displayBattery(area) && appMap.get(area.appId)"
+          v-if="!isError(area) && displayBattery(area) && appMap.get(area.appId)"
           size="36"
           :level="Math.round(appMap.get(area.appId).state.batteries[0].batteryLevel * 100)"
           :style="
@@ -21,7 +21,7 @@
           "
         ></BatteryIndicator>
         <v-avatar
-          v-if="!displayBattery(area)"
+          v-if="(!isError(area) || !appMap.get(area.appId)) && !displayBattery(area)"
           size="36"
           :color="
             getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
@@ -44,6 +44,22 @@
           <span class="small" v-if="displayWatts(area)">{{
             formatPower(getPowerOf(area))
           }}</span>
+        </v-avatar>
+        <v-avatar
+          v-if="isError(area) && appMap.get(area.appId)"
+          size="36"
+          color="red"
+          class="noFocus"
+          :style="`pointer-events: none; position: absolute; top: ${
+              area.iconPos[1] * (imgWidth / fullImgWidth)
+            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+          "
+        >
+          <v-icon
+            size="20"
+            color="white"
+            >bolt</v-icon
+          >
         </v-avatar>
       </span>
     </span>
@@ -305,6 +321,20 @@ export default {
         return undefined
       }
       return a.split(',').filter(x => x.trim().length && !isNaN(x)).map(Number)
+    },
+    isError (area) {
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        return true
+      }
+      let st = app.onOffState
+      if (Array.isArray(st)) {
+        st = st[area.index]
+      }
+      if (st === 'error') {
+        return true
+      }
+      return false
     },
     getColor (area) {
       const app = this.appMap.get(area.appId)
