@@ -5,7 +5,11 @@
         icon="vibration"
         :clickableMap="false"
         :additionalAreas="areas"
-        :strongAreaColors="true"
+        colorOn="rgba(160, 160, 0, 0.6)"
+        colorOff="rgba(60, 60, 255, 0.4)"
+        colorError="rgba(255, 0, 0, 0.3)"
+        colorGrey="rgba(60, 60, 60, 0.6)"
+        colorTransparent="rgba(0, 0, 0, 0)"
         :classFqnFilter="[
           'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyMotionAppliance'
         ]"

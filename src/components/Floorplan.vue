@@ -95,18 +95,18 @@ export default {
     applianceTypeFilter: [],
     classFqnFilter: [],
     clickableMap: {},
-    strongAreaColors: {}
+    colorOn: {},
+    colorOff: {},
+    colorMiddle: {},
+    colorError: {},
+    colorGrey: {},
+    colorTransparent: {}
   },
 
   data: () => ({
     areas: [],
     loaded: false,
     ctx: null,
-    colorOn: ['rgba(160, 160, 0, 0.1)', 'rgba(160, 160, 0, 0.8)'],
-    colorOff: ['rgba(60, 60, 255, 0.1)', 'rgba(60, 60, 255, 0.5)'],
-    colorError: ['rgba(255, 0, 0, 0.1)', 'rgba(255, 0, 0, 0.5)'],
-    colorGrey: ['rgba(60, 60, 60, 0.3)', 'rgba(60, 60, 60, 0.8)'],
-    colorTransparent: ['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0)'],
     appMap: undefined,
     appliances: [],
     loading: true,
@@ -227,16 +227,19 @@ export default {
             const colorIndex = this.strongAreaColors ? 1 : 0
             switch (st) {
               case 'none':
-                this.ctx.fillStyle = this.colorTransparent[colorIndex]
+                this.ctx.fillStyle = this.colorTransparent
                 break
               case 'on':
-                this.ctx.fillStyle = this.colorOn[colorIndex]
+                this.ctx.fillStyle = this.colorOn
+                break
+              case 'middle':
+                this.ctx.fillStyle = this.colorMiddle
                 break
               case 'off':
-                this.ctx.fillStyle = this.colorOff[colorIndex]
+                this.ctx.fillStyle = this.colorOff
                 break
               case 'error':
-                this.ctx.fillStyle = this.colorError[colorIndex]
+                this.ctx.fillStyle = this.colorError
             }
           }
         }

@@ -101,11 +101,11 @@ class OvermindUtils {
           return
         }
         if (this.tilted(item)) {
-          item.onOffState = 'on'
+          item.onOffState = 'middle'
           return
         }
         if (this.opened(item)) {
-          item.onOffState = 'error'
+          item.onOffState = 'on'
           return
         }
         console.log(item)
