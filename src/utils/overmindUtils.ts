@@ -108,7 +108,6 @@ class OvermindUtils {
           item.onOffState = 'on'
           return
         }
-        console.log(item)
         item.onOffState = 'off'
         return
       case 'RELAY_DUAL':

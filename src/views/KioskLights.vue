@@ -4,7 +4,7 @@
       <Floorplan
         icon="lightbulb"
         :additionalAreas="areas"
-        colorOn="rgba(160, 160, 0, 0.6)"
+        colorOn="rgba(120, 120, 0, 0.6)"
         colorOff="rgba(60, 60, 255, 0.4)"
         colorError="rgba(255, 0, 0, 0.3)"
         colorGrey="rgba(60, 60, 60, 0.6)"
