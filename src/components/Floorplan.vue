@@ -1,5 +1,7 @@
 <template>
-  <div style="position: relative" :width="imgWidth" :height="imgHeight">
+  <span>
+  <v-row v-resize="reCompose" ref="backgroundMeasurement" class="ma-0 pa-0"></v-row>
+  <div style="position: relative; width: 100vw;">
     <canvas
       class="noFocus"
       ref="canvas"
@@ -87,6 +89,7 @@
       />
     </map>
   </div>
+  </span>
 </template>
 
 <style lang="scss">
@@ -130,6 +133,11 @@ export default {
     fullImgHeight: 464,
     imgWidth: 1000,
     imgHeight: 363,
+    readWidth: undefined,
+    readHeight: undefined,
+    imgWidthOrHeightDebounce: false,
+    _clickableMap: undefined,
+    _strongAreaColors: false,
     colorOverrides: []
   }),
 
@@ -137,9 +145,36 @@ export default {
   },
 
   watch: {
+    imgWidth: {
+      handler: function () {
+        if (!this.imgWidthOrHeightDebounce) {
+          this.imgWidthOrHeightDebounce = true
+          setTimeout(() => this.reCompose(), 10)
+        }
+      },
+      deep: true
+    },
+    imgHeight: {
+      handler: function () {
+        if (!this.imgWidthOrHeightDebounce) {
+          this.imgWidthOrHeightDebounce = true
+          setTimeout(() => this.reCompose(), 10)
+        }
+      },
+      deep: true
+    }
   },
 
   methods: {
+    reCompose () {
+      this.imgWidthOrHeightDebounce = false
+      this.imgWidth = this.$refs.backgroundMeasurement.clientWidth
+      this.imgWidth = this.imgWidth - this.imgWidth / 30
+      this.imgHeight = this.fullImgHeight * (this.imgWidth / this.fullImgWidth)
+      const canvas = this.$refs.canvas
+      this.ctx = canvas.getContext('2d')
+      this.redraw(false)
+    },
     displayBattery (area) {
       const app = this.appMap.get(area.appId)
       if (app === undefined) {
@@ -178,7 +213,7 @@ export default {
       if (!app) {
         return
       }
-      if (!this.clickableMap) {
+      if (!this._clickableMap) {
         return
       }
       if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
@@ -240,7 +275,7 @@ export default {
           if (override) {
             this.ctx.fillStyle = this.colorGrey
           } else {
-            const colorIndex = this.strongAreaColors ? 1 : 0
+            const colorIndex = this._strongAreaColors ? 1 : 0
             switch (st) {
               case 'none':
                 this.ctx.fillStyle = this.colorTransparent
@@ -375,13 +410,12 @@ export default {
 
   mounted () {
     if (this.clickableMap === undefined) {
-      this.clickableMap = true
+      this._clickableMap = true
     }
     if (this.strongAreaColors === undefined) {
-      this.strongAreaColors = false
+      this._strongAreaColors = false
     }
-    const canvas = this.$refs.canvas
-    this.ctx = canvas.getContext('2d')
+    this.reCompose()
     this.getAppliances(true)
     this.interval = setInterval(() => this.getAppliances(false), 2000)
   }
