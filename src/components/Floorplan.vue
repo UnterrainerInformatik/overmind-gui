@@ -7,14 +7,14 @@
       ref="canvas"
       :width="imgWidth"
       :height="imgHeight"
-      style="position: absolute; pointer-events: none"
+      style="position: absolute; pointer-events: none;"
       >Your browser does not support the HTML5 canvas tag.
     </canvas>
     <span v-if="loaded">
       <span v-for="(area, i) in getAreasWithIcon()" :key="i">
         <BatteryIndicator
           v-if="!isError(area) && displayBattery(area) && appMap.get(area.appId)"
-          size="36"
+          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
           :level="Math.round(appMap.get(area.appId).state.batteries[0].batteryLevel * 100)"
           :style="
             `position: absolute; top: ${
@@ -22,9 +22,9 @@
             }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
           "
         ></BatteryIndicator>
-        <v-avatar
+        <v-avatar style="margin: 0; padding: 0;"
           v-if="(!isError(area) || !appMap.get(area.appId)) && !displayBattery(area)"
-          size="36"
+          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
           :color="
             getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
           "
@@ -49,7 +49,7 @@
         </v-avatar>
         <v-avatar
           v-if="isError(area) && appMap.get(area.appId)"
-          size="36"
+          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
           color="red"
           class="noFocus"
           :style="`pointer-events: none; position: absolute; top: ${
@@ -133,11 +133,12 @@ export default {
     fullImgHeight: 464,
     imgWidth: 1000,
     imgHeight: 363,
+    avatarBaseSize: 46,
     readWidth: undefined,
     readHeight: undefined,
     imgWidthOrHeightDebounce: false,
-    _clickableMap: undefined,
-    _strongAreaColors: false,
+    myClickableMap: true,
+    myStrongAreaColors: false,
     colorOverrides: []
   }),
 
@@ -168,6 +169,9 @@ export default {
   methods: {
     reCompose () {
       this.imgWidthOrHeightDebounce = false
+      if (!this.$refs.backgroundMeasurement) {
+        return
+      }
       this.imgWidth = this.$refs.backgroundMeasurement.clientWidth
       this.imgWidth = this.imgWidth - this.imgWidth / 30
       this.imgHeight = this.fullImgHeight * (this.imgWidth / this.fullImgWidth)
@@ -213,7 +217,7 @@ export default {
       if (!app) {
         return
       }
-      if (!this._clickableMap) {
+      if (!this.myClickableMap) {
         return
       }
       if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
@@ -275,7 +279,6 @@ export default {
           if (override) {
             this.ctx.fillStyle = this.colorGrey
           } else {
-            const colorIndex = this._strongAreaColors ? 1 : 0
             switch (st) {
               case 'none':
                 this.ctx.fillStyle = this.colorTransparent
@@ -409,11 +412,11 @@ export default {
   },
 
   mounted () {
-    if (this.clickableMap === undefined) {
-      this._clickableMap = true
+    if (this.clickableMap !== undefined) {
+      this.myClickableMap = this.clickableMap
     }
-    if (this.strongAreaColors === undefined) {
-      this._strongAreaColors = false
+    if (this.strongAreaColors !== undefined) {
+      this.myStrongAreaColors = this.strongAreaColors
     }
     this.reCompose()
     this.getAppliances(true)

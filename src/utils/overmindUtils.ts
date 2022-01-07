@@ -1,3 +1,4 @@
+import { singleton as dateUtils } from '@/utils/dateUtils'
 
 class OvermindUtils {
   private static instanceField: OvermindUtils
@@ -66,6 +67,11 @@ class OvermindUtils {
 
   public addOnOffStateTo (item, index) {
     if (item === undefined) {
+      return
+    }
+
+    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 12) {
+      item.onOffState = 'error'
       return
     }
 
