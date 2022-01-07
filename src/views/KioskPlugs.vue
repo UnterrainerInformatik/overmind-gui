@@ -3,6 +3,7 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <Floorplan
         icon="power"
+        :clickableMap="false"
         :additionalAreas="areas"
         :applianceTypeFilter="['PLUG']"
       >

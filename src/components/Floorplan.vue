@@ -26,8 +26,9 @@
                 appMap.get(area.appId).state.batteries[0].batteryLevel * 100
               )
             "
+            v-on:click="areaClicked($event, area, true)"
             :style="
-              (clickableMap ? '' : 'cursor: default !important; ') +
+              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
               `position: absolute; top: ${
                 area.iconPos[1] * (imgWidth / fullImgWidth)
               }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
@@ -42,11 +43,10 @@
             :color="
               getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
             "
-            v-on:click="areaClicked($event, area)"
+            v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
-              (clickableMap ? '' : 'cursor: default !important; ') +
-              (hasCoords(area) ? 'pointer-events: none; ' : '') +
+              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
               `position: absolute; top: ${
                 area.iconPos[1] * (imgWidth / fullImgWidth)
               }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
@@ -67,9 +67,10 @@
             :size="avatarBaseSize * (imgWidth / fullImgWidth)"
             color="red"
             class="noFocus"
+            v-on:click="areaClicked($event, area, true)"
             :style="
-              (clickableMap ? '' : 'cursor: default !important; ') +
-              `pointer-events: none; position: absolute; top: ${
+              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
+              `position: absolute; top: ${
                 area.iconPos[1] * (imgWidth / fullImgWidth)
               }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
             "
@@ -86,16 +87,13 @@
         alt="Map of the building"
         usemap="#image-map"
       />
-      <map
-        name="image-map"
-        v-if="loaded"
-      >
+      <map name="image-map" v-if="loaded">
         <area
           class="noFocus"
           :style="clickableMap ? '' : 'cursor: default !important; '"
           v-for="(area, i) in getAreasWithCoords()"
           :key="i"
-          v-on:click="areaClicked($event, area)"
+          v-on:click="areaClicked($event, area, false)"
           :alt="area.title"
           :title="area.title"
           href="#"
@@ -131,6 +129,7 @@ export default {
     applianceTypeFilter: [],
     classFqnFilter: [],
     clickableMap: { default: true },
+    clickableIcons: { default: true },
     colorOn: {},
     colorOff: {},
     colorMiddle: {},
@@ -223,7 +222,7 @@ export default {
     hasCoords (area) {
       return area.coords
     },
-    areaClicked (event, area) {
+    areaClicked (event, area, iconClicked) {
       event.preventDefault()
       if (area.appId === 0) {
         return
@@ -232,7 +231,7 @@ export default {
       if (!app) {
         return
       }
-      if (!this.clickableMap) {
+      if ((!iconClicked && !this.clickableMap) || (iconClicked && !this.clickableIcons)) {
         return
       }
       if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {

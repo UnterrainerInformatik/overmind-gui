@@ -30,7 +30,15 @@
     </template>
 
     <v-list>
-      <v-list-group sub-group prepend-icon="expand_more" :class="$vuetify.theme.dark ? 'grey--text text--lighten-3' : 'grey--text text--darken-3'">
+      <v-list-group
+        sub-group
+        prepend-icon="expand_more"
+        :class="
+          $vuetify.theme.dark
+            ? 'grey--text text--lighten-3'
+            : 'grey--text text--darken-3'
+        "
+      >
         <template v-slot:activator>
           <v-list-item-title>{{ $t('mnu.language') }}</v-list-item-title>
           <v-list-item-icon><v-icon>translate</v-icon></v-list-item-icon>
@@ -45,7 +53,11 @@
             }
           "
           active-class="v-list-item--active"
-          :class="($i18n.locale === lang ? 'v-list-item--active' : '') + ' ' + ($i18n.locale === lang ? ' primary white--text' : '')"
+          :class="
+            ($i18n.locale === lang ? 'v-list-item--active' : '') +
+            ' ' +
+            ($i18n.locale === lang ? ' primary white--text' : '')
+          "
         >
           <v-list-item-content>
             <v-list-item-title>{{ lang }}</v-list-item-title>
