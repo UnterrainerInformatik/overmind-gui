@@ -1,94 +1,111 @@
 <template>
   <span>
-  <v-row v-resize="reCompose" ref="backgroundMeasurement" class="ma-0 pa-0"></v-row>
-  <div style="position: relative; width: 100vw;">
-    <canvas
-      class="noFocus"
-      ref="canvas"
-      :width="imgWidth"
-      :height="imgHeight"
-      style="position: absolute; pointer-events: none;"
-      >Your browser does not support the HTML5 canvas tag.
-    </canvas>
-    <span v-if="loaded">
-      <span v-for="(area, i) in getAreasWithIcon()" :key="i">
-        <BatteryIndicator
-          v-if="!isError(area) && displayBattery(area) && appMap.get(area.appId)"
-          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
-          :level="Math.round(appMap.get(area.appId).state.batteries[0].batteryLevel * 100)"
-          :style="
-            `position: absolute; top: ${
-              area.iconPos[1] * (imgWidth / fullImgWidth)
-            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
-          "
-        ></BatteryIndicator>
-        <v-avatar style="margin: 0; padding: 0;"
-          v-if="(!isError(area) || !appMap.get(area.appId)) && !displayBattery(area)"
-          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
-          :color="
-            getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
-          "
-          v-on:click="areaClicked($event, area)"
-          class="noFocus"
-          :style="
-            (hasCoords(area) ? 'pointer-events: none; ' : '') +
-            `position: absolute; top: ${
-              area.iconPos[1] * (imgWidth / fullImgWidth)
-            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
-          "
-        >
-          <v-icon
-            size="20"
-            v-if="!displayWatts(area)"
-            :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
-            >{{ icon }}</v-icon
-          >
-          <span class="small" v-if="displayWatts(area)">{{
-            formatPower(getPowerOf(area))
-          }}</span>
-        </v-avatar>
-        <v-avatar
-          v-if="isError(area) && appMap.get(area.appId)"
-          :size="avatarBaseSize * (imgWidth / fullImgWidth)"
-          color="red"
-          class="noFocus"
-          :style="`pointer-events: none; position: absolute; top: ${
-              area.iconPos[1] * (imgWidth / fullImgWidth)
-            }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
-          "
-        >
-          <v-icon
-            size="20"
-            color="white"
-            >bolt</v-icon
-          >
-        </v-avatar>
-      </span>
-    </span>
-    <img
-      :width="imgWidth"
-      :height="imgHeight"
-      class="noFocus"
-      :src="require('@/assets/plan.png')"
-      alt="Map of the building"
-      usemap="#image-map"
-    />
-    <map name="image-map" v-if="loaded">
-      <area
+    <v-row
+      v-resize="reCompose"
+      ref="backgroundMeasurement"
+      class="ma-0 pa-0"
+    ></v-row>
+    <div style="position: relative; width: 100vw">
+      <canvas
         class="noFocus"
-        v-for="(area, i) in getAreasWithCoords()"
-        :key="i"
-        v-on:click="areaClicked($event, area)"
-        :alt="area.title"
-        :title="area.title"
-        href="#"
-        :coords="
-          area.coords.map((e) => e * (imgWidth / fullImgWidth)).toString()
-        "
-        shape="poly"
+        ref="canvas"
+        :width="imgWidth"
+        :height="imgHeight"
+        style="position: absolute; pointer-events: none"
+        >Your browser does not support the HTML5 canvas tag.
+      </canvas>
+      <span v-if="loaded">
+        <span v-for="(area, i) in getAreasWithIcon()" :key="i">
+          <BatteryIndicator
+            v-if="
+              !isError(area) && displayBattery(area) && appMap.get(area.appId)
+            "
+            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            :level="
+              Math.round(
+                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+              )
+            "
+            :style="
+              (clickableMap ? '' : 'cursor: default !important; ') +
+              `position: absolute; top: ${
+                area.iconPos[1] * (imgWidth / fullImgWidth)
+              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+            "
+          ></BatteryIndicator>
+          <v-avatar
+            v-if="
+              (!isError(area) || !appMap.get(area.appId)) &&
+              !displayBattery(area)
+            "
+            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            :color="
+              getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
+            "
+            v-on:click="areaClicked($event, area)"
+            class="noFocus"
+            :style="
+              (clickableMap ? '' : 'cursor: default !important; ') +
+              (hasCoords(area) ? 'pointer-events: none; ' : '') +
+              `position: absolute; top: ${
+                area.iconPos[1] * (imgWidth / fullImgWidth)
+              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+            "
+          >
+            <v-icon
+              size="20"
+              v-if="!displayWatts(area)"
+              :color="getColor(area) == 'transparent' ? 'grey' : 'white'"
+              >{{ icon }}</v-icon
+            >
+            <span class="small" v-if="displayWatts(area)">{{
+              formatPower(getPowerOf(area))
+            }}</span>
+          </v-avatar>
+          <v-avatar
+            v-if="isError(area) && appMap.get(area.appId)"
+            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            color="red"
+            class="noFocus"
+            :style="
+              (clickableMap ? '' : 'cursor: default !important; ') +
+              `pointer-events: none; position: absolute; top: ${
+                area.iconPos[1] * (imgWidth / fullImgWidth)
+              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+            "
+          >
+            <v-icon size="20" color="white">bolt</v-icon>
+          </v-avatar>
+        </span>
+      </span>
+      <img
+        :width="imgWidth"
+        :height="imgHeight"
+        class="noFocus"
+        :src="require('@/assets/plan.png')"
+        alt="Map of the building"
+        usemap="#image-map"
       />
-    </map>
-  </div>
+      <map
+        name="image-map"
+        v-if="loaded"
+      >
+        <area
+          class="noFocus"
+          :style="clickableMap ? '' : 'cursor: default !important; '"
+          v-for="(area, i) in getAreasWithCoords()"
+          :key="i"
+          v-on:click="areaClicked($event, area)"
+          :alt="area.title"
+          :title="area.title"
+          href="#"
+          :coords="
+            area.coords.map((e) => e * (imgWidth / fullImgWidth)).toString()
+          "
+          shape="poly"
+        />
+      </map>
+    </div>
   </span>
 </template>
 
@@ -113,7 +130,7 @@ export default {
     additionalAreas: {},
     applianceTypeFilter: [],
     classFqnFilter: [],
-    clickableMap: {},
+    clickableMap: { default: true },
     colorOn: {},
     colorOff: {},
     colorMiddle: {},
@@ -137,8 +154,6 @@ export default {
     readWidth: undefined,
     readHeight: undefined,
     imgWidthOrHeightDebounce: false,
-    myClickableMap: true,
-    myStrongAreaColors: false,
     colorOverrides: []
   }),
 
@@ -217,7 +232,7 @@ export default {
       if (!app) {
         return
       }
-      if (!this.myClickableMap) {
+      if (!this.clickableMap) {
         return
       }
       if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
@@ -412,12 +427,6 @@ export default {
   },
 
   mounted () {
-    if (this.clickableMap !== undefined) {
-      this.myClickableMap = this.clickableMap
-    }
-    if (this.strongAreaColors !== undefined) {
-      this.myStrongAreaColors = this.strongAreaColors
-    }
     this.reCompose()
     this.getAppliances(true)
     this.interval = setInterval(() => this.getAppliances(false), 2000)
