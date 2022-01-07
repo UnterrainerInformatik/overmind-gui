@@ -46,6 +46,15 @@
         </h3>
         <v-spacer></v-spacer>
 
+        <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn icon v-bind="attrs" v-on="on" to="/app/kioskoverview">
+              <v-icon color="white">exit_to_app</v-icon>
+            </v-btn>
+          </template>
+          <div v-html="$t('tooltip.mnu.kiosk')"></div>
+        </v-tooltip>
+
         <AppBarMenu></AppBarMenu>
       </v-app-bar>
 

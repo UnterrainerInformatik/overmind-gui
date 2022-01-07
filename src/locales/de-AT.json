@@ -111,6 +111,7 @@
 		"mnu": {
 			"dark": "Zwischen heller und dunkler Einstellung wechseln",
 			"help": "Ein oder ausschalten der<br />kontextbezogenen Hilfs-Tooltips",
+			"kiosk": "Kiosk Modus öffnen",
 			"logout": "Abmelden oder Benutzer wechseln",
 			"menu": "Seite wählen",
 			"preferences": "Verschiedene Einstellungen"

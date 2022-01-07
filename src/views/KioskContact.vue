@@ -4,6 +4,7 @@
       <Floorplan
         icon="meeting_room"
         :clickableMap="false"
+        :clickableIcons="false"
         :additionalAreas="areas"
         colorOn="rgba(160, 160, 0, 0.8)"
         colorMiddle="rgba(160, 100, 0, 0.8)"

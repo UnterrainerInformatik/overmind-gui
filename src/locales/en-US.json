@@ -111,6 +111,7 @@
 		"mnu": {
 			"dark": "Switch between light- and dark-theme",
 			"help": "Turn display of the<br />help-tooltips on/off",
+			"kiosk": "Open kiosk-mode",
 			"logout": "",
 			"menu": "Choose your page",
 			"preferences": ""
