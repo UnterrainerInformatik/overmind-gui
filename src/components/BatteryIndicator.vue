@@ -1,8 +1,8 @@
 <template>
   <v-btn
     fab
-    :max-width="mySize"
-    :max-height="mySize"
+    :max-width="size"
+    :max-height="size"
     v-if="level"
     :class="'ma-0 pa-0 mr-1 ' + getBatteryColor(Math.round(level))"
     @click="() => {}"
@@ -37,11 +37,10 @@ export default {
 
   props: {
     level: {},
-    size: {}
+    size: { default: 36 }
   },
 
   data: () => ({
-    mySize: 36
   }),
 
   computed: {
@@ -73,12 +72,6 @@ export default {
 
     getMagicNumber: function (value, startingValue, numberOfValuesInStep, numberOfSteps) {
       return Math.floor((value - startingValue) / (numberOfValuesInStep / (numberOfSteps - 0.0001)) + 1)
-    }
-  },
-
-  mounted () {
-    if (this.size !== undefined) {
-      this.mySize = this.size
     }
   }
 
