@@ -5,6 +5,11 @@
         icon="power"
         :clickableMap="false"
         :additionalAreas="areas"
+        colorOn="rgba(160, 160, 0, 0.8)"
+        colorOff="rgba(60, 60, 255, 0.6)"
+        colorError="rgba(255, 0, 0, 0.6)"
+        colorGrey="rgba(60, 60, 60, 0.8)"
+        colorTransparent="rgba(0, 0, 0, 0)"
         :applianceTypeFilter="['PLUG']"
       >
       </Floorplan>
