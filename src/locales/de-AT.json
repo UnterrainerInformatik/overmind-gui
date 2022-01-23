@@ -58,7 +58,16 @@
 			"linkContact": "Fenster und Türen",
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
-			"linkPlugs": "Steckdosen"
+			"linkPlugs": "Steckdosen",
+			"zamg": {
+				"airPressure": "Luftdruck",
+				"humidity": "Luftfeuchtigkeit",
+				"rain": "Regen",
+				"sun": "Sonne",
+				"temperature": "Temperatur",
+				"wind": "Wind",
+				"windTop": "Wind (Spitze)"
+			}
 		},
 		"plans": {
 			"viewToggle": {
