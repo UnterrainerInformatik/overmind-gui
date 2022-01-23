@@ -1,11 +1,13 @@
 <template>
   <KioskPanel borderColor="secondary" bgColor="black">
-    <template>
+    <template v-slot:title>
       <v-row>
-        <v-col>
+        <v-col class="heading">
           {{ dateUtils.dateToDateLong(date, $i18n.locale) }}<br />
         </v-col>
       </v-row>
+    </template>
+    <template>
       <v-row>
         <v-col>
           <span class="text-h4">
@@ -60,4 +62,9 @@ export default {
 
 <style lang="scss">
 @import 'index.scss';
+
+.heading {
+  font-size: 15px;
+  line-height: 20px;
+}
 </style>

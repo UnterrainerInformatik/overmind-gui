@@ -60,13 +60,26 @@
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
 			"zamg": {
-				"airPressure": "Air-Pressure",
-				"humidity": "Humidity",
+				"description": "Description",
+				"feltTemp": "Subjective",
+				"noon": "Noon",
 				"rain": "Rain",
 				"sun": "Sun",
+				"sunRise": "Sunrise",
+				"sunSet": "Sunset",
+				"tempDesc0": "horrendously cold",
+				"tempDesc1": "piercingly cold",
+				"tempDesc10": "extremely hot",
+				"tempDesc2": "extremely cold",
+				"tempDesc3": "freezing cold",
+				"tempDesc4": "cold",
+				"tempDesc5": "slightly cold",
+				"tempDesc6": "normal",
+				"tempDesc7": "slightly warm",
+				"tempDesc8": "warm",
+				"tempDesc9": "hot",
 				"temperature": "Temperature",
-				"wind": "Wind",
-				"windTop": "Wind (top)"
+				"wind": "Wind"
 			}
 		},
 		"plans": {

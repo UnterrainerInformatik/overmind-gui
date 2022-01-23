@@ -122,9 +122,10 @@ export class AxiosUtils {
    * Send a GET retrieving the response from the server.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param additionalQueryParams a string containing additional query parameters (like 'scanId=5&searchName=hallo' for example)
    */
-  public async getResponse (server: string, endpointPath: string): Promise<any> {
-    return this.internalRestCall(this.internalGet(server, objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint), false))
+  public async getResponse (server: string, endpointPath: string, additionalQueryParams?: string): Promise<any> {
+    return this.internalRestCall(this.internalGet(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}${additionalQueryParams != null ? '?' + additionalQueryParams : ''}`, false))
   }
 
   /**

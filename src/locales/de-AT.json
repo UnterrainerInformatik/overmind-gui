@@ -60,13 +60,26 @@
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
 			"zamg": {
-				"airPressure": "Luftdruck",
-				"humidity": "Luftfeuchtigkeit",
+				"description": "Beschreibung",
+				"feltTemp": "Gefühlt",
+				"noon": "Mittag",
 				"rain": "Regen",
 				"sun": "Sonne",
+				"sunRise": "Sonnenaufgang",
+				"sunSet": "Sonnenuntergang",
+				"tempDesc0": "entsetzlich kalt",
+				"tempDesc1": "schneidend kalt",
+				"tempDesc10": "extrem heiß",
+				"tempDesc2": "extrem kalt",
+				"tempDesc3": "eiskalt",
+				"tempDesc4": "kalt",
+				"tempDesc5": "kühl",
+				"tempDesc6": "normal",
+				"tempDesc7": "wärmer",
+				"tempDesc8": "warm",
+				"tempDesc9": "heiß",
 				"temperature": "Temperatur",
-				"wind": "Wind",
-				"windTop": "Wind (Spitze)"
+				"wind": "Wind"
 			}
 		},
 		"plans": {

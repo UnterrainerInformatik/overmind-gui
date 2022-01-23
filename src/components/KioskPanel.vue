@@ -13,6 +13,7 @@
     >
       <v-card :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)">
         <v-card-title
+          v-if="renderTitle != false"
           ><slot
             name="title"
             v-bind:enabled="enabled"
@@ -37,7 +38,8 @@ export default {
   props: {
     isEnabled: {},
     borderColor: {},
-    bgColor: {}
+    bgColor: {},
+    renderTitle: {}
   },
 
   data: () => ({
