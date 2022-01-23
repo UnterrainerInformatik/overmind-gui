@@ -36,7 +36,8 @@ const store = {
         usedSwitches: '/usedswitches',
         guiWindowContacts: '/setup/guiwindowcontacts',
         initialize: '/setupappliance',
-        reloadAppliances: '/setup/reload'
+        reloadAppliances: '/setup/reload',
+        sunRiseSet: '/sunriseset'
       }
     }
   }),
