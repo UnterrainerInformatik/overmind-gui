@@ -58,7 +58,16 @@
 			"linkContact": "Windows And Doors",
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
-			"linkPlugs": "Plugs"
+			"linkPlugs": "Plugs",
+			"zamg": {
+				"airPressure": "Air-Pressure",
+				"humidity": "Humidity",
+				"rain": "Rain",
+				"sun": "Sun",
+				"temperature": "Temperature",
+				"wind": "Wind",
+				"windTop": "Wind (top)"
+			}
 		},
 		"plans": {
 			"viewToggle": {
