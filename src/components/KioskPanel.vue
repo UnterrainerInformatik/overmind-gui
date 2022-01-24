@@ -26,10 +26,6 @@
     </v-card>
 </template>
 
-<style lang="scss">
-@import 'index.scss';
-</style>
-
 <script lang="js">
 
 export default {
@@ -98,4 +94,3 @@ export default {
 .noFocus:focus::before {
   opacity: 0 !important;
 }
-</style>
