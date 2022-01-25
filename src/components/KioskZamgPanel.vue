@@ -7,13 +7,33 @@
     :renderTitle="false"
   >
     <template>
+      <!--
+        <v-row><v-col>
+        <div v-for="(color, i) in colors" :key="i" :class="color">{{descriptions[i]}}<br>{{color}}</div>
+        </v-col></v-row>
+      -->
+      <v-row class="ma-0 pa-0 align-center">
+        <v-col class="ma-0 pa-0 text-left">
+          <div class="middle ma-0 pa-0">
+            {{ $t('page.kiosk.zamg.temperature') }}:
+          </div>
+        </v-col>
+        <v-col class="ma-0 pa-0 text-center">
+          <v-chip
+            text-color="black"
+            class="bold"
+            :color="colors[calculateTemperatureIndex(weather.temperature)]"
+          >
+            {{ weather.temperature }}
+          </v-chip>
+        </v-col>
+      </v-row>
       <v-row class="ma-0 pa-0">
         <v-col class="ma-0 pa-0 text-left">
           <div class="middle ma-0 pa-0">
-            {{ $t('page.kiosk.zamg.temperature') }}:<br />
+            {{ $t('page.kiosk.zamg.description') }}:<br />
             {{ $t('page.kiosk.zamg.wind') }}:<br />
-            {{ $t('page.kiosk.zamg.feltTemp') }}:<br />
-            {{ $t('page.kiosk.zamg.description') }}:
+            {{ $t('page.kiosk.zamg.feltTemp') }}:
           </div>
           <div class="small ma-0 pa-0">
             {{ $t('page.kiosk.zamg.sun') }}:<br />
@@ -25,15 +45,6 @@
         </v-col>
         <v-col class="ma-0 pa-0 text-left">
           <div class="middle ma-0 pa-0">
-            {{ weather.temperature }}<br />
-            {{ weather.wind.substring(weather.wind.indexOf(', ') + 2) }}<br />
-            {{
-              calculateFeltTemperature(
-                weather.temperature,
-                weather.wind.substring(weather.wind.indexOf(', ') + 2),
-                weather.humidity
-              ).toFixed(1)
-            }}<br />
             {{
               calculateTemperatureDescription(
                 calculateFeltTemperature(
@@ -42,6 +53,14 @@
                   weather.humidity
                 )
               )
+            }}<br />
+            {{ weather.wind.substring(weather.wind.indexOf(', ') + 2) }}<br />
+            {{
+              calculateFeltTemperature(
+                weather.temperature,
+                weather.wind.substring(weather.wind.indexOf(', ') + 2),
+                weather.humidity
+              ).toFixed(1)
             }}
           </div>
           <div class="small ma-0 pa-0">
@@ -78,6 +97,8 @@ export default {
   },
 
   data: () => ({
+    colors: ['white', 'blue lighten-5', 'blue lighten-4', 'blue lighten-3', 'teal lighten-3', 'teal lighten-1', 'green lighten-2', 'lime lighten-1', 'amber lighten-2', 'orange lighten-2'],
+    descriptions: ['t < -39', '-39 < t < -26', '-26 < t < -13', '-13 < t < 0', '0 < t < 6', '6 < t < 14', '14 < t < 20', '20 < t < 26', '26 < t < 32', '32 < t < 38', '38 < t'],
     dateUtils,
     weather: null,
     sunRise: null,
@@ -164,38 +185,41 @@ export default {
       return c1 + c2 * temp + c3 * hum + c4 * temp * hum + c5 * pTemp + c6 * pHum + c7 * pTemp * hum + c8 * temp * pHum + c9 * pTemp * pHum
     },
     calculateTemperatureDescription (temperature) {
+      return this.$t('page.kiosk.zamg.tempDesc' + this.calculateTemperatureIndex(temperature))
+    },
+    calculateTemperatureIndex (temperature) {
       const temp = parseFloat(temperature)
       if (temp < -39) {
-        return this.$t('page.kiosk.zamg.tempDesc0')
+        return 0
       }
       if (temp < -26) {
-        return this.$t('page.kiosk.zamg.tempDesc1')
+        return 1
       }
       if (temp < -13) {
-        return this.$t('page.kiosk.zamg.tempDesc2')
+        return 2
       }
       if (temp < 0) {
-        return this.$t('page.kiosk.zamg.tempDesc3')
+        return 3
       }
       if (temp < 6) {
-        return this.$t('page.kiosk.zamg.tempDesc4')
+        return 4
       }
       if (temp < 14) {
-        return this.$t('page.kiosk.zamg.tempDesc5')
+        return 5
       }
       if (temp < 20) {
-        return this.$t('page.kiosk.zamg.tempDesc6')
+        return 6
       }
       if (temp < 26) {
-        return this.$t('page.kiosk.zamg.tempDesc7')
+        return 7
       }
       if (temp < 32) {
-        return this.$t('page.kiosk.zamg.tempDesc8')
+        return 8
       }
       if (temp < 38) {
-        return this.$t('page.kiosk.zamg.tempDesc9')
+        return 9
       }
-      return this.$t('page.kiosk.zamg.tempDesc10')
+      return 10
     }
   },
 
@@ -218,5 +242,8 @@ export default {
   font-size: 10px;
   font-weight: normal;
   line-height: 10px;
+}
+.bold {
+  font-weight: bold;
 }
 </style>
