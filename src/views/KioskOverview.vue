@@ -3,7 +3,7 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <KioskClockPanel></KioskClockPanel>
       <KioskZamgPanel></KioskZamgPanel>
-      <KioskWasteDisposalPanel></KioskWasteDisposalPanel>
+      <KioskWasteDisposalPanel :organic="false"></KioskWasteDisposalPanel>
       <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
       <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>

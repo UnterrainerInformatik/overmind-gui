@@ -94,3 +94,4 @@ export default {
 .noFocus:focus::before {
   opacity: 0 !important;
 }
+</style>

@@ -3,12 +3,32 @@
     v-if="wasteDisposalJson"
     borderColor="secondary"
     bgColor="black"
-    min-width="270"
+    min-width="140"
     :renderTitle="false"
   >
     <template>
-      <div class="small ma-0 pa-0">
-        {{ JSON.stringify(wasteDisposalJson, null, 2) }}
+      <div class="ma-n2 pa-0" v-if="data">
+        <span v-for="(item, i) in data" :key="i">
+          <v-card
+            v-if="item.show"
+            outlined
+            :class="'ma-1 pa-0 ' + item.color + ' ' + getBgColor(item.warn)"
+          >
+            <v-card
+              :class="
+                'fill-height elevation-0 ma-0 px-3 py-1 noFocus ' +
+                (item.warn ? item.color : 'disabled') +
+                getBgColor(item.warn)
+              "
+              ><v-row class="ma-0 pa-0"
+                ><v-col class="ma-0 ml-n2 pa-0 small">{{
+                  $t('page.kiosk.wasteBin.' + item.name)
+                }}</v-col><v-col class="ma-0 mr-n4 pa-0">{{ item.date.substring(0,5) }}</v-col
+                ></v-row
+              ></v-card
+            >
+          </v-card>
+        </span>
       </div>
     </template>
   </KioskPanel>
@@ -27,6 +47,14 @@ export default {
   name: 'KioskWasteDisposalPanel',
 
   props: {
+    waste: { default: true },
+    organic: { default: true },
+    plastic: { default: true },
+    paper: { default: true },
+    wasteWarnDaysBefore: { default: 1 },
+    organicWarnDaysBefore: { default: 1 },
+    plasticWarnDaysBefore: { default: 1 },
+    paperWarnDaysBefore: { default: 1 }
   },
 
   components: {
@@ -35,7 +63,8 @@ export default {
 
   data: () => ({
     dateUtils,
-    wasteDisposalJson: null
+    wasteDisposalJson: null,
+    data: null
   }),
 
   computed: {
@@ -45,6 +74,20 @@ export default {
   },
 
   methods: {
+    getBgColor (enabled) {
+      if (enabled == null || enabled === undefined) {
+        if (this.$vuetify.theme.dark) {
+          return ' darken-4'
+        }
+      } else {
+        if (this.$vuetify.theme.dark) {
+          return ' darken-4'
+        } else {
+          return ' lighten-1'
+        }
+      }
+      return ''
+    },
     update () {
       localizedDataService.getByIdentifier('wasteDisposalEnns').then((response) => {
         if (response == null) {
@@ -56,7 +99,34 @@ export default {
         } else {
           this.wasteDisposalJson = JSON.parse(response.en)
         }
+
+        const now = new Date()
+        const d = []
+
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange', this.wasteWarnDaysBefore))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green', this.organicWarnDaysBefore))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow', this.plasticWarnDaysBefore))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red', this.paperWarnDaysBefore))
+        this.data = d
       })
+    },
+    findFirstFutureDate (now, dates, show, name, color, warnDaysBefore) {
+      for (const ds of dates) {
+        const ps = ds.split('.')
+        const d = new Date(ps[2], ps[1] - 1, ps[0])
+        if (d > now) {
+          const distance = (d - now) / 1000 / 60 / 60 / 24
+          return {
+            date: dateUtils.dateToDatePadded(d, this.$i18n.locale),
+            distanceInDays: distance,
+            warn: distance <= warnDaysBefore,
+            show,
+            name,
+            color
+          }
+        }
+      }
+      return null
     }
   },
 
@@ -79,5 +149,8 @@ export default {
   font-size: 10px;
   font-weight: normal;
   line-height: 10px;
+}
+.noFocus:focus::before {
+  opacity: 0 !important;
 }
 </style>
