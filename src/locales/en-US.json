@@ -59,6 +59,12 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"wasteBin": {
+				"organic": "Organic",
+				"paper": "Paper",
+				"plastic": "Plastic",
+				"waste": "Residual"
+			},
 			"zamg": {
 				"description": "Description",
 				"feltTemp": "Subjective",

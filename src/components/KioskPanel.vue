@@ -26,10 +26,6 @@
     </v-card>
 </template>
 
-<style lang="scss">
-@import 'index.scss';
-</style>
-
 <script lang="js">
 
 export default {

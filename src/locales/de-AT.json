@@ -59,6 +59,12 @@
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
+			"wasteBin": {
+				"organic": "Biomüll",
+				"paper": "Papier",
+				"plastic": "Plastik",
+				"waste": "Restmüll"
+			},
 			"zamg": {
 				"description": "Beschreibung",
 				"feltTemp": "Gefühlt",
