@@ -60,7 +60,7 @@
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
 			"wasteBin": {
-				"organic": "Bio",
+				"organic": "Biomüll",
 				"paper": "Papier",
 				"plastic": "Plastik",
 				"waste": "Restmüll"
