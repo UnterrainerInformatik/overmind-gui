@@ -12,7 +12,7 @@
             v-on="on"
             fab
             small
-            ><v-icon>menu</v-icon></v-btn
+            ><v-icon>toggle_off</v-icon></v-btn
           >
         </template>
         <v-list

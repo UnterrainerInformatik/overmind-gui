@@ -16,9 +16,11 @@
           $vuetify.theme.dark ? 'grey--text' : 'black--text'
         } fill-height`"
       >
-        <div v-if="renderTitle" class="mb-4"><slot name="title" v-bind:enabled="enabled"></slot></div>
-        <div><slot v-bind:enabled="enabled"></slot
-      ></div></v-card-text>
+        <div v-if="renderTitle" class="mb-4">
+          <slot name="title" v-bind:enabled="enabled"></slot>
+        </div>
+        <div><slot v-bind:enabled="enabled"></slot></div
+      ></v-card-text>
     </v-card>
   </v-card>
 </template>

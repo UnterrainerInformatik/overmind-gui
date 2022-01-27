@@ -13,65 +13,81 @@
         <div v-for="(color, i) in colors" :key="i" :class="color">{{descriptions[i]}}<br>{{color}}</div>
         </v-col></v-row>
       -->
-      <v-card class="black ma-n2 pa-2" min-width="252" height="100%" max-width="252">
-      <v-card-text class="pa-2">
-        <v-row class="ma-0 pa-0 align-center">
-          <v-col class="ma-0 pa-0 text-left">
-            <div class="middle ma-0 pa-0">
-              {{ $t('page.kiosk.zamg.temperature') }}:
-            </div>
-          </v-col>
-          <v-col class="ma-0 pa-0 text-center">
-            {{ weather.temperature }}
-          </v-col>
-        </v-row>
-        <v-row class="ma-0 pa-0">
-          <v-col class="ma-0 pa-0 text-left">
-            <div class="middle ma-0 pa-0">
-              {{ $t('page.kiosk.zamg.description') }}:<br />
-              {{ $t('page.kiosk.zamg.wind') }}:<br />
-              {{ $t('page.kiosk.zamg.feltTemp') }}:
-            </div>
-            <div class="small ma-0 pa-0">
-              {{ $t('page.kiosk.zamg.sun') }}:<br />
-              {{ $t('page.kiosk.zamg.rain') }}:
-            </div>
-          </v-col>
-          <v-col class="ma-0 pa-0 text-left">
-            <div class="middle ma-0 pa-0">
-              {{
-                calculateTemperatureDescription(
-                  calculateFeltTemperature(
-                    weather.temperature,
-                    weather.wind.substring(weather.wind.indexOf(', ') + 2),
-                    weather.humidity
-                  )
-                )
-              }}<br />
-              {{ weather.wind.substring(weather.wind.indexOf(', ') + 2) }}<br />
-              {{
-                calculateFeltTemperature(
-                  weather.temperature,
-                  weather.wind.substring(weather.wind.indexOf(', ') + 2),
-                  weather.humidity
-                ).toFixed(1)
-              }}
-            </div>
-            <div class="small ma-0 pa-0">
-              {{ weather.sun }}<br />
-              {{ weather.rain }}
-            </div>
-          </v-col>
-        </v-row>
-        <v-row class="ma-0 mt-2 mb-n2 pa-0 align-center">
-          <v-col class="ma-0 pa-0 text-center">
-            <div class="small ma-0 pa-0">
-              <v-icon x-small color="white">brightness_5</v-icon>
-              &nbsp;&nbsp;{{ sunRise }} - {{ noon }} - {{ sunSet }}&nbsp;&nbsp;
-              <v-icon x-small color="white">brightness_2</v-icon>
-            </div>
-          </v-col>
-        </v-row>
+      <v-card
+        class="black ma-n2 pa-2"
+        min-width="252"
+        max-width="252"
+        height="145"
+      >
+        <v-card-text class="pa-2">
+          <v-row class="ma-0 mt-1 mb-5 pa-0 align-center">
+            <v-col
+              class="middle ma-0 pa-0 text-center"
+              style="font-weight: bold"
+            >
+              <v-icon color="white">thermostat</v-icon>
+              {{ weather.temperature }}
+            </v-col>
+            <v-col class="small ma-0 pa-0 text-center">
+              <v-row class="ma-0 pa-0" cols="12"
+                ><v-col class="ma-0 mr-5 pa-0" cols="1">
+                  <v-icon color="white">psychology</v-icon>
+                </v-col>
+                <v-col class="ma-0 pa-0 text-left">
+                  <v-row class="ma-0 mb-1 pa-0">
+                    <v-col class="ma-0 pa-0">
+                      {{
+                        calculateFeltTemperature(
+                          weather.temperature,
+                          weather.wind.substring(
+                            weather.wind.indexOf(', ') + 2
+                          ),
+                          weather.humidity
+                        ).toFixed(1)
+                      }}°
+                    </v-col></v-row
+                  >
+                  <v-row class="ma-0 pa-0"
+                    ><v-col class="ma-0 pa-0">
+                      ({{
+                        calculateTemperatureDescription(
+                          calculateFeltTemperature(
+                            weather.temperature,
+                            weather.wind.substring(
+                              weather.wind.indexOf(', ') + 2
+                            ),
+                            weather.humidity
+                          )
+                        )
+                      }})
+                    </v-col></v-row
+                  >
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+          <v-row class="ma-0 my-3 pa-0 align-center">
+            <v-col class="ma-0 pa-0 text-center">
+              <div class="small ma-0 pa-0">
+                <v-icon color="white">wb_sunny</v-icon>
+                {{ weather.sun }}
+                &nbsp;&nbsp;<v-icon color="white">water_drop</v-icon>
+                {{ weather.rain }}
+                &nbsp;&nbsp;<v-icon color="white">air</v-icon>
+                {{ weather.wind.substring(weather.wind.indexOf(', ') + 2) }}
+              </div>
+            </v-col>
+          </v-row>
+          <v-row class="ma-0 my-5 mb-n2 pa-0 align-center">
+            <v-col class="ma-0 pa-0 text-center">
+              <div class="small ma-0 pa-0">
+                <v-icon x-small color="white">wb_sunny</v-icon>
+                &nbsp;&nbsp;{{ sunRise }} - {{ noon }} -
+                {{ sunSet }}&nbsp;&nbsp;
+                <v-icon x-small color="white">brightness_2</v-icon>
+              </div>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
     </template>
