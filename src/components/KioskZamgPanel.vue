@@ -34,7 +34,7 @@
                   <v-icon color="white">psychology</v-icon>
                 </v-col>
                 <v-col class="ma-0 pa-0 text-left">
-                  <v-row class="ma-0 pa-0">
+                  <v-row class="ma-0 mb-1 pa-0">
                     <v-col class="ma-0 pa-0">
                       {{
                         calculateFeltTemperature(
