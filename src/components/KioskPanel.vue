@@ -1,29 +1,26 @@
 <template>
+  <v-card
+    outlined
+    :class="`ma-1 pa-${borderSize - 1} ${
+      borderColor ? borderColor : (enabled ? 'on ' : 'off ') + 'darken-1'
+    }`"
+    max-width="180px"
+    v-bind="$attrs"
+    v-on="$listeners"
+  >
     <v-card
-      outlined
-      :class="
-        'ma-1 pa-0 ' +
-        (borderColor
-          ? borderColor
-          : (enabled ? 'on ' : 'off ') + 'darken-1')
-      "
-      max-width="180px"
-      v-bind="$attrs"
-      v-on="$listeners"
+      :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)"
     >
-      <v-card :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)">
-        <v-card-title
-          v-if="renderTitle != false"
-          ><slot
-            name="title"
-            v-bind:enabled="enabled"
-          ></slot
-        ></v-card-title>
-        <v-card-text :class="$vuetify.theme.dark ? 'grey--text' : 'black--text'"
-          ><slot v-bind:enabled="enabled"></slot
-        ></v-card-text>
-      </v-card>
+      <v-card-text
+        :class="`${
+          $vuetify.theme.dark ? 'grey--text' : 'black--text'
+        } fill-height`"
+      >
+        <div v-if="renderTitle" class="mb-4"><slot name="title" v-bind:enabled="enabled"></slot></div>
+        <div><slot v-bind:enabled="enabled"></slot
+      ></div></v-card-text>
     </v-card>
+  </v-card>
 </template>
 
 <script lang="js">
@@ -35,7 +32,8 @@ export default {
     isEnabled: {},
     borderColor: {},
     bgColor: {},
-    renderTitle: {}
+    renderTitle: { default: true },
+    borderSize: { default: 1 }
   },
 
   data: () => ({
