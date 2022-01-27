@@ -1,5 +1,3 @@
-import { singleton as dateUtils } from '@/utils/dateUtils'
-
 class OvermindUtils {
   private static instanceField: OvermindUtils
 
@@ -40,7 +38,7 @@ class OvermindUtils {
         return 'camera'
       case 'DIMMER':
       case 'BULB_RGB':
-        return 'lightbulb'
+        return 'emoji_objects'
       case 'DEBUGGER':
         return 'bug_report'
       case 'GROUP_SERIAL':
@@ -53,11 +51,12 @@ class OvermindUtils {
       case 'CONTACT_SENSOR':
         return 'meeting_room'
       case 'MOTION_SENSOR':
-        return 'vibration'
+        return 'track_changes'
       case 'PLUG':
+        return 'power'
       case 'RELAY_DUAL':
       case 'RELAY':
-        return 'power'
+        return 'outlet'
       case 'STATE_CHECKER':
         return 'check_circle_outline'
       default:
@@ -70,7 +69,7 @@ class OvermindUtils {
       return
     }
 
-    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 13) {
+    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 14) {
       item.onOffState = 'error'
       return
     }
