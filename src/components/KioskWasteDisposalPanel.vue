@@ -21,9 +21,19 @@
                 getBgColor(item.warn)
               "
               ><v-row class="ma-0 pa-0"
-                ><v-col class="ma-0 ml-n2 pa-0 small">{{
-                  $t('page.kiosk.wasteBin.' + item.name)
-                }}</v-col><v-col class="ma-0 mr-n4 pa-0">{{ item.date.substring(0,5) }}</v-col
+                ><v-col
+                  :class="
+                    'ma-0 ml-n2 pa-0 small ' + (item.warn ? 'black--text' : '')
+                  "
+                  >{{ $t('page.kiosk.wasteBin.' + item.name) }}</v-col
+                >
+                <v-col class="ma-0 ml-1 mr-n5 pa-0">
+                  <v-icon color="black" small v-if="item.warn">logout</v-icon>
+                  <v-icon small v-if="item.return">input</v-icon>
+                </v-col>
+                <v-col
+                  :class="'ma-0 mr-n3 pa-0 ' + (item.warn ? 'black--text' : '')"
+                  >{{ item.date.substring(0, 5) }}</v-col
                 ></v-row
               ></v-card
             >
@@ -51,10 +61,10 @@ export default {
     organic: { default: true },
     plastic: { default: true },
     paper: { default: true },
-    wasteWarnDaysBefore: { default: 1 },
-    organicWarnDaysBefore: { default: 1 },
-    plasticWarnDaysBefore: { default: 1 },
-    paperWarnDaysBefore: { default: 1 }
+    wasteWarnDaysBefore: { default: 2 },
+    organicWarnDaysBefore: { default: 2 },
+    plasticWarnDaysBefore: { default: 2 },
+    paperWarnDaysBefore: { default: 2 }
   },
 
   components: {
@@ -101,6 +111,8 @@ export default {
         }
 
         const now = new Date()
+        // Get yesterday to be able to display return-time as well.
+        now.setDate(now.getDate() - 1)
         const d = []
 
         d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange', this.wasteWarnDaysBefore))
@@ -119,7 +131,8 @@ export default {
           return {
             date: dateUtils.dateToDatePadded(d, this.$i18n.locale),
             distanceInDays: distance,
-            warn: distance <= warnDaysBefore,
+            warn: distance <= warnDaysBefore && distance >= 0.5,
+            return: distance < 0.5,
             show,
             name,
             color
