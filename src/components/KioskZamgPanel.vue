@@ -14,27 +14,27 @@
         </v-col></v-row>
       -->
       <v-card
-        class="black ma-n2 pa-2"
-        min-width="252"
-        max-width="252"
+        class="black ma-n3 pa-1"
+        min-width="260"
+        max-width="260"
         height="145"
       >
-        <v-card-text class="pa-2">
-          <v-row class="ma-0 mt-1 mb-5 pa-0 align-center">
+        <v-card-text class="pa-1">
+          <v-row class="ma-0 mt-2 mb-6 pa-0 align-center">
             <v-col
               class="middle ma-0 pa-0 text-center"
               style="font-weight: bold"
             >
-              <v-icon color="white">thermostat</v-icon>
+              <v-icon large color="white">thermostat</v-icon>
               {{ weather.temperature }}
             </v-col>
             <v-col class="small ma-0 pa-0 text-center">
               <v-row class="ma-0 pa-0" cols="12"
-                ><v-col class="ma-0 mr-5 pa-0" cols="1">
-                  <v-icon color="white">psychology</v-icon>
+                ><v-col class="ma-0 mr-7 pa-0" cols="1">
+                  <v-icon large color="white">psychology</v-icon>
                 </v-col>
                 <v-col class="ma-0 pa-0 text-left">
-                  <v-row class="ma-0 mb-1 pa-0">
+                  <v-row class="ma-0 mt-1 mb-1 pa-0">
                     <v-col class="ma-0 pa-0">
                       {{
                         calculateFeltTemperature(
@@ -78,7 +78,7 @@
               </div>
             </v-col>
           </v-row>
-          <v-row class="ma-0 my-5 mb-n2 pa-0 align-center">
+          <v-row class="ma-0 my-6 mt-7 mb-n2 pa-0 align-center">
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0">
                 <v-icon x-small color="white">wb_sunny</v-icon>
