@@ -49,7 +49,7 @@
                   >
                   <v-row class="ma-0 pa-0"
                     ><v-col class="ma-0 pa-0">
-                      ({{
+                      {{
                         calculateTemperatureDescription(
                           calculateFeltTemperature(
                             weather.temperature,
@@ -59,7 +59,7 @@
                             weather.humidity
                           )
                         )
-                      }})
+                      }}
                     </v-col></v-row
                   >
                 </v-col>

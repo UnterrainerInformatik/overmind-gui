@@ -7,39 +7,43 @@
     :renderTitle="false"
   >
     <template>
-      <div class="ma-n2 pa-0" v-if="data">
-        <span v-for="(item, i) in data" :key="i">
-          <v-card
-            v-if="item.show"
-            outlined
-            :class="'ma-1 pa-0 ' + item.color + ' ' + getBgColor(item.warn)"
-          >
+      <v-container class="ma-0 pa-0 d-fluid" v-if="data">
+        <v-row v-for="(item, i) in data" :key="i">
+          <v-col class="ma-1 pa-0" v-if="item.show">
             <v-card
-              :class="
-                'fill-height elevation-0 ma-0 px-3 py-1 noFocus ' +
-                (item.warn ? item.color : 'disabled') +
-                getBgColor(item.warn)
-              "
-              ><v-row class="ma-0 pa-0"
-                ><v-col
-                  :class="
-                    'ma-0 ml-n2 pa-0 small ' + (item.warn ? 'black--text' : '')
-                  "
-                  >{{ $t('page.kiosk.wasteBin.' + item.name) }}</v-col
-                >
-                <v-col class="ma-0 ml-1 mr-n5 pa-0">
-                  <v-icon color="black" small v-if="item.warn">logout</v-icon>
-                  <v-icon small v-if="item.return">input</v-icon>
-                </v-col>
-                <v-col
-                  :class="'ma-0 mr-n3 pa-0 ' + (item.warn ? 'black--text' : '')"
-                  >{{ item.date.substring(0, 5) }}</v-col
-                ></v-row
-              ></v-card
+              outlined
+              :class="'ma-0 pa-0 ' + item.color + ' ' + getBgColor(item.warn)"
             >
-          </v-card>
-        </span>
-      </div>
+              <v-card
+                :class="
+                  'fill-height elevation-0 ma-0 px-3 py-1 noFocus ' +
+                  (item.warn ? item.color : 'disabled') +
+                  getBgColor(item.warn)
+                "
+                ><v-row class="ma-0 pa-0"
+                  ><v-col
+                    :class="
+                      'ma-0 ml-n2 pa-0 small ' +
+                      (item.warn ? 'black--text' : '')
+                    "
+                    >{{ $t('page.kiosk.wasteBin.' + item.name) }}</v-col
+                  >
+                  <v-col class="ma-0 ml-1 mr-n5 pa-0">
+                    <v-icon color="black" small v-if="item.warn">logout</v-icon>
+                    <v-icon small v-if="item.return">input</v-icon>
+                  </v-col>
+                  <v-col
+                    :class="
+                      'ma-0 mr-n3 pa-0 ' + (item.warn ? 'black--text' : '')
+                    "
+                    >{{ item.date.substring(0, 5) }}</v-col
+                  ></v-row
+                ></v-card
+              >
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </template>
   </KioskPanel>
 </template>
@@ -61,10 +65,10 @@ export default {
     organic: { default: true },
     plastic: { default: true },
     paper: { default: true },
-    wasteWarnDaysBefore: { default: 2 },
-    organicWarnDaysBefore: { default: 2 },
-    plasticWarnDaysBefore: { default: 2 },
-    paperWarnDaysBefore: { default: 2 }
+    wasteWarnDaysBefore: { default: 1 },
+    organicWarnDaysBefore: { default: 1 },
+    plasticWarnDaysBefore: { default: 1 },
+    paperWarnDaysBefore: { default: 1 }
   },
 
   components: {
@@ -115,10 +119,10 @@ export default {
         now.setDate(now.getDate() - 1)
         const d = []
 
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange', this.wasteWarnDaysBefore))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green', this.organicWarnDaysBefore))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow', this.plasticWarnDaysBefore))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red', this.paperWarnDaysBefore))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange', this.wasteWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green', this.organicWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow', this.plasticWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red', this.paperWarnDaysBefore + 1))
         this.data = d
       })
     },

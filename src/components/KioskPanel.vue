@@ -14,7 +14,7 @@
       <v-card-text
         :class="`${
           $vuetify.theme.dark ? 'grey--text' : 'black--text'
-        } fill-height`"
+        } fill-height ${pa ? 'pa-' + pa : ''}`"
       >
         <div v-if="renderTitle" class="mb-4">
           <slot name="title" v-bind:enabled="enabled"></slot>
@@ -35,7 +35,8 @@ export default {
     borderColor: {},
     bgColor: {},
     renderTitle: { default: true },
-    borderSize: { default: 1 }
+    borderSize: { default: 1 },
+    pa: { default: null }
   },
 
   data: () => ({
