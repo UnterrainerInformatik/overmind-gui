@@ -18,6 +18,10 @@ export class AppliancesService extends BaseService {
     return this.axiosUtils.getList(this.server, 'initialize', 1, 0, `id=${id}`)
   }
 
+  public async reboot (id: number | string) {
+    return this.axiosUtils.getList(this.server, 'reboot', 1, 0, `id=${id}`)
+  }
+
   public async turnOn (id: number | string, actorPath: string) {
     return this.axiosUtils.post(this.server, 'execute', () => {
       return {

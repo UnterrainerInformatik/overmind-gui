@@ -14,7 +14,8 @@ const store = {
     kioskMode: false,
     modalLoading: false,
     drawerVisible: false,
-    lastMdAndUp: true
+    lastMdAndUp: true,
+    floorplan: null
   }),
 
   mutations: {
@@ -32,6 +33,9 @@ const store = {
     },
     lastMdAndUp (state, value) {
       state.lastMdAndUp = value
+    },
+    floorplan (state, value) {
+      state.floorplan = value
     }
   },
 
@@ -57,6 +61,10 @@ const store = {
     lastMdAndUp (context, value) {
       context.commit('lastMdAndUp', value)
       return Promise.resolve()
+    },
+    floorplan (context, value) {
+      context.commit('floorplan', value)
+      return Promise.resolve()
     }
   },
 
@@ -72,6 +80,9 @@ const store = {
     },
     lastMdAndUp: state => {
       return state.lastMdAndUp
+    },
+    floorplan: state => {
+      return state.floorplan
     }
   }
 

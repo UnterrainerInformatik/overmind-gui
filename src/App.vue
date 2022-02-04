@@ -138,6 +138,11 @@ export default {
   },
 
   mounted () {
+    if (this.$store.state.gui.floorplan == null) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      this.$store.dispatch('gui/floorplan', require('@/assets/plan.png'))
+    }
+
     const lang = localStorage.getItem('languageKey')
     if (lang) {
       console.log('Loaded languageKey: ' + lang)
