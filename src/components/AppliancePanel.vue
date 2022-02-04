@@ -88,10 +88,19 @@
                     small
                     v-if="item.config && item.config.address"
                     :disabled="disabled"
-                    :class="color"
+                    :class="`mr-4 ${color}`"
                     @click.stop="initializeAppliance(item)"
                   >
                     <v-icon>update</v-icon>
+                  </v-btn>
+                  <v-btn
+                    fab
+                    small
+                    v-if="item.config && item.config.address"
+                    class="error"
+                    @click.stop="appliancesService.reboot(item.id)"
+                  >
+                    <v-icon>restart_alt</v-icon>
                   </v-btn>
                 </span>
               </v-expansion-panel-header>
@@ -156,6 +165,7 @@ export default {
 
   data: () => ({
     overmindUtils,
+    appliancesService,
     disabled: false,
     color: 'warning'
   }),

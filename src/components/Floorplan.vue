@@ -83,7 +83,7 @@
         :width="imgWidth"
         :height="imgHeight"
         class="noFocus"
-        :src="require('@/assets/plan.png')"
+        :src="$store.state.gui.floorplan"
         alt="Map of the building"
         usemap="#image-map"
       />
