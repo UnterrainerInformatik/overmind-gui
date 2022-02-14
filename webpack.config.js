@@ -5,6 +5,7 @@ module.exports = {
       use: [
         'vue-style-loader',
         'css-loader',
+        'sass-loader',
         {
           loader: 'sass-loader',
           // Requires sass-loader@^8.0.0

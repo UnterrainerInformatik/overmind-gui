@@ -94,7 +94,8 @@ export default {
     },
     localeBackingField: '',
     darkTheme: 'false',
-    languageKey: 'de'
+    languageKey: 'de',
+    floorplan: new Image()
   }),
 
   computed: {
@@ -141,6 +142,8 @@ export default {
     if (this.$store.state.gui.floorplan == null) {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       this.$store.dispatch('gui/floorplan', require('@/assets/plan.png'))
+      this.floorplan.src = this.$store.state.gui.floorplan
+      console.log(this.floorplan)
     }
 
     const lang = localStorage.getItem('languageKey')
