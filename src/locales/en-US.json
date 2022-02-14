@@ -113,6 +113,11 @@
 	"pageTitle": {
 		"about": "About",
 		"appliances": "Devices",
+		"kioskContact": "",
+		"kioskLights": "",
+		"kioskMovement": "",
+		"kioskOverview": "",
+		"kioskPlugs": "",
 		"logout": "Logout",
 		"plans": "Plans",
 		"preferences": "Preferences",
