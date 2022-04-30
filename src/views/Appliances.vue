@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0">
-      <span v-for="(item, i) in appliances" :key="i">
+      <span v-for="item in appliances" :key="item.id">
         <AppliancePanel
           :item="item"
         ></AppliancePanel>
