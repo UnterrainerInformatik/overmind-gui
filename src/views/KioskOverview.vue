@@ -12,6 +12,7 @@
         <v-col class="ma-0 pa-0 d-flex flex-wrap" cols="12">
           <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="shuttersFirstFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
@@ -68,6 +69,7 @@ export default {
     allHereGoneItem: {},
     allAsleepItem: {},
     shuttersGroundFloor: {},
+    shuttersFirstFloor: {},
     tv: {},
     snuggling: {},
     bioTrash: {},
@@ -107,6 +109,15 @@ export default {
         description: 'Rollos Erdgeschoß runter',
         isEnabled: () => {
           return plansService.isPlanEnabled(64)
+        }
+      }
+      this.shuttersFirstFloor = {
+        planId: 72,
+        sensorPath: 'switch1',
+        eventPath: 'off.click',
+        description: 'Rollos 1.Stock rauf',
+        isEnabled: () => {
+          return plansService.isPlanEnabled(74)
         }
       }
       this.tv = {
