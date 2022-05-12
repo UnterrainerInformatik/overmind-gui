@@ -114,10 +114,10 @@ export default {
       this.shuttersFirstFloor = {
         planId: 72,
         sensorPath: 'switch1',
-        eventPath: 'off.click',
+        eventPath: 'on.click',
         description: 'Rollos 1.Stock rauf',
         isEnabled: () => {
-          return plansService.isPlanEnabled(74)
+          return plansService.isPlanEnabled(86)
         }
       }
       this.tv = {
