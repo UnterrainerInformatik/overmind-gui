@@ -24,7 +24,7 @@
           <v-container fluid class="ma-0 pa-0">
             <v-row class="ma-0 pa-0 align-center">
               <v-col class="ma-0 pa-0">
-                <span class="ml-2 text-caption">{{ item.name }}</span>
+                <span class="ml-2 text-caption">{{ item.name }} [{{ item.id }}]</span>
               </v-col>
               <v-col class="ma-0 pa-0">
                 <span
