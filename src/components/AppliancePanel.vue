@@ -7,8 +7,7 @@
       <v-expansion-panel class="ma-0 pa-0">
         <v-expansion-panel-header
           :class="
-            'my-0 py-0 secondary ' +
-            ($vuetify.theme.dark ? 'darken-1' : '')
+            'my-0 py-0 secondary ' + ($vuetify.theme.dark ? 'darken-1' : '')
           "
         >
           <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
@@ -24,15 +23,17 @@
           <v-container fluid class="ma-0 pa-0">
             <v-row class="ma-0 pa-0 align-center">
               <v-col class="ma-0 pa-0">
-                <span class="ml-2 text-caption">{{ item.name }} [{{ item.id }}]</span>
+                <span class="ml-2 text-caption"
+                  >{{ item.name }} [{{ item.id }}]</span
+                >
               </v-col>
               <v-col class="ma-0 pa-0">
                 <span
                   v-if="
                     item.state &&
-                    item.state.temperatures &&
-                    item.state.temperatures[0] &&
-                    item.state.temperatures[0].temperature
+                      item.state.temperatures &&
+                      item.state.temperatures[0] &&
+                      item.state.temperatures[0].temperature
                   "
                   class="text-button"
                   >{{ item.state.temperatures[0].temperature }}°C</span
@@ -48,9 +49,9 @@
                 <BatteryIndicator
                   v-if="
                     item.state &&
-                    item.state.batteries &&
-                    item.state.batteries[0] &&
-                    item.state.batteries[0].batteryLevel
+                      item.state.batteries &&
+                      item.state.batteries[0] &&
+                      item.state.batteries[0].batteryLevel
                   "
                   :level="
                     Math.round(item.state.batteries[0].batteryLevel * 100)
@@ -68,7 +69,7 @@
               <v-expansion-panel-header
                 :class="
                   'my-0 py-0 secondary ' +
-                  ($vuetify.theme.dark ? 'darken-2' : 'darken-1')
+                    ($vuetify.theme.dark ? 'darken-2' : 'darken-1')
                 "
               >
                 <span class="my-1">
@@ -107,9 +108,15 @@
               <v-expansion-panel-content
                 :class="
                   'mt-1 secondary' +
-                  ($vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
+                    ($vuetify.theme.dark ? 'lighten-1' : ' lighten-2')
                 "
               >
+                <v-row>
+                  <v-col>
+                    <v-form-base v-if="specificItemData"
+                    :model="specificItemData"
+                  </v-col>
+                </v-row>
                 <v-row>
                   <v-col>
                     <v-form-base
@@ -171,6 +178,22 @@ export default {
   }),
 
   computed: {
+    specificItemData () {
+      if (!this.item) {
+        return null
+      }
+      return {
+        id: this.item.id,
+        name: this.item.name,
+        enabled: this.item.enabled,
+        lastTimeOnline: this.item.lastTimeOnline,
+        pingable: this.item.pingable,
+        type: this.item.type,
+        usageType: this.item.usageType,
+        batteryDriven: this.item.batteryDriven,
+        classFqn: this.item.classFqn
+      }
+    },
     ...mapGetters('gui/tooltips', {
       tooltips: 'tooltips',
       openDelay: 'openDelay'
