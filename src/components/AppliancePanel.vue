@@ -113,8 +113,12 @@
               >
                 <v-row>
                   <v-col>
-                    <v-form-base v-if="specificItemData"
-                    :model="specificItemData"
+                    <v-form-base
+                      v-if="specificItemData"
+                      :model="specificItemData"
+                      :col="{ xs: 12, sm: 6 }"
+                      class="border-frame"
+                    />
                   </v-col>
                 </v-row>
                 <v-row>
