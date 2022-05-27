@@ -39,26 +39,7 @@ export default {
   },
 
   data: () => ({
-    areas: [
-      {
-        title: 'cellar-vestibule',
-        appId: 0,
-        iconPos: [195, 160],
-        coords: [163, 150, 268, 149, 268, 224, 165, 225]
-      },
-      {
-        title: 'cellar-stairs-up',
-        appId: 0,
-        iconPos: [160, 114],
-        coords: [214, 148, 165, 146, 166, 56, 229, 57, 214, 106]
-      },
-      {
-        title: '1st-stairs-down',
-        appId: 0,
-        iconPos: [660, 70],
-        coords: [660, 109, 704, 108, 703, 18, 658, 18]
-      }
-    ]
+    areas: []
   }),
 
   watch: {
