@@ -5,6 +5,7 @@
       borderColor ? borderColor : (enabled ? 'on ' : 'off ') + 'darken-1'
     }`"
     max-width="180px"
+    :min-width="minWidth"
     v-bind="$attrs"
     v-on="$listeners"
   >
@@ -34,6 +35,7 @@ export default {
     isEnabled: {},
     borderColor: {},
     bgColor: {},
+    minWidth: { default: '100px' },
     renderTitle: { default: true },
     borderSize: { default: 1 },
     pa: { default: null }
