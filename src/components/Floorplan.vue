@@ -5,7 +5,7 @@
       ref="backgroundMeasurement"
       class="ma-0 pa-0"
     ></v-row>
-    <div style="position: relative; width: 100vw">
+    <div :style="`position: relative; width: 100vw`">
       <canvas
         class="noFocus"
         ref="canvas"
@@ -20,7 +20,7 @@
             v-if="
               !isError(area) && displayBattery(area) && appMap.get(area.appId)
             "
-            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            :size="avatarBaseSize * scale"
             :level="
               Math.round(
                 appMap.get(area.appId).state.batteries[0].batteryLevel * 100
@@ -28,28 +28,30 @@
             "
             v-on:click="areaClicked($event, area, true)"
             :style="
-              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
-              `position: absolute; top: ${
-                area.iconPos[1] * (imgWidth / fullImgWidth)
-              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+              (clickableIcons
+                ? 'cursor: pointer !important; '
+                : 'cursor: default !important; ') +
+                `position: absolute; top: ${area.iconPos[1] *
+                  scale}px; left: ${area.iconPos[0] * scale}px`
             "
           ></BatteryIndicator>
           <v-avatar
             v-if="
               (!isError(area) || !appMap.get(area.appId)) &&
-              !displayBattery(area)
+                !displayBattery(area)
             "
-            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            :size="avatarBaseSize * scale"
             :color="
               getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
             "
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
-              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
-              `position: absolute; top: ${
-                area.iconPos[1] * (imgWidth / fullImgWidth)
-              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+              (clickableIcons
+                ? 'cursor: pointer !important; '
+                : 'cursor: default !important; ') +
+                `position: absolute; top: ${area.iconPos[1] *
+                  scale}px; left: ${area.iconPos[0] * scale}px`
             "
           >
             <v-icon
@@ -64,15 +66,16 @@
           </v-avatar>
           <v-avatar
             v-if="isError(area) && appMap.get(area.appId)"
-            :size="avatarBaseSize * (imgWidth / fullImgWidth)"
+            :size="avatarBaseSize * scale"
             color="red"
             class="noFocus"
             v-on:click="areaClicked($event, area, true)"
             :style="
-              (clickableIcons ? 'cursor: pointer !important; ' : 'cursor: default !important; ') +
-              `position: absolute; top: ${
-                area.iconPos[1] * (imgWidth / fullImgWidth)
-              }px; left: ${area.iconPos[0] * (imgWidth / fullImgWidth)}px`
+              (clickableIcons
+                ? 'cursor: pointer !important; '
+                : 'cursor: default !important; ') +
+                `position: absolute; top: ${area.iconPos[1] *
+                  scale}px; left: ${area.iconPos[0] * scale}px`
             "
           >
             <v-icon size="20" color="white">bolt</v-icon>
@@ -97,12 +100,11 @@
           :alt="area.title"
           :title="area.title"
           href="#"
-          :coords="
-            area.coords.map((e) => e * (imgWidth / fullImgWidth)).toString()
-          "
+          :coords="area.coords.map(e => e * scale).toString()"
           shape="poly"
         />
       </map>
+      img:{{ imgWidth }} / {{ imgHeight }} full:{{ fullImgWidth }} / {{ fullImgHeight }} scale:{{ scale }}
     </div>
   </span>
 </template>
@@ -157,6 +159,9 @@ export default {
   }),
 
   computed: {
+    scale () {
+      return this.imgWidth / this.fullImgWidth
+    }
   },
 
   watch: {
@@ -186,9 +191,9 @@ export default {
       if (!this.$refs.backgroundMeasurement) {
         return
       }
-      this.imgWidth = this.$refs.backgroundMeasurement.clientWidth
+      this.imgWidth = this.$refs.backgroundMeasurement.getBoundingClientRect().width
       this.imgWidth = this.imgWidth - this.imgWidth / 30
-      this.imgHeight = this.fullImgHeight * (this.imgWidth / this.fullImgWidth)
+      this.imgHeight = this.fullImgHeight * this.scale
       const canvas = this.$refs.canvas
       this.ctx = canvas.getContext('2d')
       this.redraw(false)
@@ -267,7 +272,7 @@ export default {
       if (reset) {
         this.colorOverrides = []
       }
-      const scale = this.imgWidth / this.fullImgWidth
+      const scale = this.scale
       this.ctx.clearRect(0, 0, this.imgWidth, this.imgHeight)
       for (const area of this.areas) {
         const item = this.appMap.get(area.appId)
@@ -335,26 +340,28 @@ export default {
         const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
         if (filtered) {
           filtered.forEach(app => {
+            const iconPos = this.parseNumberArray(app.iconPos)
+            const icon1Pos = this.parseNumberArray(app.iconPos1)
             if (app.type === 'RELAY_DUAL') {
               newAreas.push({
                 title: app.config.relay1Name,
                 appId: app.id,
                 index: 0,
-                iconPos: this.parseNumberArray(app.iconPos),
+                iconPos: iconPos,
                 coords: this.parseNumberArray(app.imgMapCoords)
               })
               newAreas.push({
                 title: app.config.relay2Name,
                 appId: app.id,
                 index: 1,
-                iconPos: this.parseNumberArray(app.iconPos1),
+                iconPos: icon1Pos,
                 coords: this.parseNumberArray(app.imgMapCoords1)
               })
             } else {
               newAreas.push({
                 title: app.name,
                 appId: app.id,
-                iconPos: this.parseNumberArray(app.iconPos),
+                iconPos: iconPos,
                 coords: this.parseNumberArray(app.imgMapCoords)
               })
             }
