@@ -104,7 +104,9 @@
           shape="poly"
         />
       </map>
+      <!--
       img:{{ imgWidth }} / {{ imgHeight }} full:{{ fullImgWidth }} / {{ fullImgHeight }} scale:{{ scale }}
+      -->
     </div>
   </span>
 </template>
