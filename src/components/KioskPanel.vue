@@ -35,7 +35,7 @@ export default {
     isEnabled: {},
     borderColor: {},
     bgColor: {},
-    minWidth: { default: '100px' },
+    minWidth: { default: '140px' },
     renderTitle: { default: true },
     borderSize: { default: 1 },
     pa: { default: null }
