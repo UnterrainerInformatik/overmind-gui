@@ -57,6 +57,8 @@ class OvermindUtils {
       case 'RELAY_DUAL':
       case 'RELAY':
         return 'outlet'
+      case 'HT':
+        return 'nest_thermostat_sensor_eu'
       case 'STATE_CHECKER':
         return 'check_circle_outline'
       default:
@@ -100,6 +102,8 @@ class OvermindUtils {
         }
         item.onOffState = 'off'
         return
+      case 'HT':
+        return 'on'
       case 'CONTACT_SENSOR':
         if (!item || !item.state || !item.state.closures || !item.state.closures[0] || item.state.closures[0].open === undefined) {
           item.onOffState = 'error'
