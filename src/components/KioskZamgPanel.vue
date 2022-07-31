@@ -2,7 +2,7 @@
   <KioskPanel
     v-if="weather"
     borderColor="secondary"
-    :bgColor="colors[calculateTemperatureIndex(weather.temperature)]"
+    :bgColor="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(weather.temperature, overmindUtils.tempBoundaries)]"
     min-width="270"
     max-width="270"
     :renderTitle="false"
@@ -10,7 +10,7 @@
     <template>
       <!--
         <v-row><v-col>
-        <div v-for="(color, i) in colors" :key="i" :class="color">{{descriptions[i]}}<br>{{color}}</div>
+        <div v-for="(color, i) in overmindUtils.tempColors" :key="i" :class="color">{{overmindUtils.tempDescriptions[i]}}<br>{{color}}</div>
         </v-col></v-row>
       -->
       <v-card
@@ -100,6 +100,7 @@
 
 <script lang="js">
 import KioskPanel from '@/components/KioskPanel.vue'
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
 import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetService'
@@ -115,8 +116,7 @@ export default {
   },
 
   data: () => ({
-    colors: ['white', 'blue lighten-5', 'blue lighten-4', 'blue lighten-3', 'teal lighten-3', 'teal lighten-1', 'green lighten-2', 'lime lighten-1', 'amber lighten-2', 'orange lighten-2'],
-    descriptions: ['t < -39', '-39 < t < -26', '-26 < t < -13', '-13 < t < 0', '0 < t < 6', '6 < t < 14', '14 < t < 20', '20 < t < 26', '26 < t < 32', '32 < t < 38', '38 < t'],
+    overmindUtils,
     dateUtils,
     weather: null,
     sunRise: null,
@@ -203,41 +203,7 @@ export default {
       return c1 + c2 * temp + c3 * hum + c4 * temp * hum + c5 * pTemp + c6 * pHum + c7 * pTemp * hum + c8 * temp * pHum + c9 * pTemp * pHum
     },
     calculateTemperatureDescription (temperature) {
-      return this.$t('page.kiosk.zamg.tempDesc' + this.calculateTemperatureIndex(temperature))
-    },
-    calculateTemperatureIndex (temperature) {
-      const temp = parseFloat(temperature)
-      if (temp < -39) {
-        return 0
-      }
-      if (temp < -26) {
-        return 1
-      }
-      if (temp < -13) {
-        return 2
-      }
-      if (temp < 0) {
-        return 3
-      }
-      if (temp < 6) {
-        return 4
-      }
-      if (temp < 14) {
-        return 5
-      }
-      if (temp < 20) {
-        return 6
-      }
-      if (temp < 26) {
-        return 7
-      }
-      if (temp < 32) {
-        return 8
-      }
-      if (temp < 38) {
-        return 9
-      }
-      return 10
+      return this.$t('page.kiosk.zamg.tempDesc' + this.overmindUtils.calculateTemperatureIndex(temperature, this.overmindUtils.tempBoundaries))
     }
   },
 

@@ -9,6 +9,10 @@ class JsUtils {
     return this.instanceField
   }
 
+  public lerp (start, end, percent) {
+    return (1 - percent) * start + percent * end
+  }
+
   public groupBy (inputArray, key) {
     return inputArray.reduce((accumulator, element) => {
       const v = key instanceof Function ? key(element) : element[key]

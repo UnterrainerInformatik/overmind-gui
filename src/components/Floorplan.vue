@@ -35,6 +35,52 @@
                   scale}px; left: ${area.iconPos[0] * scale}px`
             "
           ></BatteryIndicator>
+          <!-- Shelly HT additional info-field -->
+          <v-card
+            v-if="
+              (!isError(area) || !appMap.get(area.appId)) &&
+                isHT(area)
+            "
+            color='grey darken-3'
+            v-on:click="areaClicked($event, area, true)"
+            class="noFocus"
+            :style="
+              (clickableIcons
+                ? 'cursor: pointer !important; '
+                : 'cursor: default !important; ') +
+                `position: absolute; top: ${(area.iconPos[1] + 40) *
+                  scale}px; left: ${(area.iconPos[0] + 17) * scale}px`
+            "
+          >
+          <v-row class="ma-0 pa-0">
+            <v-col class="ma-0 pa-0">
+          <v-icon
+              class="ma-0 pa-0"
+              size="15"
+              color='white'
+              >thermostat</v-icon
+            >
+            </v-col><v-col class="ma-0 mr-1 pa-0">
+            <span class="small">{{
+              getTemperatureOf(area)
+            }}&nbsp;°C</span>
+            </v-col>
+          </v-row>
+          <v-row class="ma-0 pa-0">
+            <v-col class="ma-0 pa-0">
+          <v-icon
+              class="ma-0 pa-0"
+              size="15"
+              color='white'
+              >water_drop</v-icon
+            >
+            </v-col><v-col class="ma-0 mr-1 pa-0">
+            <span class="small">{{
+              getHumidityOf(area)
+            }}&nbsp;%</span>
+            </v-col>
+          </v-row>
+          </v-card>
           <v-avatar
             v-if="
               (!isError(area) || !appMap.get(area.appId)) &&
@@ -207,6 +253,27 @@ export default {
       }
       return app.batteryDriven
     },
+    isHT (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return false
+      }
+      return app.classFqn === 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyHTAppliance'
+    },
+    getTemperatureOf (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return undefined
+      }
+      return overmindUtils.getTemperature(app)
+    },
+    getHumidityOf (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return undefined
+      }
+      return overmindUtils.getHumidity(app)
+    },
     displayWatts (area) {
       return this.isOn(area) && this.getPowerOf(area, area.index) !== undefined
     },
@@ -300,21 +367,25 @@ export default {
           if (override) {
             this.ctx.fillStyle = this.colorGrey
           } else {
-            switch (st) {
-              case 'none':
-                this.ctx.fillStyle = this.colorTransparent
-                break
-              case 'on':
-                this.ctx.fillStyle = this.colorOn
-                break
-              case 'middle':
-                this.ctx.fillStyle = this.colorMiddle
-                break
-              case 'off':
-                this.ctx.fillStyle = this.colorOff
-                break
-              case 'error':
-                this.ctx.fillStyle = this.colorError
+            if (app.colorPalette) {
+              this.ctx.fillStyle = app.colorPalette()
+            } else {
+              switch (st) {
+                case 'none':
+                  this.ctx.fillStyle = this.colorTransparent
+                  break
+                case 'on':
+                  this.ctx.fillStyle = this.colorOn
+                  break
+                case 'middle':
+                  this.ctx.fillStyle = this.colorMiddle
+                  break
+                case 'off':
+                  this.ctx.fillStyle = this.colorOff
+                  break
+                case 'error':
+                  this.ctx.fillStyle = this.colorError
+              }
             }
           }
         }

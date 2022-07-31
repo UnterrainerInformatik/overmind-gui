@@ -53,6 +53,7 @@
 			"undefined": "Nicht verfügbar"
 		},
 		"kiosk": {
+			"linkAir": "Luft",
 			"linkBack": "zurück",
 			"linkBatteries": "Batterien",
 			"linkContact": "Fenster und Türen",
