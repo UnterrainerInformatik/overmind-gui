@@ -35,6 +35,10 @@
             route="/app/kioskcontact"
           ></KioskLinkPanel>
           <KioskLinkPanel
+            :text="$t('page.kiosk.linkAir')"
+            route="/app/kioskair"
+          ></KioskLinkPanel>
+          <KioskLinkPanel
             :text="$t('page.kiosk.linkMovement')"
             route="/app/kioskmovement"
           ></KioskLinkPanel>

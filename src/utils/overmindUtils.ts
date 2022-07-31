@@ -1,11 +1,43 @@
+import { singleton as jsUtils } from '@/utils/jsUtils'
+
 class OvermindUtils {
   private static instanceField: OvermindUtils
+
+  public tempColors = ['white', 'blue lighten-5', 'blue lighten-4', 'blue lighten-3', 'teal lighten-3', 'teal lighten-1', 'green lighten-2', 'lime lighten-1', 'amber lighten-2', 'orange lighten-2', 'orange', 'white'];
+  public tempRawColors = ['rgba(255, 255, 255, 0.6)', 'rgba(144, 202, 249, 0.6)', 'rgba(38, 166, 154, 0.6)', 'rgba(0, 255, 0, 0.6)', 'rgba(212, 225, 70, 0.6)', 'rgba(255, 100, 50, 0.6)', 'rgba(255, 255, 255, 0.6)']
+  public tempRawColorsLerpable = [[255, 255, 255, 0.6], [144, 202, 249, 0.6], [38, 166, 154, 0.6], [0, 255, 0, 0.6], [255, 225, 70, 0.6], [255, 100, 50, 0.6], [255, 255, 255, 0.6]]
+  public tempBoundariesInside = [-5, 10, 22, 24, 26, 28, 33]
+  public tempBoundaries = [-39, -26, -13, 0, 6, 14, 20, 26, 32, 38, 40]
+  public tempDescriptions = ['t < -39', '-39 < t < -26', '-26 < t < -13', '-13 < t < 0', '0 < t < 6', '6 < t < 14', '14 < t < 20', '20 < t < 26', '26 < t < 32', '32 < t < 38', '38 < t'];
 
   public static getInstance () {
     if (!this.instanceField) {
       this.instanceField || (this.instanceField = new OvermindUtils())
     }
     return this.instanceField
+  }
+
+  public getLerpedTempColorFor (temp) {
+    // console.log({ temp })
+    const n = this.calculateTemperatureIndex(temp, this.tempBoundariesInside)
+    let i = n - 1
+    if (i < 0) {
+      i = 0
+    }
+    // console.log({ i }, { n })
+    const prevTemp = this.tempBoundariesInside[i]
+    const nextTemp = this.tempBoundariesInside[n]
+    const p = (temp - prevTemp) / (nextTemp - prevTemp)
+    // console.log({ prevTemp }, { nextTemp }, { p })
+    const col1 = this.tempRawColorsLerpable[i]
+    const col2 = this.tempRawColorsLerpable[n]
+    const r = Math.round(jsUtils.lerp(col1[0], col2[0], p))
+    const g = Math.round(jsUtils.lerp(col1[1], col2[1], p))
+    const b = Math.round(jsUtils.lerp(col1[2], col2[2], p))
+    const a = jsUtils.lerp(col1[3], col2[3], p)
+    // console.log({ r }, { g }, { b }, { a })
+    const result = `rgba(${r}, ${g}, ${b}, ${a})`
+    return result
   }
 
   public parseConfig (element) {
@@ -58,7 +90,7 @@ class OvermindUtils {
       case 'RELAY':
         return 'outlet'
       case 'HT':
-        return 'nest_thermostat_sensor_eu'
+        return 'thermostat'
       case 'STATE_CHECKER':
         return 'check_circle_outline'
       default:
@@ -103,7 +135,14 @@ class OvermindUtils {
         item.onOffState = 'off'
         return
       case 'HT':
-        return 'on'
+        item.onOffState = 'on'
+        item.colorPalette = () => {
+          if (item && item.state && item.state.temperatures && item.state.temperatures[0] && item.state.temperatures[0].temperature) {
+            return this.getLerpedTempColorFor(item.state.temperatures[0].temperature)
+          }
+          return 'rgba(60, 255, 255, 0.6)'
+        }
+        return
       case 'CONTACT_SENSOR':
         if (!item || !item.state || !item.state.closures || !item.state.closures[0] || item.state.closures[0].open === undefined) {
           item.onOffState = 'error'
@@ -142,6 +181,28 @@ class OvermindUtils {
         return
     }
     item.onOffState = 'none'
+  }
+
+  public getTemperature (item) {
+    if (item === undefined) {
+      return
+    }
+
+    if (!item || !item.state || !item.state.temperatures || !item.state.temperatures[0] || !item.state.temperatures[0].temperature) {
+      return undefined
+    }
+    return Number.parseFloat(item.state.temperatures[0].temperature)
+  }
+
+  public getHumidity (item) {
+    if (item === undefined) {
+      return
+    }
+
+    if (!item || !item.state || !item.state.humidities || !item.state.humidities[0] || !item.state.humidities[0].humidity) {
+      return undefined
+    }
+    return Number.parseFloat(item.state.humidities[0].humidity)
   }
 
   public getPowerOf (item, index) {
@@ -247,6 +308,16 @@ class OvermindUtils {
       setTimeout(func, dm)
       dm += deltaMillis
     }
+  }
+
+  public calculateTemperatureIndex (temperature, tempBoundaries) {
+    const temp = parseFloat(temperature)
+    for (let i = 0; i < tempBoundaries.length; i++) {
+      if (temp < tempBoundaries[i]) {
+        return i
+      }
+    }
+    return tempBoundaries.length + 1
   }
 }
 
