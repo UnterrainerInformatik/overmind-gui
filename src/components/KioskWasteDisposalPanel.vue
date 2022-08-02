@@ -12,13 +12,12 @@
           <v-col class="ma-1 pa-0" v-if="item.show">
             <v-card
               outlined
-              :class="'ma-0 pa-0 ' + item.color + ' ' + getBgColor(item.warn)"
+              :class="'ma-0 pa-0 ' + item.color"
             >
               <v-card
                 :class="
                   'fill-height elevation-0 ma-0 px-3 py-1 noFocus ' +
-                  (item.warn ? item.color : 'disabled') +
-                  getBgColor(item.warn)
+                  (item.warn ? item.color : 'disabled darken-4')
                 "
                 ><v-row class="ma-0 pa-0"
                   ><v-col
@@ -88,20 +87,6 @@ export default {
   },
 
   methods: {
-    getBgColor (enabled) {
-      if (enabled == null || enabled === undefined) {
-        if (this.$vuetify.theme.dark) {
-          return ' darken-4'
-        }
-      } else {
-        if (this.$vuetify.theme.dark) {
-          return ' darken-4'
-        } else {
-          return ' lighten-1'
-        }
-      }
-      return ''
-    },
     update () {
       localizedDataService.getByIdentifier('wasteDisposalEnns').then((response) => {
         if (response == null) {
@@ -119,10 +104,10 @@ export default {
         now.setDate(now.getDate() - 1)
         const d = []
 
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange', this.wasteWarnDaysBefore + 1))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green', this.organicWarnDaysBefore + 1))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow', this.plasticWarnDaysBefore + 1))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red', this.paperWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange darken-4', this.wasteWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green darken-4', this.organicWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow darken-1', this.plasticWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red darken-4', this.paperWarnDaysBefore + 1))
         this.data = d
       })
     },
