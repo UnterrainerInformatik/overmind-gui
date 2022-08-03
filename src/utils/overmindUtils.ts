@@ -40,6 +40,30 @@ class OvermindUtils {
     return result
   }
 
+  public getBatteryIcon (level) {
+    if (level >= 75) {
+      return 'battery_charging_full'
+    }
+    if (level >= 20) {
+      return 'battery_full'
+    }
+    return 'battery_alert'
+  }
+
+  public getBatteryColor (level) {
+    if (level >= 75) {
+      return 'green darken-' + this.getMagicNumber(level, 75, 25, 4)
+    }
+    if (level >= 20) {
+      return 'teal darken-' + this.getMagicNumber(level, 20, 55, 4)
+    }
+    return 'red darken-' + this.getMagicNumber(level, 0, 19, 4)
+  }
+
+  public getMagicNumber (value, startingValue, numberOfValuesInStep, numberOfSteps) {
+    return Math.floor((value - startingValue) / (numberOfValuesInStep / (numberOfSteps - 0.0001)) + 1)
+  }
+
   public parseConfig (element) {
     if (element.config) {
       try {
