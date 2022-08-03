@@ -13,7 +13,8 @@
         colorGrey="rgba(60, 60, 60, 0.8)"
         colorTransparent="rgba(0, 0, 0, 0)"
         :classFqnFilter="[
-          'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyDoorWindow2Appliance'
+          'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyDoorWindow2Appliance',
+          'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyHTAppliance'
         ]"
       >
       </Floorplan>

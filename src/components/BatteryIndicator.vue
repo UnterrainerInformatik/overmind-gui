@@ -4,7 +4,7 @@
     :max-width="size"
     :max-height="size"
     v-if="level"
-    :class="'ma-0 pa-0 mr-1 ' + getBatteryColor(Math.round(level))"
+    :class="'ma-0 pa-0 mr-1 ' + overmindUtils.getBatteryColor(Math.round(level))"
     @click="() => {}"
     v-bind="$attrs"
     v-on="$listeners"
@@ -13,7 +13,7 @@
       <v-col class="ma-0 pa-0">
         <v-row class="ma-0 pa-0">
           <v-col class="ma-0 pa-0">
-            <v-icon size="14">{{ getBatteryIcon(level) }}</v-icon>
+            <v-icon size="14">{{ overmindUtils.getBatteryIcon(level) }}</v-icon>
           </v-col>
         </v-row>
         <v-row class="ma-0 pa-0">
@@ -31,6 +31,7 @@
 </style>
 
 <script lang="js">
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
 export default {
   name: 'BatteryIndicator',
@@ -41,6 +42,7 @@ export default {
   },
 
   data: () => ({
+    overmindUtils
   }),
 
   computed: {
@@ -50,29 +52,6 @@ export default {
   },
 
   methods: {
-    getBatteryIcon: function (level) {
-      if (level >= 75) {
-        return 'battery_charging_full'
-      }
-      if (level >= 20) {
-        return 'battery_full'
-      }
-      return 'battery_alert'
-    },
-
-    getBatteryColor: function (level) {
-      if (level >= 75) {
-        return 'green darken-' + this.getMagicNumber(level, 75, 25, 4)
-      }
-      if (level >= 20) {
-        return 'teal darken-' + this.getMagicNumber(level, 20, 55, 4)
-      }
-      return 'red darken-' + this.getMagicNumber(level, 0, 19, 4)
-    },
-
-    getMagicNumber: function (value, startingValue, numberOfValuesInStep, numberOfSteps) {
-      return Math.floor((value - startingValue) / (numberOfValuesInStep / (numberOfSteps - 0.0001)) + 1)
-    }
   }
 
 }

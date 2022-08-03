@@ -53,10 +53,9 @@
 			"undefined": "Undefined"
 		},
 		"kiosk": {
-			"linkAir": "Air",
 			"linkBack": "back",
 			"linkBatteries": "Batteries",
-			"linkContact": "Windows And Doors",
+			"linkContact": "Windows / Doors / Air",
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",

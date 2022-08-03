@@ -18,7 +18,7 @@
         <span v-for="(area, i) in getAreasWithIcon()" :key="i">
           <BatteryIndicator
             v-if="
-              !isError(area) && displayBattery(area) && appMap.get(area.appId)
+              !isError(area) && displayBattery(area) && appMap.get(area.appId) && !isHT(area)
             "
             :size="avatarBaseSize * scale"
             :level="
@@ -41,17 +41,37 @@
               (!isError(area) || !appMap.get(area.appId)) &&
                 isHT(area)
             "
-            color='grey darken-3'
+            :color="overmindUtils.getBatteryColor(Math.round(
+                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+              ))"
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
               (clickableIcons
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
-                `position: absolute; top: ${(area.iconPos[1] + 40) *
-                  scale}px; left: ${(area.iconPos[0] + 17) * scale}px`
+                `position: absolute; top: ${(area.iconPos[1]) *
+                  scale}px; left: ${(area.iconPos[0]) * scale}px`
             "
           >
+          <v-row class="ma-0 pa-0" v-if="appMap.get(area.appId).state.hasExternalPower == false">
+            <v-col class="ma-0 pa-0">
+          <v-icon
+              class="ma-0 pa-0"
+              size="15"
+              color='white'
+              >{{overmindUtils.getBatteryIcon(Math.round(
+                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+              ))}}<i class="" aria-hidden="true"></i></v-icon
+            >
+            </v-col><v-col class="ma-0 mr-1 pa-0">
+            <span class="small">{{
+              Math.round(
+                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+              )
+            }}&nbsp;%</span>
+            </v-col>
+          </v-row>
           <v-row class="ma-0 pa-0">
             <v-col class="ma-0 pa-0">
           <v-icon
@@ -189,6 +209,7 @@ export default {
   },
 
   data: () => ({
+    overmindUtils,
     areas: [],
     loaded: false,
     ctx: null,

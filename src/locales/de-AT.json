@@ -53,10 +53,9 @@
 			"undefined": "Nicht verfügbar"
 		},
 		"kiosk": {
-			"linkAir": "Luft",
 			"linkBack": "zurück",
 			"linkBatteries": "Batterien",
-			"linkContact": "Fenster und Türen",
+			"linkContact": "Fenster / Türen / Luft",
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
