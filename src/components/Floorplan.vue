@@ -54,52 +54,52 @@
                   scale}px; left: ${(area.iconPos[0]) * scale}px`
             "
           >
-          <v-row class="ma-0 pa-0" v-if="appMap.get(area.appId).state.hasExternalPower == false">
-            <v-col class="ma-0 pa-0">
-          <v-icon
-              class="ma-0 pa-0"
-              size="15"
-              color='white'
-              >{{overmindUtils.getBatteryIcon(Math.round(
-                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
-              ))}}<i class="" aria-hidden="true"></i></v-icon
-            >
-            </v-col><v-col class="ma-0 mr-1 pa-0">
-            <span class="small">{{
-              Math.round(
-                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
-              )
-            }}&nbsp;%</span>
-            </v-col>
-          </v-row>
-          <v-row class="ma-0 pa-0">
-            <v-col class="ma-0 pa-0">
-          <v-icon
-              class="ma-0 pa-0"
-              size="15"
-              color='white'
-              >thermostat</v-icon
-            >
-            </v-col><v-col class="ma-0 mr-1 pa-0">
-            <span class="small">{{
-              getTemperatureOf(area)
-            }}&nbsp;°C</span>
-            </v-col>
-          </v-row>
-          <v-row class="ma-0 pa-0">
-            <v-col class="ma-0 pa-0">
-          <v-icon
-              class="ma-0 pa-0"
-              size="15"
-              color='white'
-              >water_drop</v-icon
-            >
-            </v-col><v-col class="ma-0 mr-1 pa-0">
-            <span class="small">{{
-              getHumidityOf(area)
-            }}&nbsp;%</span>
-            </v-col>
-          </v-row>
+            <v-row class="ma-0 pa-0" v-if="appMap.get(area.appId).state.hasExternalPower == false">
+              <v-col class="ma-0 pa-0">
+                <v-icon
+                    class="ma-0 pa-0"
+                    size="15"
+                    color='white'
+                    >{{overmindUtils.getBatteryIcon(Math.round(
+                      appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+                    ))}}<i class="" aria-hidden="true"></i></v-icon
+                  >
+              </v-col><v-col class="ma-0 mr-1 pa-0">
+                <span class="small">{{
+                  Math.round(
+                    appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+                  )
+                }}&nbsp;%</span>
+              </v-col>
+            </v-row>
+            <v-row class="ma-0 pa-0">
+              <v-col class="ma-0 pa-0">
+                <v-icon
+                    class="ma-0 pa-0"
+                    size="15"
+                    color='white'
+                    >thermostat</v-icon
+                  >
+              </v-col><v-col class="ma-0 mr-1 pa-0">
+                <span class="small">{{
+                  getTemperatureOf(area)
+                }}&nbsp;°C</span>
+              </v-col>
+            </v-row>
+            <v-row class="ma-0 pa-0">
+              <v-col class="ma-0 pa-0">
+                <v-icon
+                    class="ma-0 pa-0"
+                    size="15"
+                    color='white'
+                    >water_drop</v-icon
+                  >
+              </v-col><v-col class="ma-0 mr-1 pa-0">
+                <span class="small">{{
+                  getHumidityOf(area)
+                }}&nbsp;%</span>
+              </v-col>
+            </v-row>
           </v-card>
           <v-avatar
             v-if="
@@ -256,7 +256,6 @@ export default {
 
   methods: {
     reCompose () {
-      this.imgWidthOrHeightDebounce = false
       if (!this.$refs.backgroundMeasurement) {
         return
       }
@@ -266,6 +265,7 @@ export default {
       const canvas = this.$refs.canvas
       this.ctx = canvas.getContext('2d')
       this.redraw(false)
+      this.imgWidthOrHeightDebounce = false
     },
     displayBattery (area) {
       const app = this.appMap.get(area.appId)
