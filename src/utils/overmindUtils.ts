@@ -3,12 +3,12 @@ import { singleton as jsUtils } from '@/utils/jsUtils'
 class OvermindUtils {
   private static instanceField: OvermindUtils
 
-  public tempColors = ['white', 'blue lighten-5', 'blue lighten-4', 'blue lighten-3', 'teal lighten-3', 'teal lighten-1', 'green lighten-2', 'lime lighten-1', 'amber lighten-2', 'orange lighten-2', 'orange', 'white'];
-  public tempRawColors = ['rgba(255, 255, 255, 0.6)', 'rgba(144, 202, 249, 0.6)', 'rgba(38, 166, 154, 0.6)', 'rgba(0, 255, 0, 0.6)', 'rgba(212, 225, 70, 0.6)', 'rgba(255, 100, 50, 0.6)', 'rgba(255, 255, 255, 0.6)']
-  public tempRawColorsLerpable = [[255, 255, 255, 0.6], [144, 202, 249, 0.6], [38, 166, 154, 0.6], [0, 255, 0, 0.6], [255, 225, 70, 0.6], [255, 100, 50, 0.6], [255, 255, 255, 0.6]]
-  public tempBoundariesInside = [-5, 10, 22, 24, 26, 28, 33]
-  public tempBoundaries = [-39, -26, -13, 0, 6, 14, 20, 26, 32, 38, 40]
-  public tempDescriptions = ['t < -39', '-39 < t < -26', '-26 < t < -13', '-13 < t < 0', '0 < t < 6', '6 < t < 14', '14 < t < 20', '20 < t < 26', '26 < t < 32', '32 < t < 38', '38 < t'];
+  // The next variable is just here to see the colors live...
+  public tempRawColors = ['rgba(0, 0, 200, 0.6)', 'rgba(255, 255, 255, 0.6)', 'rgba(144, 202, 249, 0.6)', 'rgba(38, 166, 154, 0.6)', 'rgba(0, 255, 0, 0.6)', 'rgba(212, 225, 70, 0.6)', 'rgba(255, 100, 50, 0.6)', 'rgba(255, 255, 255, 0.6)', 'rgba(200, 0, 0, 0.6)']
+  public tempRawColorsLerpable = [[0, 0, 200, 0.6], [255, 255, 255, 0.6], [144, 202, 249, 0.6], [38, 166, 154, 0.6], [0, 255, 0, 0.6], [255, 225, 70, 0.6], [255, 100, 50, 0.6], [255, 255, 255, 0.6], [200, 0, 0, 0.6]]
+  // Boundaries are oriented like in between the colors:
+  // c1 --<b1>-- c2 --<b2>-- c3
+  private tempBoundaries = [-10, 0, 10, 22, 24, 26, 30, 36]
 
   public static getInstance () {
     if (!this.instanceField) {
@@ -17,16 +17,36 @@ class OvermindUtils {
     return this.instanceField
   }
 
-  public getLerpedTempColorFor (temp) {
+  public calculateTemperatureIndex (temperature) {
+    const temp = parseFloat(temperature)
+    for (let i = 0; i < this.tempBoundaries.length; i++) {
+      if (temp < this.tempBoundaries[i]) {
+        return i
+      }
+    }
+    return this.tempBoundaries.length + 1
+  }
+
+  public getTempDescriptionFor (temp) {
+    const n = this.calculateTemperatureIndex(temp)
+    let p = n - 1
+    if (p < 0) {
+      p = 0
+    }
+    return `${this.tempBoundaries[p]} < t < ${this.tempBoundaries[n]}`
+  }
+
+  public getTempColorFor (temperature) {
+    const temp = Number.parseFloat(temperature)
     // console.log({ temp })
-    const n = this.calculateTemperatureIndex(temp, this.tempBoundariesInside)
+    const n = this.calculateTemperatureIndex(temp)
     let i = n - 1
     if (i < 0) {
       i = 0
     }
     // console.log({ i }, { n })
-    const prevTemp = this.tempBoundariesInside[i]
-    const nextTemp = this.tempBoundariesInside[n]
+    const prevTemp = this.tempBoundaries[i]
+    const nextTemp = this.tempBoundaries[n]
     const p = (temp - prevTemp) / (nextTemp - prevTemp)
     // console.log({ prevTemp }, { nextTemp }, { p })
     const col1 = this.tempRawColorsLerpable[i]
@@ -162,9 +182,9 @@ class OvermindUtils {
         item.onOffState = 'on'
         item.colorPalette = () => {
           if (item && item.state && item.state.temperatures && item.state.temperatures[0] && item.state.temperatures[0].temperature) {
-            return this.getLerpedTempColorFor(item.state.temperatures[0].temperature)
+            return this.getTempColorFor(item.state.temperatures[0].temperature)
           }
-          return 'rgba(60, 255, 255, 0.6)'
+          return 'rgba(160, 160, 160, 0.6)'
         }
         return
       case 'CONTACT_SENSOR':
@@ -332,16 +352,6 @@ class OvermindUtils {
       setTimeout(func, dm)
       dm += deltaMillis
     }
-  }
-
-  public calculateTemperatureIndex (temperature, tempBoundaries) {
-    const temp = parseFloat(temperature)
-    for (let i = 0; i < tempBoundaries.length; i++) {
-      if (temp < tempBoundaries[i]) {
-        return i
-      }
-    }
-    return tempBoundaries.length + 1
   }
 }
 
