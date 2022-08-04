@@ -2,7 +2,7 @@
   <KioskPanel
     v-if="weather"
     borderColor="secondary"
-    :bgColor="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(weather.temperature, overmindUtils.tempBoundaries)]"
+    bgColor="black"
     min-width="270"
     max-width="270"
     :renderTitle="false"
@@ -25,15 +25,31 @@
               class="middle ma-0 pa-0 text-center"
               style="font-weight: bold"
             >
-              <v-icon large color="white">thermostat</v-icon>
+              <v-avatar
+              size="36"
+              :color="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(weather.temperature, overmindUtils.tempBoundaries)]"
+              >
+                <v-icon large color="black">thermostat</v-icon>
+              </v-avatar>
               {{ weather.temperature }}
             </v-col>
             <v-col class="small ma-0 pa-0 text-center">
               <v-row class="ma-0 pa-0" cols="12"
                 ><v-col class="ma-0 mr-7 pa-0" cols="1">
-                  <v-icon large color="white">psychology</v-icon>
+                  <v-avatar
+                  size="36"
+                  :color="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(calculateFeltTemperature(
+                          weather.temperature,
+                          weather.wind.substring(
+                            weather.wind.indexOf(', ') + 2
+                          ),
+                          weather.humidity
+                        ).toFixed(1), overmindUtils.tempBoundaries)]"
+                  >
+                    <v-icon large color="black">psychology</v-icon>
+                  </v-avatar>
                 </v-col>
-                <v-col class="ma-0 pa-0 text-left">
+                <v-col class="ma-0 ml-2 mt-1 pa-0 text-left">
                   <v-row class="ma-0 mt-1 mb-1 pa-0">
                     <v-col class="ma-0 pa-0">
                       {{
