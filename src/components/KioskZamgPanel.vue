@@ -29,7 +29,7 @@
               size="36"
               :color="overmindUtils.getTempColorFor(weather.temperature)"
               >
-                <v-icon large color="black">thermostat</v-icon>
+                <v-icon color="black">thermostat</v-icon>
               </v-avatar>
               {{ weather.temperature }}
             </v-col>
@@ -46,7 +46,7 @@
                           weather.humidity
                         ).toFixed(1))"
                   >
-                    <v-icon large color="black">psychology</v-icon>
+                    <v-icon color="black">psychology</v-icon>
                   </v-avatar>
                 </v-col>
                 <v-col class="ma-0 ml-2 mt-1 pa-0 text-left">
