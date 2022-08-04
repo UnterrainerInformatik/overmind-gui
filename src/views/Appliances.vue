@@ -25,6 +25,7 @@ export default {
 
   data: () => ({
     appMap: new Map(),
+    appMapBuffer: new Map(),
     appliances: [],
     onlyActive: false,
     countAll: 0,
@@ -51,10 +52,13 @@ export default {
       }).then(() => {
         appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
         this.appliances = appliances
-        this.appMap = new Map()
+        this.appMapBuffer.clear()
         for (const element of this.appliances) {
           this.appMap.set(element.id, element)
         }
+        const tmp = this.appMap
+        this.appMap = this.appMapBuffer
+        this.appMapBuffer = tmp
         this.loading = false
       })
     }
