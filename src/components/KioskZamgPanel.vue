@@ -27,7 +27,7 @@
             >
               <v-avatar
               size="36"
-              :color="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(weather.temperature, overmindUtils.tempBoundaries)]"
+              :color="overmindUtils.getTempColorFor(weather.temperature)"
               >
                 <v-icon large color="black">thermostat</v-icon>
               </v-avatar>
@@ -38,13 +38,13 @@
                 ><v-col class="ma-0 mr-7 pa-0" cols="1">
                   <v-avatar
                   size="36"
-                  :color="overmindUtils.tempColors[overmindUtils.calculateTemperatureIndex(calculateFeltTemperature(
+                  :color="overmindUtils.getTempColorFor(calculateFeltTemperature(
                           weather.temperature,
                           weather.wind.substring(
                             weather.wind.indexOf(', ') + 2
                           ),
                           weather.humidity
-                        ).toFixed(1), overmindUtils.tempBoundaries)]"
+                        ).toFixed(1))"
                   >
                     <v-icon large color="black">psychology</v-icon>
                   </v-avatar>
@@ -219,7 +219,7 @@ export default {
       return c1 + c2 * temp + c3 * hum + c4 * temp * hum + c5 * pTemp + c6 * pHum + c7 * pTemp * hum + c8 * temp * pHum + c9 * pTemp * pHum
     },
     calculateTemperatureDescription (temperature) {
-      return this.$t('page.kiosk.zamg.tempDesc' + this.overmindUtils.calculateTemperatureIndex(temperature, this.overmindUtils.tempBoundaries))
+      return this.$t('page.kiosk.zamg.tempDesc' + this.overmindUtils.calculateTemperatureIndex(temperature))
     }
   },
 
