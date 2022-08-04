@@ -213,7 +213,8 @@ export default {
     areas: [],
     loaded: false,
     ctx: null,
-    appMap: undefined,
+    appMap: new Map(),
+    appMapBuffer: new Map(),
     appliances: [],
     loading: true,
     fullImgWidth: 1276,
@@ -427,9 +428,9 @@ export default {
       }).then(() => {
         appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
         this.appliances = appliances
-        this.appMap = new Map()
+        this.appMapBuffer.clear()
         for (const element of this.appliances) {
-          this.appMap.set(element.id, element)
+          this.appMapBuffer.set(element.id, element)
         }
         const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
         if (filtered) {
@@ -464,6 +465,9 @@ export default {
         this.additionalAreas.forEach(area => {
           newAreas.push(area)
         })
+        const tmp = this.appMap
+        this.appMap = this.appMapBuffer
+        this.appMapBuffer = tmp
         this.areas = newAreas
         this.redraw(true)
         this.loading = false
