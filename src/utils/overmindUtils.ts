@@ -36,7 +36,8 @@ class OvermindUtils {
     return `${this.tempBoundaries[p]} < t < ${this.tempBoundaries[n]}`
   }
 
-  public getTempColorFor (temp) {
+  public getTempColorFor (temperature) {
+    const temp = Number.parseFloat(temperature)
     // console.log({ temp })
     const n = this.calculateTemperatureIndex(temp)
     let i = n - 1
