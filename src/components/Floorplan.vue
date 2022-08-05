@@ -155,6 +155,7 @@
         :src="$store.state.gui.floorplan"
         alt="Map of the building"
         usemap="#image-map"
+        rel="preload"
       />
       <map name="image-map" v-if="loaded">
         <area
