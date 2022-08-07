@@ -55,7 +55,7 @@
 		"kiosk": {
 			"linkBack": "back",
 			"linkBatteries": "Batteries",
-			"linkContact": "Windows / Doors / Air",
+			"linkContact": "Windows / Air",
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
