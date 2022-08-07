@@ -17,7 +17,7 @@
         class="black ma-n3 pa-1"
         min-width="260"
         max-width="260"
-        height="145"
+        height="140"
       >
         <v-card-text class="pa-1">
           <v-row class="ma-0 mt-2 mb-6 pa-0 align-center">
