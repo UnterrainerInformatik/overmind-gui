@@ -31,20 +31,14 @@
               >
                 <v-icon color="black">thermostat</v-icon>
               </v-avatar>
-              {{ weather.temperature }}
+              {{ weather.temperature }}{{weather.temperatureUnit}}
             </v-col>
             <v-col class="small ma-0 pa-0 text-center">
               <v-row class="ma-0 pa-0" cols="12"
                 ><v-col class="ma-0 mr-7 pa-0" cols="1">
                   <v-avatar
                   size="36"
-                  :color="overmindUtils.getTempColorFor(calculateFeltTemperature(
-                          weather.temperature,
-                          weather.wind.substring(
-                            weather.wind.indexOf(', ') + 2
-                          ),
-                          weather.humidity
-                        ).toFixed(1))"
+                  :color="overmindUtils.getTempColorFor(calculateFeltTemperature(weather.temperature, weather.wind, weather.humidity).toFixed(1))"
                   >
                     <v-icon color="black">psychology</v-icon>
                   </v-avatar>
@@ -55,12 +49,10 @@
                       {{
                         calculateFeltTemperature(
                           weather.temperature,
-                          weather.wind.substring(
-                            weather.wind.indexOf(', ') + 2
-                          ),
+                          weather.wind,
                           weather.humidity
                         ).toFixed(1)
-                      }}°
+                      }}{{weather.temperatureUnit}}
                     </v-col></v-row
                   >
                   <v-row class="ma-0 pa-0"
@@ -69,9 +61,7 @@
                         calculateTemperatureDescription(
                           calculateFeltTemperature(
                             weather.temperature,
-                            weather.wind.substring(
-                              weather.wind.indexOf(', ') + 2
-                            ),
+                            weather.wind,
                             weather.humidity
                           )
                         )
@@ -86,11 +76,11 @@
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0">
                 <v-icon color="white">wb_sunny</v-icon>
-                {{ weather.sun }}
+                {{ weather.sun }}{{weather.sunUnit}}
                 &nbsp;&nbsp;<v-icon color="white">water_drop</v-icon>
-                {{ weather.rain }}
+                {{ weather.rain }}{{weather.rainUnit}}
                 &nbsp;&nbsp;<v-icon color="white">air</v-icon>
-                {{ weather.wind.substring(weather.wind.indexOf(', ') + 2) }}
+                {{ weather.wind }}{{weather.windUnit}}
               </div>
             </v-col>
           </v-row>
