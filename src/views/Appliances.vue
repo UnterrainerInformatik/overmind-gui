@@ -13,6 +13,7 @@
 <script type="js">
 // @ is an alias to /src
 import AppliancePanel from '@/components/AppliancePanel.vue'
+import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 
@@ -24,8 +25,6 @@ export default {
   },
 
   data: () => ({
-    appMap: new Map(),
-    appMapBuffer: new Map(),
     appliances: [],
     onlyActive: false,
     countAll: 0,
@@ -41,26 +40,16 @@ export default {
   methods: {
     async getAppliances (showLoadingProgress) {
       this.loading = showLoadingProgress
-
       const appliances = []
-      return appliancesService.getList().then((response) => {
-        response.entries.forEach(element => {
-          overmindUtils.parseState(element)
-          overmindUtils.parseConfig(element)
-          appliances.push(element)
-        })
-      }).then(() => {
-        appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
-        this.appliances = appliances
-        this.appMapBuffer.clear()
-        for (const element of this.appliances) {
-          this.appMap.set(element.id, element)
-        }
-        const tmp = this.appMap
-        this.appMap = this.appMapBuffer
-        this.appMapBuffer = tmp
-        this.loading = false
+      const response = await appliancesService.getList()
+      response.entries.forEach(element => {
+        overmindUtils.parseState(element)
+        overmindUtils.parseConfig(element)
+        appliances.push(element)
       })
+      appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
+      this.appliances = appliances
+      this.loading = false
     }
   },
 
