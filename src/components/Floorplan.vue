@@ -41,9 +41,7 @@
               (!isError(area) || !appMap.get(area.appId)) &&
                 isHT(area)
             "
-            :color="overmindUtils.getBatteryColor(Math.round(
-                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
-              ))"
+            :color="getBatteryLevelColor(area.appId)"
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
@@ -274,14 +272,22 @@ export default {
       if (app === undefined) {
         return false
       }
-      return app.batteryDriven
+      return app.batteryDriven || this.isHT(area)
     },
     isHT (area) {
       const app = this.appMap.get(area.appId)
       if (app === undefined) {
         return false
       }
-      return app.classFqn === 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyHTAppliance'
+      return app.classFqn === 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyHTAppliance' ||
+        app.classFqn === 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlusHTAppliance'
+    },
+    getBatteryLevelColor (id) {
+      const app = this.appMap.get(id)
+      if (app.state.hasExternalPower) {
+        return overmindUtils.getBatteryColor(100)
+      }
+      return overmindUtils.getBatteryColor(Math.round(app.state.batteries[0].batteryLevel * 100))
     },
     getTemperatureOf (area) {
       const app = this.appMap.get(area.appId)
