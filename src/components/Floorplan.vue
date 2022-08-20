@@ -16,6 +16,7 @@
       </canvas>
       <span v-if="loaded">
         <span v-for="(area, i) in getAreasWithIcon()" :key="i">
+          <FloorplanDialogFactory v-if="constructIdFrom(area)" :item="area" :app="appMap.get(area.appId)" :ref="constructIdFrom(area)"></FloorplanDialogFactory>
           <BatteryIndicator
             v-if="
               !isError(area) && displayBattery(area) && appMap.get(area.appId) && !isHT(area)
@@ -182,6 +183,7 @@
 
 <script lang="js">
 import BatteryIndicator from '@/components/BatteryIndicator.vue'
+import FloorplanDialogFactory from '@/components/FloorplanDialogFactory.vue'
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
@@ -190,6 +192,7 @@ export default {
   name: 'Floorplan',
 
   components: {
+    FloorplanDialogFactory,
     BatteryIndicator
   },
 
@@ -255,6 +258,12 @@ export default {
   },
 
   methods: {
+    constructIdFrom (area) {
+      if (area.appId === 0) {
+        return null
+      }
+      return 'dialog-' + area.appId + (area.index ? ('-' + area.index) : '')
+    },
     reCompose () {
       if (!this.$refs.backgroundMeasurement) {
         return
@@ -337,33 +346,9 @@ export default {
       if ((!iconClicked && !this.clickableMap) || (iconClicked && !this.clickableIcons)) {
         return
       }
-      if (this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)) {
-        return
-      }
-      this.colorOverrides.push({ id: area.appId, index: area.index })
       this.redraw(false)
-      const actorPath = this.getActorPathOf(app, area.index)
-      let st = app.onOffState
-      if (Array.isArray(st)) {
-        st = st[area.index]
-      }
-      if (st === 'on') {
-        appliancesService.turnOff(app.id, actorPath)
-      }
-      if (st === 'off') {
-        appliancesService.turnOn(app.id, actorPath)
-      }
-    },
-    getActorPathOf (app, index) {
-      switch (app.type) {
-        case 'PLUG':
-        case 'RELAY':
-          return 'relay'
-        case 'DIMMER':
-        case 'BULB_RGB':
-          return 'light'
-        case 'RELAY_DUAL':
-          return 'relay' + (index + 1)
+      if (this.constructIdFrom(area)) {
+        this.$refs[this.constructIdFrom(area)][0].show()
       }
     },
     redraw (reset) {
@@ -376,7 +361,6 @@ export default {
         const item = this.appMap.get(area.appId)
         overmindUtils.addOnOffStateTo(item, area.index)
       }
-      this.loaded = true
       for (const area of this.getAreasWithCoords()) {
         this.ctx.beginPath()
         this.ctx.moveTo(area.coords[0] * scale, area.coords[1] * scale)
@@ -426,57 +410,56 @@ export default {
 
       const appliances = []
       const newAreas = []
-      return appliancesService.getList().then((response) => {
-        response.entries.forEach(element => {
-          overmindUtils.parseState(element)
-          overmindUtils.parseConfig(element)
-          appliances.push(element)
-        })
-      }).then(() => {
-        appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
-        this.appliances = appliances
-        this.appMap.backingMap.clear()
-        for (const element of this.appliances) {
-          this.appMap.backingMap.set(element.id, element)
-        }
-        const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
-        if (filtered) {
-          filtered.forEach(app => {
-            const iconPos = this.parseNumberArray(app.iconPos)
-            const icon1Pos = this.parseNumberArray(app.iconPos1)
-            if (app.type === 'RELAY_DUAL') {
-              newAreas.push({
-                title: app.config.relay1Name,
-                appId: app.id,
-                index: 0,
-                iconPos: iconPos,
-                coords: this.parseNumberArray(app.imgMapCoords)
-              })
-              newAreas.push({
-                title: app.config.relay2Name,
-                appId: app.id,
-                index: 1,
-                iconPos: icon1Pos,
-                coords: this.parseNumberArray(app.imgMapCoords1)
-              })
-            } else {
-              newAreas.push({
-                title: app.name,
-                appId: app.id,
-                iconPos: iconPos,
-                coords: this.parseNumberArray(app.imgMapCoords)
-              })
-            }
-          })
-        }
-        this.additionalAreas.forEach(area => {
-          newAreas.push(area)
-        })
-        this.appMap.swap()
-        this.areas = newAreas
-        this.redraw(true)
-        this.loading = false
+      const response = await appliancesService.getList()
+      response.entries.forEach(element => {
+        overmindUtils.parseState(element)
+        overmindUtils.parseConfig(element)
+        appliances.push(element)
       })
+      appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
+      this.appliances = appliances
+      this.appMap.backingMap.clear()
+      for (const element of this.appliances) {
+        this.appMap.backingMap.set(element.id, element)
+      }
+      const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
+      if (filtered) {
+        filtered.forEach(app => {
+          const iconPos = this.parseNumberArray(app.iconPos)
+          const icon1Pos = this.parseNumberArray(app.iconPos1)
+          if (app.type === 'RELAY_DUAL') {
+            newAreas.push({
+              title: app.config.relay1Name,
+              appId: app.id,
+              index: 0,
+              iconPos: iconPos,
+              coords: this.parseNumberArray(app.imgMapCoords)
+            })
+            newAreas.push({
+              title: app.config.relay2Name,
+              appId: app.id,
+              index: 1,
+              iconPos: icon1Pos,
+              coords: this.parseNumberArray(app.imgMapCoords1)
+            })
+          } else {
+            newAreas.push({
+              title: app.name,
+              appId: app.id,
+              iconPos: iconPos,
+              coords: this.parseNumberArray(app.imgMapCoords)
+            })
+          }
+        })
+      }
+      this.additionalAreas.forEach(area => {
+        newAreas.push(area)
+      })
+      this.appMap.swap()
+      this.areas = newAreas
+      this.redraw(true)
+      this.loading = false
+      this.loaded = true
     },
     parseNumberArray (a) {
       if (!a) {
