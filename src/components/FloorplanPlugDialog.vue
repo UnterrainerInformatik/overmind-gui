@@ -13,7 +13,7 @@
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {
-  name: 'TestLabel',
+  name: 'FloorplanPlugDialog',
 
   props: {
     item: {},
