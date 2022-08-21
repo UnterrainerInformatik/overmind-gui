@@ -189,6 +189,13 @@ class DateUtils {
     return this.dateToDatePadded(d, locale) + ' ' + this.dateToShortTime(d, locale)
   }
 
+  public dateToShortDateLongTime (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return this.dateToDatePadded(d, locale) + ' ' + this.dateToLongTime(d, locale)
+  }
+
   public isSameDay (d1, d2) {
     return d1.getFullYear() === d2.getFullYear() &&
       d1.getMonth() === d2.getMonth() &&
