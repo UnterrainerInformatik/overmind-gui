@@ -9,13 +9,12 @@
       <v-card-text class="mb-n2">
         <component v-if="component" v-bind:is="component" :item="item" :app="app"></component>
       </v-card-text>
-
       <v-divider></v-divider>
 
       <v-card-text class="ma-0 mt-3 pa-0">
-        <v-expansion-panels accordion hover class="ma-0 pa-0">
+        <v-expansion-panels accordion hover class="ma-0 pa-0" v-model="showAdditionalInfo">
           <v-expansion-panel class="ma-0 pa-0">
-            <v-expansion-panel-header class="ma-0">
+            <v-expansion-panel-header class="ma-0 primary">
                 Zusatzinfos
             </v-expansion-panel-header>
             <v-expansion-panel-content class="ma-0 mt-2 pa-0">
@@ -24,7 +23,7 @@
                   <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="ID:" :value="app.id"></v-text-field>
                 </v-col>
                 <v-col class="ma-0 pa-0">
-                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="IP:" :value="getIp(app)"></v-text-field>
+                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="Adresse:" :value="getIp(app)"></v-text-field>
                 </v-col>
               </v-row>
               <v-row>
@@ -35,6 +34,42 @@
                   <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="Letztes Setup:" :value="dateUtils.isoToShortDateLongTime(app.lastTimeSetup, $i18n.locale)"></v-text-field>
                 </v-col>
               </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+        <v-expansion-panels accordion hover class="ma-0 pa-0" v-if="app.config && showAdditionalInfo === 0">
+          <v-expansion-panel class="ma-0 pa-0">
+            <v-expansion-panel-header class="ma-0 primary">
+                Konfiguration
+            </v-expansion-panel-header>
+            <v-expansion-panel-content class="ma-0 mt-2 pa-0">
+              <v-textarea
+                disabled
+                :rows="configRows"
+                type="text"
+                outlined
+                dense
+                v-model="config"
+              >
+              </v-textarea>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+        <v-expansion-panels accordion hover class="ma-0 pa-0" v-if="app.state && showAdditionalInfo === 0">
+          <v-expansion-panel class="ma-0 pa-0">
+            <v-expansion-panel-header class="ma-0 primary">
+                Zustand
+            </v-expansion-panel-header>
+            <v-expansion-panel-content class="ma-0 mt-2 pa-0">
+              <v-textarea
+                disabled
+                :rows="stateRows"
+                type="text"
+                outlined
+                dense
+                v-model="state"
+              >
+              </v-textarea>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
@@ -62,12 +97,39 @@ export default {
 
   data: () => ({
     dateUtils,
+    showAdditionalInfo: false,
     dialogOpen: false,
     component: {},
     FloorplanPlugDialog
   }),
 
   computed: {
+    config: {
+      get: function () {
+        if (!this.app || !this.app.config) {
+          return ''
+        }
+        return JSON.stringify(this.app.config, undefined, 2)
+      }
+    },
+    state: {
+      get: function () {
+        if (!this.app || !this.app.state) {
+          return ''
+        }
+        return JSON.stringify(this.app.state, undefined, 2)
+      }
+    },
+    configRows: {
+      get: function () {
+        return this.config.split(/\r\n|\r|\n/).length
+      }
+    },
+    stateRows: {
+      get: function () {
+        return this.state.split(/\r\n|\r|\n/).length
+      }
+    }
   },
 
   watch: {

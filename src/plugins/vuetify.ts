@@ -38,6 +38,7 @@ import Vuetify, {
   VCol,
   VSpacer,
   VSwitch,
+  VTextarea,
   VTextField,
   VToolbar,
   VToolbarTitle,
@@ -55,7 +56,7 @@ import { preset } from 'vue-cli-plugin-vuetify-preset-basil/preset'
 
 Vue.use(Vuetify, {
   components: {
-    VApp, VAppBar, VAppBarTitle, VAppBarNavIcon, VAvatar, VBtn, VBtnToggle, VCard, VCardTitle, VCardSubtitle, VCardText, VCardActions, VChip, VContainer, VDialog, VDivider, VExpansionPanels, VExpansionPanel, VExpansionPanelHeader, VExpansionPanelContent, VHover, VIcon, VImg, VList, VListItem, VListItemAction, VListItemTitle, VListItemSubtitle, VListItemContent, VListItemIcon, VListGroup, VMain, VMenu, VNavigationDrawer, VRow, VTooltip, VCol, VSpacer, VSwitch, VTextField, VToolbar, VToolbarTitle, VToolbarItems, VCheckbox, VSelect, VSnackbar
+    VApp, VAppBar, VAppBarTitle, VAppBarNavIcon, VAvatar, VBtn, VBtnToggle, VCard, VCardTitle, VCardSubtitle, VCardText, VCardActions, VChip, VContainer, VDialog, VDivider, VExpansionPanels, VExpansionPanel, VExpansionPanelHeader, VExpansionPanelContent, VHover, VIcon, VImg, VList, VListItem, VListItemAction, VListItemTitle, VListItemSubtitle, VListItemContent, VListItemIcon, VListGroup, VMain, VMenu, VNavigationDrawer, VRow, VTooltip, VCol, VSpacer, VSwitch, VTextField, VTextarea, VToolbar, VToolbarTitle, VToolbarItems, VCheckbox, VSelect, VSnackbar
   },
   directives: { Ripple, Intersect, Touch, Resize, ClickOutside, Mutate, Scroll }
 })
