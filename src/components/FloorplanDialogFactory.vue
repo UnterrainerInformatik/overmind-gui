@@ -93,6 +93,7 @@ import { singleton as dateUtils } from '@/utils/dateUtils'
 import FloorplanPlugDialog from '@/components/FloorplanPlugDialog.vue'
 import FloorplanHTDialog from '@/components/FloorplanHTDialog.vue'
 import FloorplanContactDialog from '@/components/FloorplanContactDialog.vue'
+import FloorplanMotionDialog from '@/components/FloorplanMotionDialog.vue'
 
 export default {
   name: 'FloorplanDialogFactory',
@@ -192,10 +193,11 @@ export default {
           this.component = FloorplanContactDialog
           return true
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyMotionAppliance':
-          this.component = null
+          this.component = FloorplanMotionDialog
           return true
       }
-      return false
+      this.component = null
+      return true
     }
   },
 
