@@ -50,10 +50,16 @@ class DateUtils {
   }
 
   public isoToDateLong (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToDateLong(new Date(d + 'Z'), locale)
   }
 
   public dateToDateLong (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
@@ -63,10 +69,16 @@ class DateUtils {
   }
 
   public isoToDateLongPadded (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToDateLongPadded(new Date(d + 'Z'), locale)
   }
 
   public dateToDateLongPadded (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
@@ -76,18 +88,30 @@ class DateUtils {
   }
 
   public isoToDate (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToDate(new Date(d + 'Z'), locale)
   }
 
   public dateToDate (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleDateString(locale)
   }
 
   public isoToDatePadded (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToDatePadded(new Date(d + 'Z'), locale)
   }
 
   public dateToDatePadded (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleDateString(locale, {
       year: 'numeric',
       month: '2-digit',
@@ -96,29 +120,72 @@ class DateUtils {
   }
 
   public isoToTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToTime(new Date(d + 'Z'), locale)
   }
 
   public dateToTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleTimeString(locale)
   }
 
   public isoToShortTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToShortTime(new Date(d + 'Z'), locale)
   }
 
   public dateToShortTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return d.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit'
     })
   }
 
+  public isoToLongTime (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return this.dateToLongTime(new Date(d + 'Z'), locale)
+  }
+
+  public dateToLongTime (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return d.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  }
+
   public isoToShortDateTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.isoToDatePadded(d, locale) + ' ' + this.isoToShortTime(d, locale)
   }
 
+  public isoToShortDateLongTime (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return this.isoToDatePadded(d, locale) + ' ' + this.isoToLongTime(d, locale)
+  }
+
   public dateToShortDateTime (d, locale) {
+    if (!d) {
+      return ''
+    }
     return this.dateToDatePadded(d, locale) + ' ' + this.dateToShortTime(d, locale)
   }
 
