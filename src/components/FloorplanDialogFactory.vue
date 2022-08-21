@@ -1,7 +1,7 @@
 <template>
 <div class="text-center">
   <v-dialog v-model="dialogOpen" width="500">
-    <v-card>
+    <v-card class="ma-0 pa-0">
       <v-card-title class="text-h6 accent mb-2">
         {{ app.name }}
       </v-card-title>
@@ -12,23 +12,40 @@
 
       <v-divider></v-divider>
 
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          block
-          color="secondary"
-          text
-          @click="dialogOpen = false"
-        >
-          Schließen
-        </v-btn>
-      </v-card-actions>
+      <v-card-text class="ma-0 mt-3 pa-0">
+        <v-expansion-panels accordion hover class="ma-0 pa-0">
+          <v-expansion-panel class="ma-0 pa-0">
+            <v-expansion-panel-header class="ma-0">
+                Zusatzinfos
+            </v-expansion-panel-header>
+            <v-expansion-panel-content class="ma-0 mt-2 pa-0">
+              <v-row>
+                <v-col class="ma-0 mr-1 pa-0">
+                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="ID:" :value="app.id"></v-text-field>
+                </v-col>
+                <v-col class="ma-0 pa-0">
+                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="IP:" :value="getIp(app)"></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col class="ma-0 mr-1 pa-0">
+                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="Letztes Mal online:" :value="dateUtils.isoToShortDateLongTime(app.lastTimeOnline, $i18n.locale)"></v-text-field>
+                </v-col>
+                <v-col class="ma-0 pa-0">
+                  <v-text-field disabled dense outlined hide-details="true" class="ma-0 my-3 pa-0" label="Letztes Setup:" :value="dateUtils.isoToShortDateLongTime(app.lastTimeSetup, $i18n.locale)"></v-text-field>
+                </v-col>
+              </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card-text>
     </v-card>
   </v-dialog>
   </div>
 </template>
 
 <script lang="js">
+import { singleton as dateUtils } from '@/utils/dateUtils'
 import FloorplanPlugDialog from '@/components/FloorplanPlugDialog.vue'
 
 export default {
@@ -44,6 +61,7 @@ export default {
   },
 
   data: () => ({
+    dateUtils,
     dialogOpen: false,
     component: {},
     FloorplanPlugDialog
@@ -56,13 +74,19 @@ export default {
   },
 
   methods: {
+    getIp (app) {
+      if (app && app.config) {
+        return app.config.address ? app.config.address : ''
+      }
+      return ''
+    },
     show () {
       if (this.mapFqn()) {
         this.dialogOpen = true
       }
     },
     mapFqn () {
-      console.log(this.app.classFqn)
+      // console.log(this.app.classFqn)
       switch (this.app.classFqn) {
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellySwitch1PMAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlugAppliance':
