@@ -51,7 +51,7 @@ export default {
     },
     getTimestamp (app) {
       if (app && app.state && app.state.motions && app.state.motions[0] !== undefined && app.state.motions[0].timestamp !== undefined) {
-        return dateUtils.dateToShortDateLongTime(new Date(app.state.motions[0].timestamp * 1000), this.$i18n.locale)
+        return dateUtils.dateToShortDateLongTime(new Date(app.state.motions[0].timestamp), this.$i18n.locale)
       }
       return null
     },
