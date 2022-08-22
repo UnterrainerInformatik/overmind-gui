@@ -1,3 +1,4 @@
+import 'typeface-roboto'
 import Vue from 'vue'
 import App from './App.vue'
 
