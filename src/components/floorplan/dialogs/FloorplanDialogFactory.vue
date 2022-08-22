@@ -90,10 +90,10 @@
 
 <script lang="js">
 import { singleton as dateUtils } from '@/utils/dateUtils'
-import FloorplanPlugDialog from '@/components/FloorplanPlugDialog.vue'
-import FloorplanHTDialog from '@/components/FloorplanHTDialog.vue'
-import FloorplanContactDialog from '@/components/FloorplanContactDialog.vue'
-import FloorplanMotionDialog from '@/components/FloorplanMotionDialog.vue'
+import FloorplanPlugDialog from '@/components/floorplan/dialogs/FloorplanPlugDialog.vue'
+import FloorplanHTDialog from '@/components/floorplan/dialogs/FloorplanHTDialog.vue'
+import FloorplanContactDialog from '@/components/floorplan/dialogs/FloorplanContactDialog.vue'
+import FloorplanMotionDialog from '@/components/floorplan/dialogs/FloorplanMotionDialog.vue'
 
 export default {
   name: 'FloorplanDialogFactory',
@@ -208,7 +208,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import 'index.scss';
+@import '../../index.scss';
 
 .middle {
   font-size: 15px;

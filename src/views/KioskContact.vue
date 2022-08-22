@@ -29,7 +29,7 @@
 // @ is an alias to /src
 import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
-import Floorplan from '@/components/Floorplan.vue'
+import Floorplan from '@/components/floorplan/Floorplan.vue'
 
 export default {
   name: 'kioskContact',

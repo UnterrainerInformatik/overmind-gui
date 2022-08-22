@@ -76,7 +76,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import 'index.scss';
+@import '../../index.scss';
 
 .middle {
   font-size: 15px;
