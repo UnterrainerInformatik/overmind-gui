@@ -178,12 +178,12 @@
 </template>
 
 <style lang="scss">
-@import 'index.scss';
+@import '../index.scss';
 </style>
 
 <script lang="js">
 import BatteryIndicator from '@/components/BatteryIndicator.vue'
-import FloorplanDialogFactory from '@/components/FloorplanDialogFactory.vue'
+import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDialogFactory.vue'
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
@@ -527,7 +527,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import 'index.scss';
+@import '../index.scss';
 
 .noFocus:focus::before {
   opacity: 0 !important;
