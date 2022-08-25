@@ -37,8 +37,8 @@ export default {
   },
 
   methods: {
-    mouseUp () {
-      this.setBrightness()
+    async mouseUp () {
+      await this.setBrightness()
       this.pause = false
     },
     mouseDown () {
