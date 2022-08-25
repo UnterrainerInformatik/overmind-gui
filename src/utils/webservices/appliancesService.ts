@@ -49,6 +49,21 @@ export class AppliancesService extends BaseService {
       }
     })
   }
+
+  public async setBrightness (id: number | string, actorPath: string, value: number) {
+    return this.axiosUtils.post(this.server, 'execute', () => {
+      return {
+        applianceId: id,
+        actorPath: actorPath,
+        commands: [
+          {
+            name: 'brightness',
+            params: [value]
+          }
+        ]
+      }
+    })
+  }
 }
 
 export const singleton = AppliancesService.getInstance()

@@ -91,6 +91,7 @@
 <script lang="js">
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import FloorplanPlugDialog from '@/components/floorplan/dialogs/FloorplanPlugDialog.vue'
+import FloorplanDimmerDialog from '@/components/floorplan/dialogs/FloorplanDimmerDialog.vue'
 import FloorplanHTDialog from '@/components/floorplan/dialogs/FloorplanHTDialog.vue'
 import FloorplanContactDialog from '@/components/floorplan/dialogs/FloorplanContactDialog.vue'
 import FloorplanMotionDialog from '@/components/floorplan/dialogs/FloorplanMotionDialog.vue'
@@ -182,8 +183,10 @@ export default {
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellySwitch1PMAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlugAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellySwitch25Appliance':
-        case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyDimmerAppliance':
           this.component = FloorplanPlugDialog
+          return true
+        case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyDimmerAppliance':
+          this.component = FloorplanDimmerDialog
           return true
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyHTAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlusHTAppliance':
