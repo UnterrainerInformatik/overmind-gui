@@ -64,6 +64,21 @@ export class AppliancesService extends BaseService {
       }
     })
   }
+
+  public async setColor (id: number | string, actorPath: string, r: number, g: number, b: number, a: number) {
+    return this.axiosUtils.post(this.server, 'execute', () => {
+      return {
+        applianceId: id,
+        actorPath: actorPath,
+        commands: [
+          {
+            name: 'setRgb',
+            params: [r, g, b, 0.0, a]
+          }
+        ]
+      }
+    })
+  }
 }
 
 export const singleton = AppliancesService.getInstance()
