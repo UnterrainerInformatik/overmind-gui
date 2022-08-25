@@ -1,13 +1,24 @@
 <template>
   <div v-if="app && item">
     <br>
-    <v-slider v-if="brightness" class="mb-4" v-model="brightness" color="on" thumb-color="on" thumb-label="always" @mouseup="mouseUp" @mousedown="mouseDown"></v-slider>
+    <v-color-picker
+      class="ml-16"
+      v-if="value"
+      :value="value"
+      @update:color="changeColor"
+      dot-size="31"
+      mode="rgba"
+      swatches-max-height="100"
+      v-model="colorModel"
+    ></v-color-picker>
+    <br>
     <v-btn @click="toggle()" block height="42" :color="
             (app.state.relays[0].state === 'ON' ? 'on ' : 'off ') +
             ' darken-1'
           ">
       <v-icon>power_settings_new</v-icon>
     </v-btn>
+    {{ colorModel }}
   </div>
 </template>
 
@@ -26,8 +37,9 @@ export default {
   },
 
   data: () => ({
-    brightness: null,
-    pause: false
+    pause: false,
+    colorModel: null,
+    value: null
   }),
 
   computed: {
@@ -37,21 +49,27 @@ export default {
   },
 
   methods: {
-    async mouseUp () {
-      await this.setBrightness()
+    async changeColor () {
+      this.pause = true
+      await this.setColors()
       this.pause = false
     },
-    mouseDown () {
-      this.pause = true
-    },
-    getBrightness (app) {
-      if (app && app.state && app.state.dimmers && app.state.dimmers[0] && app.state.dimmers[0].brightness !== undefined) {
-        return app.state.dimmers[0].brightness * 100
+    getColors (app) {
+      if (app && app.state && app.state.rgbws && app.state.rgbws[0]) {
+        const v = app.state.rgbws[0]
+        return {
+          r: v.red * 255,
+          g: v.green * 255,
+          b: v.blue * 255,
+          a: v.gain
+        }
       }
       return null
     },
-    async setBrightness () {
-      await appliancesService.setBrightness(this.app.id, 'light', this.brightness / 100)
+    async setColors () {
+      console.log('setColors')
+      const v = this.colorModel.rgba
+      await appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, v.a)
     },
     async toggle () {
       const actorPath = this.getActorPathOf(this.app, this.item.index)
@@ -81,12 +99,12 @@ export default {
   },
 
   mounted () {
-    this.brightness = this.getBrightness(this.app)
+    this.value = this.getColors(this.app)
     setInterval(() => {
       if (this.pause) {
         return
       }
-      this.brightness = this.getBrightness(this.app)
+      this.value = this.getColors(this.app)
     }, 500)
   }
 }
