@@ -65,7 +65,7 @@ export class AppliancesService extends BaseService {
     })
   }
 
-  public async setColor (id: number | string, actorPath: string, r: number, g: number, b: number, a: number) {
+  public async setColor (id: number | string, actorPath: string, r: number, g: number, b: number, w: number, a: number) {
     return this.axiosUtils.post(this.server, 'execute', () => {
       return {
         applianceId: id,
@@ -73,7 +73,7 @@ export class AppliancesService extends BaseService {
         commands: [
           {
             name: 'setRgb',
-            params: [r, g, b, 0.0, a]
+            params: [r, g, b, w, a]
           }
         ]
       }
