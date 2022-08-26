@@ -12,35 +12,37 @@
  * This way you never lose the last function call (because of eventual consistency and stuff).
  */
 export class Debouncer {
+  public timeout = 100
+  public whenDebounceCalled: Function | null = null
+  public whenEmptyEvent: Function | null = null
+
   private timer: object | null = null
-  private timeout = 100
   private lastFunc: Function | null = null
 
   /**
    * Creates another Debouncer with the given timeout in milliseconds.
-   * @param timeout the timeout in milliseconds (defaults to 100 if omitted)
+   * @param init the initialization-object
    */
-  public constructor (timeout?) {
-    if (timeout) {
-      this.timeout = timeout
-    }
+  public constructor (init?: Partial<Debouncer>) {
+    Object.assign(this, init)
   }
 
   /**
    * Enqueue a function to be debounced by this instance.
    * @param func the function to debounce
-   * @return the instance of this Debouncer to provide a fluent interface
    */
   public async debounce (func: Function) {
+    if (this.whenDebounceCalled) {
+      await this.whenDebounceCalled()
+    }
     if (this.timer) {
       // Function is currently running. Remember it for cleanup-run.
       // This is the actual debouncing without losing the last function.
       this.lastFunc = func
-      return this
+      return
     }
     this.setupTimer()
     await func()
-    return this
   }
 
   private setupTimer () {
@@ -52,6 +54,9 @@ export class Debouncer {
   private async cleanupRun () {
     if (!this.lastFunc) {
       this.timer = null
+      if (this.whenEmptyEvent) {
+        await this.whenEmptyEvent()
+      }
       return
     }
     this.setupTimer()
