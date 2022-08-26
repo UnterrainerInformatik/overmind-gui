@@ -24,13 +24,14 @@
           ">
       <v-icon>power_settings_new</v-icon>
     </v-btn>
-    {{ colorModel }}
+    colorModel: {{ colorModel }}<br>
+    pause: {{ pause }}<br>
+    waitForNextAppChange: {{ waitForNextAppChange }}<br>
   </div>
 </template>
 
 <script lang="js">
 import { Debouncer } from '@/utils/debouncer'
-import { singleton as jsUtils } from '@/utils/jsUtils'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {
@@ -45,10 +46,11 @@ export default {
   },
 
   data: () => ({
-    debouncer: new Debouncer(500),
+    debouncer: null,
     pause: false,
     colorModel: null,
-    white: null
+    white: null,
+    waitForNextAppChange: false
   }),
 
   computed: {
@@ -60,6 +62,12 @@ export default {
   },
 
   watch: {
+    app: {
+      handler: function () {
+        this.waitForNextAppChange = false
+      },
+      deep: true
+    }
   },
 
   methods: {
@@ -80,7 +88,6 @@ export default {
     },
     async mouseUpWhite () {
       await this.saveValues()
-      this.pause = false
     },
     mouseDownWhite () {
       this.pause = true
@@ -92,9 +99,7 @@ export default {
       return null
     },
     async setColor () {
-      this.pause = true
       await this.saveValues()
-      this.pause = false
     },
     getValues (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].white !== undefined) {
@@ -144,9 +149,17 @@ export default {
   },
 
   mounted () {
+    this.debouncer = new Debouncer({
+      timeout: 500,
+      whenDebounceCalled: () => { this.pause = true },
+      whenEmptyEvent: () => {
+        this.waitForNextAppChange = true
+        this.pause = false
+      }
+    })
     this.getValues(this.app)
     setInterval(() => {
-      if (this.pause) {
+      if (this.pause || this.waitForNextAppChange) {
         return
       }
       this.getValues(this.app)
