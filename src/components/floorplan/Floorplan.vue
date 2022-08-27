@@ -416,6 +416,22 @@ export default {
         overmindUtils.parseConfig(element)
         appliances.push(element)
       })
+      // Resolve appliance-groups in a reasonable way.
+      for (const appliance of appliances) {
+        if ((appliance.type === 'GROUP_PARALLEL' || appliance.type === 'GROUP_SERIAL') && appliance.config && appliance.config.applianceIds) {
+          for (const id of appliance.config.applianceIds) {
+            const subApp = await appliancesService.getById(id)
+            overmindUtils.parseState(subApp)
+            overmindUtils.parseConfig(subApp)
+            appliance.lastTimeOnline = subApp.lastTimeOnline
+            appliance.lastTimeSetup = subApp.lastTimeSetup
+            appliance.state = subApp.state
+            appliance.type = subApp.type
+            appliance.classFqn = subApp.classFqn
+            break
+          }
+        }
+      }
       appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
       this.appliances = appliances
       this.appMap.backingMap.clear()
