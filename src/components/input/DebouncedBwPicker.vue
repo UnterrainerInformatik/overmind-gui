@@ -18,7 +18,7 @@
       </v-row>
       <v-row>
         <v-col cols="2">
-          hot
+          <v-avatar x-small color="orange lighten-2"></v-avatar>
         </v-col>
         <v-col>
       <v-slider
@@ -34,7 +34,7 @@
       ></v-slider>
         </v-col>
         <v-col cols="2">
-          cold
+          <v-avatar x-small color="blue lighten-3"></v-avatar>
         </v-col>
       </v-row>
       <!--
@@ -86,32 +86,31 @@ export default {
     mouseDown () {
       this.pause = true
     },
-    getBrightness (app) {
+    getValues (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].brightness !== undefined) {
         this.brightness = app.state.rgbws[0].brightness * 100
       }
-    },
-    getTemp (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].colorTemperature !== undefined) {
         this.temp = app.state.rgbws[0].colorTemperature * 100
       }
     },
     async immediatelySetValues () {
+      console.log('trying to send values')
       if (this.brightness !== undefined && this.temp !== undefined) {
+        console.log('sending values...')
         await appliancesService.setWhite(this.app.id, 'light', this.brightness / 100, this.temp / 100)
+        console.log('sent bw:', this.brightness, this.temp)
       }
     }
   },
 
   mounted () {
-    this.getBrightness(this.app)
-    this.getTemp(this.app)
+    this.getValues(this.app)
     setInterval(() => {
       if (this.pause || this.waitForNextAppChange) {
         return
       }
-      this.getBrightness(this.app)
-      this.getTemp(this.app)
+      this.getValues(this.app)
     }, 500)
   }
 }

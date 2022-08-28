@@ -2,26 +2,31 @@
   <div v-if="app && item">
     <v-card>
       <v-tabs background-color="primary" fixed-tabs v-model="tab">
-        <v-tab>
-          Farbe
-        </v-tab>
-        <v-tab>
-          Weiß
-        </v-tab>
+        <v-tab> Farbe </v-tab>
+        <v-tab> Weiß </v-tab>
       </v-tabs>
     </v-card>
-    <br>
+    <br />
     <v-tabs-items v-model="tab">
-      <v-tab-item>
-        <DebouncedRgbwPicker ref="rgbwPicker" :item="item" :app="app" :disableWhite="true"></DebouncedRgbwPicker>
+      <v-tab-item eager>
+        <DebouncedRgbwPicker
+          ref="rgbwPicker"
+          :item="item"
+          :app="app"
+          :disableWhite="true"
+        ></DebouncedRgbwPicker>
       </v-tab-item>
-      <v-tab-item>
-        <DebouncedBwPicker ref="bwPicker" :item="item" :app="app"></DebouncedBwPicker>
+      <v-tab-item eager>
+        <DebouncedBwPicker
+          ref="bwPicker"
+          :item="item"
+          :app="app"
+        ></DebouncedBwPicker>
       </v-tab-item>
     </v-tabs-items>
 
     <DebouncedOnOffButton :item="item" :app="app"></DebouncedOnOffButton>
-    tab: {{ tab }}<br>
+    tab: {{ tab }}<br />
     mode: {{ app.state.rgbws[0].mode }}
   </div>
 </template>
@@ -65,20 +70,30 @@ export default {
     tab: {
       handler: async function (v) {
         if (v === 0) {
-          const o = this.$refs.rgbwPicker
-          if (!o) {
-            return
-          }
-          console.log('setting values of color on bulb')
-          await o.immediatelySetValues()
+          await this.$nextTick(async () => {
+            const o = this.$refs.rgbwPicker
+            if (!o) {
+              return
+            }
+            this.pause = true
+            await o.immediatelySetValues()
+            this.waitForNextAppChange = true
+            this.pause = false
+          })
         }
         if (v === 1) {
-          const o = this.$refs.bwPicker
-          if (!o) {
-            return
-          }
-          console.log('setting values of white on bulb')
-          await o.immediatelySetValues()
+          console.log('changed from c->bw')
+          await this.$nextTick(async () => {
+            const o = this.$refs.bwPicker
+            if (!o) {
+              console.log('cannot find picker')
+              return
+            }
+            this.pause = true
+            await o.immediatelySetValues()
+            this.waitForNextAppChange = true
+            this.pause = false
+          })
         }
       },
       deep: true
