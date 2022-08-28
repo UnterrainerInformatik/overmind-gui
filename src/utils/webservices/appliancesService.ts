@@ -79,6 +79,21 @@ export class AppliancesService extends BaseService {
       }
     })
   }
+
+  public async setWhite (id: number | string, actorPath: string, brightness: number, temp: number) {
+    return this.axiosUtils.post(this.server, 'execute', () => {
+      return {
+        applianceId: id,
+        actorPath: actorPath,
+        commands: [
+          {
+            name: 'setWhite',
+            params: [brightness, temp]
+          }
+        ]
+      }
+    })
+  }
 }
 
 export const singleton = AppliancesService.getInstance()
