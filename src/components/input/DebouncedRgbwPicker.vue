@@ -1,6 +1,6 @@
 <template>
   <div v-if="app && item">
-    <v-row>
+    <v-row v-if="!disableWhite">
       <v-col v-if="colorModel" class="ma-0 mb-n2 pa-0">
         <div
           id="container"
@@ -53,11 +53,12 @@
         <v-color-picker
           @update:color="setColor"
           dot-size="31"
+          :width="disableWhite ? '478px' : undefined"
           mode="rgba"
           v-model="colorModel"
         ></v-color-picker>
       </v-col>
-      <v-col>
+      <v-col v-if="!disableWhite">
         <v-slider
           v-if="white !== undefined"
           v-model="white"
@@ -72,6 +73,11 @@
         ></v-slider>
       </v-col>
     </v-row>
+    <!--
+    colorModel: {{ colorModel }}<br>
+    pause: {{ pause }}<br>
+    waitForNextAppChange: {{ waitForNextAppChange }}<br>
+    -->
   </div>
 </template>
 
@@ -84,7 +90,8 @@ export default {
 
   props: {
     item: {},
-    app: {}
+    app: {},
+    disableWhite: { default: false }
   },
 
   data: () => ({
@@ -168,6 +175,12 @@ export default {
       this.debouncer.debounce(() => {
         appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, this.white / 100, v.a)
       })
+    },
+    async immediatelySetValues () {
+      const v = this.colorModel
+      if (v !== undefined && this.white !== undefined) {
+        appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, this.white / 100, v.a)
+      }
     }
   },
 
