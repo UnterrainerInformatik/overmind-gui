@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import store from '@/store'
+import { AxiosRequestHeaders } from 'axios'
 import { singleton as log } from '@/utils/loggingUtils'
 import { singleton as objectUtils } from '@/utils/objectUtils'
 
@@ -29,7 +30,7 @@ export class AxiosUtils {
     return null
   }
 
-  private getAuthorizationHeader (): object {
+  private getAuthorizationHeader (): AxiosRequestHeaders {
     const token = store.getters['keycloak/token']
     if (token == null || token === undefined || token === '') {
       return {}
