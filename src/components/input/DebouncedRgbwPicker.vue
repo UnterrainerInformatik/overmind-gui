@@ -95,6 +95,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     debouncer: null,
     pause: false,
     colorModel: null,
@@ -194,12 +195,18 @@ export default {
       }
     })
     this.getValues(this.app)
-    setInterval(() => {
+    this.interval = setInterval(() => {
       if (this.pause || this.waitForNextAppChange) {
         return
       }
       this.getValues(this.app)
     }, 500)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

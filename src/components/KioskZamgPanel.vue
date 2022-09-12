@@ -122,6 +122,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     overmindUtils,
     dateUtils,
     weather: null,
@@ -215,7 +216,13 @@ export default {
 
   mounted () {
     this.update()
-    setInterval(() => this.update(), 10000)
+    this.interval = setInterval(() => this.update(), 10000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

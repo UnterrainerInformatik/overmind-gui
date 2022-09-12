@@ -43,6 +43,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     raw: {},
     offset: 0,
     size: 1000,
@@ -69,7 +70,13 @@ export default {
 
   mounted () {
     this.getPlans(true, this.size, this.offset)
-    setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
+    this.interval = setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

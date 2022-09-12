@@ -42,6 +42,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     enabled: false
   }),
 
@@ -86,7 +87,13 @@ export default {
   },
 
   mounted () {
-    setInterval(() => this.calculateEnabledState(), 1000)
+    this.interval = setInterval(() => this.calculateEnabledState(), 1000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

@@ -212,6 +212,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     overmindUtils,
     areas: [],
     loaded: false,
@@ -538,6 +539,12 @@ export default {
     this.reCompose()
     this.getAppliances(true)
     this.interval = setInterval(() => this.getAppliances(false), 2000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

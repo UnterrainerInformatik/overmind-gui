@@ -59,6 +59,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     brightness: undefined,
     temp: undefined,
     pause: false,
@@ -106,12 +107,18 @@ export default {
 
   mounted () {
     this.getValues(this.app)
-    setInterval(() => {
+    this.interval = setInterval(() => {
       if (this.pause || this.waitForNextAppChange) {
         return
       }
       this.getValues(this.app)
     }, 500)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

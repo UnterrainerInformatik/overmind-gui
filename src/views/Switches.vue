@@ -23,6 +23,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     raw: {},
     filtered: {},
     onlyActive: false,
@@ -70,6 +71,12 @@ export default {
   mounted () {
     this.getUsedSwitches(true)
     this.interval = setInterval(() => this.getUsedSwitches(false), 10000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>
