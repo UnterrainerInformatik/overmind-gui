@@ -42,6 +42,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     filtered: {},
     loading: true
   }),
@@ -88,6 +89,12 @@ export default {
   mounted () {
     this.getUsedWindowContacts(true)
     this.interval = setInterval(() => this.getUsedWindowContacts(false), 3000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

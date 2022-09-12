@@ -75,6 +75,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     dateUtils,
     wasteDisposalJson: null,
     data: null
@@ -134,7 +135,13 @@ export default {
 
   mounted () {
     this.update()
-    setInterval(() => this.update(), 10000)
+    this.interval = setInterval(() => this.update(), 10000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

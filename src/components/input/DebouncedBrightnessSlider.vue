@@ -31,6 +31,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     brightness: undefined,
     pause: false,
     waitForNextAppChange: false
@@ -69,12 +70,18 @@ export default {
 
   mounted () {
     this.getBrightness(this.app)
-    setInterval(() => {
+    this.interval = setInterval(() => {
       if (this.pause || this.waitForNextAppChange) {
         return
       }
       this.getBrightness(this.app)
     }, 500)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>

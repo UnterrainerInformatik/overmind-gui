@@ -41,6 +41,7 @@ export default {
   },
 
   data: () => ({
+    interval: null,
     dateUtils,
     date: new Date()
   }),
@@ -58,7 +59,13 @@ export default {
   },
 
   mounted () {
-    setInterval(() => this.update(), 1000)
+    this.interval = setInterval(() => this.update(), 1000)
+  },
+
+  beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 }
 </script>
