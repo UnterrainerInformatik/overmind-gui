@@ -3,6 +3,7 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <Floorplan
         icon="power"
+        :displayEnhancedDialog="displayEnhancedDialog"
         :clickableMap="false"
         :additionalAreas="areas"
         colorOn="rgba(160, 160, 0, 0.8)"
@@ -17,6 +18,9 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
+      <v-divider></v-divider>
+      <KioskTogglePanel :text="$t('page.kiosk.toggleDetails')" @handle-change="handleToggleDetailsChange">
+      </KioskTogglePanel>
     </v-container>
   </div>
 </template>
@@ -25,6 +29,7 @@
 // @ is an alias to /src
 import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
+import KioskTogglePanel from '@/components/KioskTogglePanel.vue'
 import Floorplan from '@/components/floorplan/Floorplan.vue'
 
 export default {
@@ -32,10 +37,12 @@ export default {
 
   components: {
     KioskLinkPanel,
+    KioskTogglePanel,
     Floorplan
   },
 
   data: () => ({
+    displayEnhancedDialog: false,
     areas: [
       {
         title: 'cellar-computer',
@@ -172,6 +179,9 @@ export default {
   },
 
   methods: {
+    handleToggleDetailsChange (value) {
+      this.displayEnhancedDialog = value
+    },
     ...mapActions('gui', {
       kioskMode: 'kioskMode'
     })

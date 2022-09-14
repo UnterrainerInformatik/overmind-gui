@@ -59,6 +59,7 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"toggleDetails": "Details anzeigen",
 			"wasteBin": {
 				"organic": "Organic",
 				"paper": "Paper",

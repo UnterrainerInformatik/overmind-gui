@@ -25,7 +25,7 @@
       </v-tab-item>
     </v-tabs-items>
 
-    <DebouncedOnOffButton :item="item" :app="app"></DebouncedOnOffButton>
+    <DebouncedOnOffButton ref="default" :item="item" :app="app"></DebouncedOnOffButton>
     tab: {{ tab }}<br />
     mode: {{ app.state.rgbws[0].mode }}
   </div>
@@ -101,6 +101,9 @@ export default {
   },
 
   methods: {
+    defaultAction () {
+      this.$refs.default.toggle()
+    },
     changeTabBasedOnMode () {
       if (this.app && this.app.state && this.app.state.rgbws && this.app.state.rgbws[0] && this.app.state.rgbws[0].mode !== undefined) {
         if (this.app.state.rgbws[0].mode === 'WHITE') {

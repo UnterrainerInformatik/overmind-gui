@@ -3,6 +3,7 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <Floorplan
         icon="meeting_room"
+        :displayEnhancedDialog="true"
         :additionalAreas="areas"
         colorOn="rgba(280, 70, 0, 0.6)"
         colorMiddle="rgba(160, 160, 0, 0.8)"

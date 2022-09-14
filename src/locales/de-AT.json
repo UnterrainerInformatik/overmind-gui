@@ -59,6 +59,7 @@
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
+			"toggleDetails": "Show details",
 			"wasteBin": {
 				"organic": "Biomüll",
 				"paper": "Papier",
