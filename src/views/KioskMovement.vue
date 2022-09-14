@@ -3,6 +3,7 @@
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <Floorplan
         icon="vibration"
+        :displayEnhancedDialog="true"
         :additionalAreas="areas"
         colorOn="rgba(120, 120, 0, 0.6)"
         colorOff="rgba(60, 60, 255, 0.4)"

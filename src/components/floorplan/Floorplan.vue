@@ -197,6 +197,7 @@ export default {
   },
 
   props: {
+    displayEnhancedDialog: { default: false },
     icon: {},
     additionalAreas: {},
     applianceTypeFilter: [],
@@ -349,7 +350,11 @@ export default {
       }
       this.redraw(false)
       if (this.constructIdFrom(area)) {
-        this.$refs[this.constructIdFrom(area)][0].show()
+        if (this.displayEnhancedDialog) {
+          this.$refs[this.constructIdFrom(area)][0].show()
+        } else {
+          this.$refs[this.constructIdFrom(area)][0].defaultAction()
+        }
       }
     },
     redraw (reset) {

@@ -90,6 +90,7 @@
 
 <script lang="js">
 import { singleton as dateUtils } from '@/utils/dateUtils'
+import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import FloorplanPlugDialog from '@/components/floorplan/dialogs/FloorplanPlugDialog.vue'
 import FloorplanBulbDialog from '@/components/floorplan/dialogs/FloorplanBulbDialog.vue'
 import FloorplanDimmerDialog from '@/components/floorplan/dialogs/FloorplanDimmerDialog.vue'
@@ -106,7 +107,6 @@ export default {
   },
 
   components: {
-    FloorplanPlugDialog
   },
 
   data: () => ({
@@ -178,6 +178,34 @@ export default {
         this.dialogOpen = true
       }
     },
+    defaultAction () {
+      this.toggleInternal(this.app, this.item)
+    },
+    async toggleInternal (app, item) {
+      const actorPath = this.getActorPathOf(app, item.index)
+      let st = app.onOffState
+      if (Array.isArray(st)) {
+        st = st[item.index]
+      }
+      if (st === 'on') {
+        await appliancesService.turnOff(app.id, actorPath)
+      }
+      if (st === 'off') {
+        await appliancesService.turnOn(app.id, actorPath)
+      }
+    },
+    getActorPathOf (app, index) {
+      switch (app.type) {
+        case 'PLUG':
+        case 'RELAY':
+          return 'relay'
+        case 'DIMMER':
+        case 'BULB_RGB':
+          return 'light'
+        case 'RELAY_DUAL':
+          return 'relay' + (index + 1)
+      }
+    },
     mapFqn () {
       // console.log(this.app.classFqn)
       switch (this.app.classFqn) {
@@ -204,7 +232,7 @@ export default {
           return true
       }
       this.component = null
-      return true
+      return false
     }
   },
 

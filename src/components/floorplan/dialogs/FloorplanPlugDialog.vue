@@ -1,5 +1,5 @@
 <template>
-  <DebouncedOnOffButton :item="item" :app="app"></DebouncedOnOffButton>
+  <DebouncedOnOffButton ref="defaultActor" :item="item" :app="app"></DebouncedOnOffButton>
 </template>
 
 <script lang="js">
