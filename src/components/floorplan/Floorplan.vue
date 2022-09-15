@@ -543,7 +543,7 @@ export default {
   mounted () {
     this.reCompose()
     this.getAppliances(true)
-    this.interval = setInterval(() => this.getAppliances(false), 600)
+    this.interval = setInterval(() => this.getAppliances(false), 2000)
   },
 
   beforeDestroy () {
