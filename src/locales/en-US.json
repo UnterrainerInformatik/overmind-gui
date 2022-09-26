@@ -59,6 +59,7 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"solarPower": "Solar Power",
 			"toggleDetails": "Details anzeigen",
 			"wasteBin": {
 				"organic": "Organic",
@@ -66,6 +67,7 @@
 				"plastic": "Plastic",
 				"waste": "Residual"
 			},
+			"watts": "W",
 			"zamg": {
 				"description": "Description",
 				"feltTemp": "Subjective",
