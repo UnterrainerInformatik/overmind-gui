@@ -6,6 +6,7 @@
           <KioskClockPanel></KioskClockPanel>
           <KioskZamgPanel></KioskZamgPanel>
           <KioskWasteDisposalPanel :organic="false"></KioskWasteDisposalPanel>
+          <KioskPvPanel :appId="142" wp="800"></KioskPvPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -52,6 +53,7 @@ import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
+import KioskPvPanel from '@/components/KioskPvPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -61,6 +63,7 @@ export default {
     KioskLinkPanel,
     KioskClockPanel,
     KioskZamgPanel,
+    KioskPvPanel,
     KioskWasteDisposalPanel,
     KioskSwitchPanel
   },

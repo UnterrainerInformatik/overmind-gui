@@ -59,6 +59,7 @@
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
+			"solarPower": "Photovoltaik",
 			"toggleDetails": "Show details",
 			"wasteBin": {
 				"organic": "Biomüll",
@@ -66,6 +67,7 @@
 				"plastic": "Plastik",
 				"waste": "Restmüll"
 			},
+			"watts": "W",
 			"zamg": {
 				"description": "Beschreibung",
 				"feltTemp": "Gefühlt",
