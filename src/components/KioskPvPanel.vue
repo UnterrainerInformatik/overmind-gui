@@ -19,7 +19,7 @@
     </template>
     <template>
       <v-card>
-        <v-progress-linear striped height="70" class="bar" color="orange" :value="value">{{ value }} {{ $t('page.kiosk.watts') }}</v-progress-linear>
+        <v-progress-linear striped height="70" class="bar" color="orange darken-3" :value="value">{{ this.appliance.state.relays[0].power }} {{ $t('page.kiosk.watts') }}</v-progress-linear>
       </v-card>
     </template>
   </KioskPanel>
@@ -53,7 +53,7 @@ export default {
 
   computed: {
     value () {
-      return this.wp / 100 * this.appliance.state.relays[0].power
+      return 100 / this.wp * this.appliance.state.relays[0].power
     }
   },
 
