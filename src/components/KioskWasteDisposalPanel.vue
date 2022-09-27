@@ -108,7 +108,7 @@ export default {
         d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.wasteBinDates, this.waste, 'waste', 'deep-orange darken-2', this.wasteWarnDaysBefore + 1))
         d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.organicWasteBinDates, this.organic, 'organic', 'green darken-3', this.organicWarnDaysBefore + 1))
         d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.plasticWasteBinDates, this.plastic, 'plastic', 'yellow darken-1', this.plasticWarnDaysBefore + 1))
-        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red darken-3', this.paperWarnDaysBefore + 1))
+        d.push(this.findFirstFutureDate(now, this.wasteDisposalJson.paperWasteBinDates, this.paper, 'paper', 'red darken-2', this.paperWarnDaysBefore + 1))
         this.data = d
       })
     },
