@@ -19,7 +19,22 @@
     </template>
     <template>
       <v-card>
-        <v-progress-linear striped height="70" class="bar" color="orange darken-3" :value="value">{{ this.appliance.state.relays[0].power }} {{ $t('page.kiosk.watts') }}</v-progress-linear>
+        <v-progress-linear
+          striped
+          height="70"
+          class="bar"
+          color="orange darken-3"
+          :value="value"
+          >
+          <div>
+          <v-row class="ma-0 pa-0 text-center"
+            ><v-col class="ma-0 pa-0">{{
+              Math.round(this.appliance.state.relays[0].power)
+            }}</v-col></v-row
+          ><v-row class="ma-0 pa-0 text-center"
+            ><v-col class="ma-0 pa-0">{{ $t('page.kiosk.wattsLong') }}</v-col></v-row
+          ></div></v-progress-linear
+        >
       </v-card>
     </template>
   </KioskPanel>

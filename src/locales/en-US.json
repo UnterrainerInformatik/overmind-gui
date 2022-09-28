@@ -67,7 +67,8 @@
 				"plastic": "Plastic",
 				"waste": "Residual"
 			},
-			"watts": "W",
+			"wattsLong": "Watts",
+			"wattsShort": "W",
 			"zamg": {
 				"description": "Description",
 				"feltTemp": "Subjective",
