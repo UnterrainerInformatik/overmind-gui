@@ -1,6 +1,7 @@
 <template>
   <KioskPanel
     :isEnabled="item.isEnabled"
+    pa="1"
     @click="triggerEvent(item.planId, item.sensorPath, item.eventPath)"
     class="noFocus"
   >
@@ -10,7 +11,7 @@
           (state.enabled ? 'on ' : 'off ') +
           ' darken-1'
         "
-        size="42"
+        size="38"
       >
         <v-icon>power_settings_new</v-icon>
       </v-avatar>

@@ -8,10 +8,10 @@
   >
     <template v-slot:title>
       <v-row>
-        <v-col>
+        <v-col class="ma-0 pa-0">
           {{ $t('page.kiosk.power') }}
         </v-col>
-        <v-col class="text-right">
+        <v-col class="ma-0 pa-0 text-right">
           <v-icon>electrical_services</v-icon>
         </v-col>
       </v-row>
