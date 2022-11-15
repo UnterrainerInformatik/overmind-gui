@@ -59,6 +59,7 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"power": "Power Consumption",
 			"solarPower": "Solar Power",
 			"toggleDetails": "Details anzeigen",
 			"wasteBin": {
