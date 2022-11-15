@@ -3,12 +3,13 @@
     class="noFocus"
     borderColor="disabled"
     bgColor="disabled darken-4"
+    pa="1"
     :to="route"
   >
     <template v-slot:title>
       <v-avatar
         color="disabled darken-2"
-        size="42"
+        size="38"
       >
         <v-icon>link</v-icon>
       </v-avatar>
