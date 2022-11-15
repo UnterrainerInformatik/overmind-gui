@@ -6,7 +6,15 @@
           <KioskClockPanel></KioskClockPanel>
           <KioskZamgPanel></KioskZamgPanel>
           <KioskWasteDisposalPanel :organic="false"></KioskWasteDisposalPanel>
-          <KioskPvPanel :appId="142" wp="800"></KioskPvPanel>
+          <KioskPvPanel
+            :pvId="142"
+            :pvIndexes="[0]"
+            :mainId="145"
+            :mainIndexes="[0, 1, 2]"
+            :heatId="146"
+            :heatIndexes="[0, 1, 2]"
+            wp="800"
+          ></KioskPvPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
