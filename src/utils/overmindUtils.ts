@@ -147,7 +147,7 @@ class OvermindUtils {
       return
     }
 
-    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 15) {
+    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 24) {
       item.onOffState = 'error'
       return
     }
