@@ -75,11 +75,6 @@ export default {
         iconPos: [230, 185]
       },
       {
-        title: 'cellar-workshop-fridge',
-        appId: 0,
-        iconPos: [270, 109]
-      },
-      {
         title: '1st-playroom-window',
         appId: 0,
         iconPos: [790, 126]
