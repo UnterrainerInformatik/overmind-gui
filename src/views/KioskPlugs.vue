@@ -50,11 +50,6 @@ export default {
         iconPos: [90, 230]
       },
       {
-        title: 'cellar-technical-room',
-        appId: 0,
-        iconPos: [115, 150]
-      },
-      {
         title: 'cellar-servers',
         appId: 0,
         iconPos: [10, 185]
@@ -68,11 +63,6 @@ export default {
         title: 'cellar-washingmachine-right',
         appId: 0,
         iconPos: [56, 125]
-      },
-      {
-        title: 'cellar-vestibule',
-        appId: 0,
-        iconPos: [230, 185]
       },
       {
         title: '1st-playroom-window',
