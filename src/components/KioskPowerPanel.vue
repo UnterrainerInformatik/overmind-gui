@@ -9,32 +9,37 @@
   >
     <template>
       <v-row v-for="(row, i) in appliances" :key="i">
-        <v-col v-for="(app, j) in row" :key="j" class="ma-0 pa-1">
-          <v-card v-if="app">
-            <v-progress-linear
-              striped
-              height="32"
-              class="bar ma-0 mb-1 text-center"
-              :color="
-                (app.gradient && app.percent
-                  ? toRgba([
-                      255,
-                      jsUtils.lerp(180, 0, app.percent / 100),
-                      0,
-                      jsUtils.lerp(0.7, 1, app.percent / 100)
-                    ])
-                  : app.color) + ' darken-3'
-              "
-              :value="app.percent ? app.percent : undefined"
-            >
-              <v-row
-                ><v-col cols="1" v-for="(icon, g) in app.icons" :key="g">
-                  <v-icon>{{ icon }}</v-icon>
-                </v-col>
-                <v-col>{{ app.power }}</v-col>
-              </v-row>
-            </v-progress-linear>
-          </v-card>
+        <v-col v-for="(app, j) in row" :key="j" class="ma-0 pa-0 pl-1">
+          <v-row>
+            <v-col>
+              <v-card v-if="app">
+                <v-progress-linear
+                  striped
+                  :height="app.isBattery ? 28 : 32"
+                  :class="'ma-0 text-center' + (app.isBattery ? ' rounded-b-0' : ' mb-1')"
+                  :color="getColor(app)"
+                  :value="app.percent ? app.percent : undefined"
+                >
+                  <v-row>
+                    <v-col cols="1" v-for="(icon, g) in app.icons" :key="g">
+                      <v-icon>{{ icon }}</v-icon>
+                    </v-col>
+                    <v-col>{{ app.power }}</v-col>
+                  </v-row>
+                </v-progress-linear>
+              </v-card>
+              <v-card v-if="app.isBattery">
+                <v-progress-linear
+                  striped
+                  height="4"
+                  class="ma-0 mb-1 text-center rounded-t-0"
+                  color="yellow darken-3"
+                  :value="0"
+                >
+                </v-progress-linear>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </template>
@@ -76,8 +81,21 @@ export default {
   },
 
   methods: {
+    getColor (app) {
+      if (!app.gradient || app.percent == null || app.percent === undefined) {
+        return app.color + ' darken-3'
+      }
+      const from = app.gradient.from
+      const to = app.gradient.to
+      const p = app.percent / 100
+      return this.toRgba([
+        jsUtils.lerp(from[0], to[0], p),
+        jsUtils.lerp(from[1], to[1], p),
+        jsUtils.lerp(from[2], to[2], p),
+        jsUtils.lerp(from[3], to[3], p)
+      ])
+    },
     toRgba (c) {
-      console.log({ c })
       const r = `rgba(${c[0]},${c[1]},${c[2]},${c[3]})`
       return r
     },
@@ -105,8 +123,9 @@ export default {
           const obj = {
             appliances: appliances,
             icons: d.icons,
+            isBattery: d.isBattery,
             max: d.max,
-            gradient: d.gradient ? d.gradient : false,
+            gradient: d.gradient,
             power: overmindUtils.formatPower(p),
             percent: d.max ? (100 / d.max * p) : null,
             color: d.color ? d.color : 'orange'

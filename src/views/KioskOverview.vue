@@ -16,8 +16,11 @@
                       indexes: [0, 1, 2]
                     }
                   ],
-                  gradient: true,
-                  max: 5000,
+                  gradient: {
+                    from: [255, 180, 0, 0.7],
+                    to: [255, 0, 0, 1]
+                  },
+                  max: 4000,
                   icons: ['electric_bolt']
                 }
               ],
@@ -30,12 +33,32 @@
                     }
                   ],
                   max: 800,
-                  color: 'green',
+                  gradient: {
+                    from: [120, 255, 120, 0.3],
+                    to: [0, 255, 0, 0.6]
+                  },
                   icons: ['solar_power']
                 }
               ],
+              /*[
+                {
+                  appliances: [
+                    {
+                      id: 142,
+                      indexes: [0]
+                    }
+                  ],
+                  isBattery: true,
+                  max: 800,
+                  gradient: {
+                    from: [120, 255, 120, 0.3],
+                    to: [0, 255, 0, 0.6]
+                  },
+                  icons: ['battery_charging_full']
+                }
+              ],*/
               [
-              {
+                {
                   appliances: [
                     {
                       id: 32,
@@ -122,7 +145,11 @@
                       indexes: [0]
                     }
                   ],
-                  max: 1000,
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
+                  max: 650,
                   icons: ['lightbulb']
                 },
                 {
@@ -132,6 +159,10 @@
                       indexes: [0, 1, 2]
                     }
                   ],
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
                   max: 8000,
                   icons: ['local_fire_department']
                 }
@@ -144,6 +175,10 @@
                       indexes: [0]
                     }
                   ],
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
                   max: 80,
                   icons: ['kitchen', 'arrow_upward']
                 },
@@ -154,6 +189,10 @@
                       indexes: [0]
                     }
                   ],
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
                   max: 100,
                   icons: ['kitchen', 'arrow_downward']
                 }
