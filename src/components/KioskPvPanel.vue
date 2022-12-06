@@ -2,10 +2,12 @@
   <KioskPanel
     class="noFocus"
     borderColor="secondary"
+    :renderTitle="false"
     bgColor="black"
     min-width="270"
     max-width="270"
   >
+  <!--
     <template v-slot:title>
       <v-row>
         <v-col class="ma-0 pa-0">
@@ -15,7 +17,7 @@
           <v-icon>electrical_services</v-icon>
         </v-col>
       </v-row>
-    </template>
+    </template>-->
     <template>
       <v-card class="ma-0 mb-1 pa-1 px-0 text-center" v-if="mainAppliance">
         <v-row
@@ -36,7 +38,7 @@
           striped
           height="32"
           class="bar ma-0 mb-1 text-center"
-          color="orange darken-3"
+          color="green darken-3"
           :value="pvValue"
         >
           <v-row

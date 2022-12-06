@@ -6,15 +6,160 @@
           <KioskClockPanel></KioskClockPanel>
           <KioskZamgPanel></KioskZamgPanel>
           <KioskWasteDisposalPanel :organic="false"></KioskWasteDisposalPanel>
-          <KioskPvPanel
-            :pvId="142"
-            :pvIndexes="[0]"
-            :mainId="145"
-            :mainIndexes="[0, 1, 2]"
-            :heatId="146"
-            :heatIndexes="[0, 1, 2]"
-            wp="800"
-          ></KioskPvPanel>
+          <KioskPowerPanel
+            :data="[
+              [
+                {
+                  appliances: [
+                    {
+                      id: 145,
+                      indexes: [0, 1, 2]
+                    }
+                  ],
+                  gradient: true,
+                  max: 5000,
+                  icons: ['electric_bolt']
+                }
+              ],
+              [
+                {
+                  appliances: [
+                    {
+                      id: 142,
+                      indexes: [0]
+                    }
+                  ],
+                  max: 800,
+                  color: 'green',
+                  icons: ['solar_power']
+                }
+              ],
+              [
+              {
+                  appliances: [
+                    {
+                      id: 32,
+                      indexes: [0, 1]
+                    },
+                    {
+                      id: 33,
+                      indexes: [0, 1]
+                    },
+                    {
+                      id: 40,
+                      indexes: [0]
+                    },
+                    {
+                      id: 41,
+                      indexes: [0]
+                    },
+                    {
+                      id: 42,
+                      indexes: [0]
+                    },
+                    {
+                      id: 43,
+                      indexes: [0]
+                    },
+                    {
+                      id: 44,
+                      indexes: [0]
+                    },
+                    {
+                      id: 48,
+                      indexes: [0]
+                    },
+                    {
+                      id: 58,
+                      indexes: [0]
+                    },
+                    {
+                      id: 94,
+                      indexes: [0]
+                    },
+                    {
+                      id: 95,
+                      indexes: [0]
+                    },
+                    {
+                      id: 96,
+                      indexes: [0]
+                    },
+                    {
+                      id: 102,
+                      indexes: [0]
+                    },
+                    {
+                      id: 103,
+                      indexes: [0]
+                    },
+                    {
+                      id: 106,
+                      indexes: [0]
+                    },
+                    {
+                      id: 107,
+                      indexes: [0]
+                    },
+                    {
+                      id: 108,
+                      indexes: [0]
+                    },
+                    {
+                      id: 116,
+                      indexes: [0]
+                    },
+                    {
+                      id: 117,
+                      indexes: [0]
+                    },
+                    {
+                      id: 119,
+                      indexes: [0]
+                    },
+                    {
+                      id: 140,
+                      indexes: [0]
+                    }
+                  ],
+                  max: 1000,
+                  icons: ['lightbulb']
+                },
+                {
+                  appliances: [
+                    {
+                      id: 146,
+                      indexes: [0, 1, 2]
+                    }
+                  ],
+                  max: 8000,
+                  icons: ['local_fire_department']
+                }
+              ],
+              [
+                {
+                  appliances: [
+                    {
+                      id: 156,
+                      indexes: [0]
+                    }
+                  ],
+                  max: 80,
+                  icons: ['kitchen', 'arrow_upward']
+                },
+                {
+                  appliances: [
+                    {
+                      id: 155,
+                      indexes: [0]
+                    }
+                  ],
+                  max: 100,
+                  icons: ['kitchen', 'arrow_downward']
+                }
+              ]
+            ]"
+          ></KioskPowerPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -61,7 +206,7 @@ import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
-import KioskPvPanel from '@/components/KioskPvPanel.vue'
+import KioskPowerPanel from '@/components/KioskPowerPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -71,7 +216,7 @@ export default {
     KioskLinkPanel,
     KioskClockPanel,
     KioskZamgPanel,
-    KioskPvPanel,
+    KioskPowerPanel,
     KioskWasteDisposalPanel,
     KioskSwitchPanel
   },
