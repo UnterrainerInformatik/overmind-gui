@@ -76,9 +76,10 @@
             @click="backClicked()"
           >
             <v-card-text v-if="showDetailsOf" class="ma-0 pa-0">
-              <v-card class="ma-0 pa-0 text-left grey darken-4">
+              <v-card class="ma-0 pa-0 text-left" elevation="0">
                 <v-card-text
                   class="ma-0 pa-0 small"
+                  elevation="0"
                   v-for="(app, i) in detailApps"
                   :key="i"
                 >

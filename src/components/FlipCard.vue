@@ -77,9 +77,6 @@ export default {
   backface-visibility: hidden;
 }
 
-.flip-card-front {
-}
-
 .flip-card-back {
   transform: rotateY(180deg);
 }
