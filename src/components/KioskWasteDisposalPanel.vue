@@ -8,7 +8,7 @@
   >
     <template>
       <v-container class="ma-0 pa-0 d-fluid" v-if="data">
-        <v-row v-for="(item, i) in data" :key="i">
+        <v-row v-for="(item, i) in filteredData" :key="i">
           <v-col class="ma-1 pa-0" v-if="item.show">
             <v-card
               outlined
@@ -82,6 +82,13 @@ export default {
   }),
 
   computed: {
+    filteredData: {
+      get () {
+        return this.data.filter(e => {
+          return e !== null
+        })
+      }
+    }
   },
 
   watch: {
