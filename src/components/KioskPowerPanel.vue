@@ -35,11 +35,11 @@
                 <v-progress-linear
                   striped
                   stream
-                  buffer-value="0"
+                  buffer-value="50"
                   height="4"
                   class="ma-0 mb-1 text-center rounded-t-0"
                   color="yellow darken-3"
-                  :value="50"
+                  :value="60"
                 >
                 </v-progress-linear>
               </v-card>

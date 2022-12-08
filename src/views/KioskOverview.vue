@@ -40,7 +40,7 @@
                   icons: ['solar_power']
                 }
               ],
-              /*[
+              [
                 {
                   appliances: [
                     {
@@ -56,7 +56,7 @@
                   },
                   icons: ['battery_charging_full']
                 }
-              ],*/
+              ],
               [
                 {
                   appliances: [
