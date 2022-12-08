@@ -8,97 +8,88 @@
     max-width="350"
     min-height="150px"
     :ripple="false"
-    @click="backClicked()"
   >
     <template>
       <FlipCard ref="flipCard">
         <template slot="front">
-          front
-        </template>
-        <template slot="back">
-          back
-        </template>
-      </FlipCard>
-      <v-card>
-        <v-card-text
-          :class="'ma-0 pa-0 flip-card' + (showDetails ? ' flip' : '')"
-        >
-          <v-card class="flip-card-inner">
-            <v-card-text class="ma-0 pa-0 flip-card-front">
-              <v-card>
-                <v-row v-for="(row, i) in appliances" :key="i">
-                  <v-col
-                    v-for="(app, j) in row"
-                    :key="j"
-                    :class="
-                      'ma-0 pa-0' +
-                      (j !== row.length - 1 ? ' mr-1' : '') +
-                      (i === appliances.length - 1 ? ' mb-n1' : '')
-                    "
-                  >
-                    <v-row>
-                      <v-col>
-                        <v-card v-if="app">
-                          <v-progress-linear
-                            striped
-                            :height="app.isBattery ? 28 : 32"
-                            :class="
-                              'ma-0 text-center' +
-                              (app.isBattery ? ' rounded-b-0' : ' mb-1')
-                            "
-                            :color="getColor(app)"
-                            :value="app.percent ? app.percent : undefined"
-                            @click.stop="frontClicked(i, j)"
+          <v-card>
+            <v-row v-for="(row, i) in appliances" :key="i">
+              <v-col
+                v-for="(app, j) in row"
+                :key="j"
+                :class="
+                  'ma-0 pa-0' +
+                  (j !== row.length - 1 ? ' mr-1' : '') +
+                  (i === appliances.length - 1 ? ' mb-n1' : '')
+                "
+              >
+                <v-row>
+                  <v-col>
+                    <v-card v-if="app">
+                      <v-progress-linear
+                        v-ripple="true"
+                        striped
+                        :height="app.isBattery ? 28 : 32"
+                        :class="
+                          'ma-0 text-center' +
+                          (app.isBattery ? ' rounded-b-0' : ' mb-1')
+                        "
+                        :color="getColor(app)"
+                        :value="app.percent ? app.percent : undefined"
+                        @click.stop="frontClicked(i, j)"
+                      >
+                        <v-row>
+                          <v-col
+                            cols="1"
+                            v-for="(icon, g) in app.icons"
+                            :key="g"
                           >
-                            <v-row>
-                              <v-col
-                                cols="1"
-                                v-for="(icon, g) in app.icons"
-                                :key="g"
-                              >
-                                <v-icon>{{ icon }}</v-icon>
-                              </v-col>
-                              <v-col>{{ app.power }}</v-col>
-                            </v-row>
-                          </v-progress-linear>
-                        </v-card>
-                        <v-card v-if="app.isBattery">
-                          <v-progress-linear
-                            striped
-                            stream
-                            buffer-value="50"
-                            height="4"
-                            class="ma-0 mb-1 text-center rounded-t-0"
-                            color="yellow darken-3"
-                            :value="60"
-                          >
-                          </v-progress-linear>
-                        </v-card>
-                      </v-col>
-                    </v-row>
+                            <v-icon>{{ icon }}</v-icon>
+                          </v-col>
+                          <v-col>{{ app.power }}</v-col>
+                        </v-row>
+                      </v-progress-linear>
+                    </v-card>
+                    <v-card v-if="app.isBattery">
+                      <v-progress-linear
+                        striped
+                        stream
+                        buffer-value="50"
+                        height="4"
+                        class="ma-0 mb-1 text-center rounded-t-0"
+                        color="yellow darken-3"
+                        :value="60"
+                      >
+                      </v-progress-linear>
+                    </v-card>
                   </v-col>
                 </v-row>
-              </v-card>
-            </v-card-text>
-            <v-card-text class="ma-n3 pa-0 flip-card-back">
-              <v-card class="ma-0 ml-n6 pa-0" min-width="340px" min-height="140px">
-                <v-card-text v-if="showDetailsOf" class="ma-0 pa-0">
-                  <v-card class="ma-0 pa-0 text-left grey darken-4">
-                    <v-card-text
-                      class="ma-0 pa-0 small"
-                      v-for="(app, i) in detailApps"
-                      :key="i"
-                    >
-                      <span class="bold">{{ app.power }}</span
-                      >: {{ app.name }}
-                    </v-card-text>
-                  </v-card>
+              </v-col>
+            </v-row>
+          </v-card>
+        </template>
+        <template slot="back">
+          <v-card
+            class="ma-0 ml-n6 pa-0"
+            min-width="340px"
+            min-height="140px"
+            @click="backClicked()"
+          >
+            <v-card-text v-if="showDetailsOf" class="ma-0 pa-0">
+              <v-card class="ma-0 pa-0 text-left grey darken-4">
+                <v-card-text
+                  class="ma-0 pa-0 small"
+                  v-for="(app, i) in detailApps"
+                  :key="i"
+                >
+                  <span class="bold">{{ app.power }}</span
+                  >: {{ app.name }}
                 </v-card-text>
               </v-card>
             </v-card-text>
           </v-card>
-        </v-card-text>
-      </v-card>
+        </template>
+      </FlipCard>
     </template>
   </KioskPanel>
 </template>
@@ -131,8 +122,7 @@ export default {
     overmindUtils,
     interval: null,
     appliances: null,
-    showDetailsOf: null,
-    showDetails: false
+    showDetailsOf: null
   }),
 
   computed: {
@@ -155,18 +145,16 @@ export default {
 
   methods: {
     frontClicked (rowIndex, appIndex) {
-      if (!this.showDetails) {
-        this.showDetails = true
+      if (!this.$refs.flipCard.showBack) {
         this.showDetailsOf = {
           rowIndex,
           appIndex
         }
-      } else {
-        this.showDetails = false
       }
+      this.$refs.flipCard.flip()
     },
     backClicked () {
-      this.showDetails = false
+      this.$refs.flipCard.flip()
     },
     getColor (app) {
       if (!app.gradient || app.percent == null || app.percent === undefined) {
@@ -175,16 +163,7 @@ export default {
       const from = app.gradient.from
       const to = app.gradient.to
       const p = app.percent / 100
-      return this.toRgba([
-        jsUtils.lerp(from[0], to[0], p),
-        jsUtils.lerp(from[1], to[1], p),
-        jsUtils.lerp(from[2], to[2], p),
-        jsUtils.lerp(from[3], to[3], p)
-      ])
-    },
-    toRgba (c) {
-      const r = `rgba(${c[0]},${c[1]},${c[2]},${c[3]})`
-      return r
+      return overmindUtils.lerpColorArrayToRgba(from, to, p)
     },
     getPower (appliance, indexes) {
       let power = 0
@@ -253,43 +232,5 @@ export default {
 }
 .bold {
   font-weight: bold;
-}
-
-.noFocus:focus::before {
-  opacity: 0 !important;
-}
-
-.flip-card {
-  perspective: 1000px;
-}
-
-.flip-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-}
-
-.flip .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
-.flip-card-front,
-.flip-card-back {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.flip-card-front {
-}
-
-.flip-card-back {
-  transform: rotateY(180deg);
 }
 </style>

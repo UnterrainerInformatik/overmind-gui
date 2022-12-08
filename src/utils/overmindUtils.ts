@@ -51,13 +51,24 @@ class OvermindUtils {
     // console.log({ prevTemp }, { nextTemp }, { p })
     const col1 = this.tempRawColorsLerpable[i]
     const col2 = this.tempRawColorsLerpable[n]
-    const r = Math.round(jsUtils.lerp(col1[0], col2[0], p))
-    const g = Math.round(jsUtils.lerp(col1[1], col2[1], p))
-    const b = Math.round(jsUtils.lerp(col1[2], col2[2], p))
-    const a = jsUtils.lerp(col1[3], col2[3], p)
-    // console.log({ r }, { g }, { b }, { a })
-    const result = `rgba(${r}, ${g}, ${b}, ${a})`
-    return result
+    return this.lerpColorArrayToRgba(col1, col2, p)
+  }
+
+  public lerpColorArray (from, to, p) {
+    return [
+      Math.round(jsUtils.lerp(from[0], to[0], p)),
+      Math.round(jsUtils.lerp(from[1], to[1], p)),
+      Math.round(jsUtils.lerp(from[2], to[2], p)),
+      jsUtils.lerp(from[3], to[3], p)
+    ]
+  }
+
+  public colorArrayToRgba (c) {
+    return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3]})`
+  }
+
+  public lerpColorArrayToRgba (from, to, p) {
+    return this.colorArrayToRgba(this.lerpColorArray(from, to, p))
   }
 
   public getBatteryIcon (level) {
