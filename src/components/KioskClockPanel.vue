@@ -14,7 +14,7 @@
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" fill-height>
-        <v-col class="ma-0 mt-4 pa-0 heading text-center">
+        <v-col class="ma-0 mt-3 pa-0 heading text-center">
           {{ dateUtils.dateToDatePadded(date, $i18n.locale).split('.')[0] }}.{{ dateUtils.dateToDatePadded(date, $i18n.locale).split('.')[1] }}<br />
         </v-col>
       </v-row>

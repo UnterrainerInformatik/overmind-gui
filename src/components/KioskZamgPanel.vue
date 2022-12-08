@@ -20,7 +20,7 @@
         height="140"
       >
         <v-card-text class="pa-1">
-          <v-row class="ma-0 mt-2 mb-6 pa-0 align-center">
+          <v-row class="ma-0 mt-0 mb-5 pa-0 align-center">
             <v-col
               class="middle ma-0 pa-0 text-center"
               style="font-weight: bold"

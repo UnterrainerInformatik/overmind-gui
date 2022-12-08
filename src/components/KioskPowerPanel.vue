@@ -6,15 +6,26 @@
     bgColor="black"
     min-width="350"
     max-width="350"
+    min-height="150px"
     :ripple="false"
     @click="backClicked()"
   >
     <template>
+      <FlipCard ref="flipCard">
+        <template slot="front">
+          front
+        </template>
+        <template slot="back">
+          back
+        </template>
+      </FlipCard>
       <v-card>
-        <v-card-text class="ma-0 pa-0">
-          <div :class="'flip-card' + (showDetails ? ' flip' : '')">
-            <div class="flip-card-inner">
-              <div class="flip-card-front">
+        <v-card-text
+          :class="'ma-0 pa-0 flip-card' + (showDetails ? ' flip' : '')"
+        >
+          <v-card class="flip-card-inner">
+            <v-card-text class="ma-0 pa-0 flip-card-front">
+              <v-card>
                 <v-row v-for="(row, i) in appliances" :key="i">
                   <v-col
                     v-for="(app, j) in row"
@@ -67,21 +78,25 @@
                     </v-row>
                   </v-col>
                 </v-row>
-              </div>
-              <div class="flip-card-back ma-n3 pa-0">
-                <span v-if="showDetailsOf">
-                  <div
-                    class="small text-left ml-n6 grey darken-4"
-                    v-for="(app, i) in detailApps"
-                    :key="i"
-                  >
-                    <span class="bold">{{ app.power }}</span
-                    >: {{ app.name }}
-                  </div>
-                </span>
-              </div>
-            </div>
-          </div>
+              </v-card>
+            </v-card-text>
+            <v-card-text class="ma-n3 pa-0 flip-card-back">
+              <v-card class="ma-0 ml-n6 pa-0" min-width="340px" min-height="140px">
+                <v-card-text v-if="showDetailsOf" class="ma-0 pa-0">
+                  <v-card class="ma-0 pa-0 text-left grey darken-4">
+                    <v-card-text
+                      class="ma-0 pa-0 small"
+                      v-for="(app, i) in detailApps"
+                      :key="i"
+                    >
+                      <span class="bold">{{ app.power }}</span
+                      >: {{ app.name }}
+                    </v-card-text>
+                  </v-card>
+                </v-card-text>
+              </v-card>
+            </v-card-text>
+          </v-card>
         </v-card-text>
       </v-card>
     </template>
@@ -94,6 +109,7 @@
 
 <script lang="js">
 import KioskPanel from '@/components/KioskPanel.vue'
+import FlipCard from '@/components/FlipCard.vue'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as jsUtils } from '@/utils/jsUtils'
@@ -106,7 +122,8 @@ export default {
   },
 
   components: {
-    KioskPanel
+    KioskPanel,
+    FlipCard
   },
 
   data: () => ({
@@ -243,7 +260,6 @@ export default {
 }
 
 .flip-card {
-  background-color: transparent;
   perspective: 1000px;
 }
 
