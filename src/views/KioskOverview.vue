@@ -169,20 +169,6 @@
                   },
                   max: 180,
                   icons: ['kitchen']
-                },
-                {
-                  appliances: [
-                    {
-                      id: 146,
-                      indexes: [0, 1, 2]
-                    }
-                  ],
-                  gradient: {
-                    from: [255, 100, 0, 0.3],
-                    to: [255, 120, 0, 1]
-                  },
-                  max: 1000,
-                  icons: ['local_fire_department']
                 }
               ],
               [
