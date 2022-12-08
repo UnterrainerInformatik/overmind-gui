@@ -21,6 +21,7 @@
                     :key="j"
                     :class="
                       'ma-0 pa-0' +
+                      (j !== row.length - 1 ? ' mr-1' : '') +
                       (i === appliances.length - 1 ? ' mb-n1' : '')
                     "
                   >
@@ -74,7 +75,8 @@
                     v-for="(app, i) in detailApps"
                     :key="i"
                   >
-                    <span class="bold">{{ app.power }}</span>: {{ app.name }}
+                    <span class="bold">{{ app.power }}</span
+                    >: {{ app.name }}
                   </div>
                 </span>
               </div>
@@ -119,11 +121,13 @@ export default {
   computed: {
     detailApps: {
       get () {
-        const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances
+        const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances.filter(e => {
+          return e.powerRaw > 0
+        })
         a.sort((a, b) => {
           return a.powerRaw === b.powerRaw ? 0 : a.powerRaw < b.powerRaw ? 1 : -1
         })
-        a.splice(14)
+        a.splice(12)
         return a
       }
     }
@@ -226,9 +230,9 @@ export default {
   line-height: 20px;
 }
 .small {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: normal;
-  line-height: 10px;
+  line-height: 12px;
 }
 .bold {
   font-weight: bold;
