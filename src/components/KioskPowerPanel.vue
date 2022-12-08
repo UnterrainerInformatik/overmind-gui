@@ -16,7 +16,10 @@
                 <v-progress-linear
                   striped
                   :height="app.isBattery ? 28 : 32"
-                  :class="'ma-0 text-center' + (app.isBattery ? ' rounded-b-0' : ' mb-1')"
+                  :class="
+                    'ma-0 text-center' +
+                    (app.isBattery ? ' rounded-b-0' : ' mb-1')
+                  "
                   :color="getColor(app)"
                   :value="app.percent ? app.percent : undefined"
                 >
@@ -31,10 +34,12 @@
               <v-card v-if="app.isBattery">
                 <v-progress-linear
                   striped
+                  stream
+                  buffer-value="0"
                   height="4"
                   class="ma-0 mb-1 text-center rounded-t-0"
                   color="yellow darken-3"
-                  :value="0"
+                  :value="50"
                 >
                 </v-progress-linear>
               </v-card>
@@ -141,6 +146,10 @@ export default {
   mounted () {
     this.getAppliances()
     this.interval = setInterval(() => this.getAppliances(), 2000)
+  },
+
+  beforeDestroy () {
+    clearInterval(this.interval)
   }
 }
 </script>

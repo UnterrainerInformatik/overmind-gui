@@ -10,7 +10,18 @@ class JsUtils {
   }
 
   public lerp (start, end, percent) {
+    percent = this.clampTo(0, 1, percent)
     return (1 - percent) * start + percent * end
+  }
+
+  public clampTo (low, high, value) {
+    if (value > high) {
+      return high
+    }
+    if (value < low) {
+      return low
+    }
+    return value
   }
 
   public groupBy (inputArray, key) {
