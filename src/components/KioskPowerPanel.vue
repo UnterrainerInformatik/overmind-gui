@@ -6,47 +6,82 @@
     bgColor="black"
     min-width="350"
     max-width="350"
+    :ripple="false"
+    @click="backClicked()"
   >
     <template>
-      <v-row v-for="(row, i) in appliances" :key="i">
-        <v-col v-for="(app, j) in row" :key="j" class="ma-0 pa-0 pl-1">
-          <v-row>
-            <v-col>
-              <v-card v-if="app">
-                <v-progress-linear
-                  striped
-                  :height="app.isBattery ? 28 : 32"
-                  :class="
-                    'ma-0 text-center' +
-                    (app.isBattery ? ' rounded-b-0' : ' mb-1')
-                  "
-                  :color="getColor(app)"
-                  :value="app.percent ? app.percent : undefined"
-                >
-                  <v-row>
-                    <v-col cols="1" v-for="(icon, g) in app.icons" :key="g">
-                      <v-icon>{{ icon }}</v-icon>
-                    </v-col>
-                    <v-col>{{ app.power }}</v-col>
-                  </v-row>
-                </v-progress-linear>
-              </v-card>
-              <v-card v-if="app.isBattery">
-                <v-progress-linear
-                  striped
-                  stream
-                  buffer-value="50"
-                  height="4"
-                  class="ma-0 mb-1 text-center rounded-t-0"
-                  color="yellow darken-3"
-                  :value="60"
-                >
-                </v-progress-linear>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
+      <v-card>
+        <v-card-text class="ma-0 pa-0">
+          <div :class="'flip-card' + (showDetails ? ' flip' : '')">
+            <div class="flip-card-inner">
+              <div class="flip-card-front">
+                <v-row v-for="(row, i) in appliances" :key="i">
+                  <v-col
+                    v-for="(app, j) in row"
+                    :key="j"
+                    :class="
+                      'ma-0 pa-0' +
+                      (i === appliances.length - 1 ? ' mb-n1' : '')
+                    "
+                  >
+                    <v-row>
+                      <v-col>
+                        <v-card v-if="app">
+                          <v-progress-linear
+                            striped
+                            :height="app.isBattery ? 28 : 32"
+                            :class="
+                              'ma-0 text-center' +
+                              (app.isBattery ? ' rounded-b-0' : ' mb-1')
+                            "
+                            :color="getColor(app)"
+                            :value="app.percent ? app.percent : undefined"
+                            @click.stop="frontClicked(i, j)"
+                          >
+                            <v-row>
+                              <v-col
+                                cols="1"
+                                v-for="(icon, g) in app.icons"
+                                :key="g"
+                              >
+                                <v-icon>{{ icon }}</v-icon>
+                              </v-col>
+                              <v-col>{{ app.power }}</v-col>
+                            </v-row>
+                          </v-progress-linear>
+                        </v-card>
+                        <v-card v-if="app.isBattery">
+                          <v-progress-linear
+                            striped
+                            stream
+                            buffer-value="50"
+                            height="4"
+                            class="ma-0 mb-1 text-center rounded-t-0"
+                            color="yellow darken-3"
+                            :value="60"
+                          >
+                          </v-progress-linear>
+                        </v-card>
+                      </v-col>
+                    </v-row>
+                  </v-col>
+                </v-row>
+              </div>
+              <div class="flip-card-back ma-n3 pa-0">
+                <span v-if="showDetailsOf">
+                  <div
+                    class="small text-left ml-n6 grey darken-4"
+                    v-for="(app, i) in detailApps"
+                    :key="i"
+                  >
+                    <span class="bold">{{ app.power }}</span>: {{ app.name }}
+                  </div>
+                </span>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
     </template>
   </KioskPanel>
 </template>
@@ -76,16 +111,42 @@ export default {
     jsUtils,
     overmindUtils,
     interval: null,
-    appliances: null
+    appliances: null,
+    showDetailsOf: null,
+    showDetails: false
   }),
 
   computed: {
+    detailApps: {
+      get () {
+        const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances
+        a.sort((a, b) => {
+          return a.powerRaw === b.powerRaw ? 0 : a.powerRaw < b.powerRaw ? 1 : -1
+        })
+        a.splice(14)
+        return a
+      }
+    }
   },
 
   watch: {
   },
 
   methods: {
+    frontClicked (rowIndex, appIndex) {
+      if (!this.showDetails) {
+        this.showDetails = true
+        this.showDetailsOf = {
+          rowIndex,
+          appIndex
+        }
+      } else {
+        this.showDetails = false
+      }
+    },
+    backClicked () {
+      this.showDetails = false
+    },
     getColor (app) {
       if (!app.gradient || app.percent == null || app.percent === undefined) {
         return app.color + ' darken-3'
@@ -122,8 +183,10 @@ export default {
             const a = await appliancesService.getById(appliance.id)
             overmindUtils.parseState(a)
             overmindUtils.parseConfig(a)
+            a.powerRaw = this.getPower(a, appliance.indexes)
+            a.power = overmindUtils.formatPower(a.powerRaw, true)
+            p += a.powerRaw
             appliances.push(a)
-            p += this.getPower(a, appliance.indexes)
           }
           const obj = {
             appliances: appliances,
@@ -157,7 +220,56 @@ export default {
 <style lang="scss">
 @import 'index.scss';
 
+.middle {
+  font-size: 15px;
+  font-weight: normal;
+  line-height: 20px;
+}
+.small {
+  font-size: 10px;
+  font-weight: normal;
+  line-height: 10px;
+}
+.bold {
+  font-weight: bold;
+}
+
 .noFocus:focus::before {
   opacity: 0 !important;
+}
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.flip .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-card-front {
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
 }
 </style>

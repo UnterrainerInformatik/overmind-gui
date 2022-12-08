@@ -20,7 +20,7 @@
                     from: [255, 180, 0, 0.7],
                     to: [255, 0, 0, 1]
                   },
-                  max: 4000,
+                  max: 5000,
                   icons: ['electric_bolt']
                 }
               ],
@@ -40,7 +40,7 @@
                   icons: ['solar_power']
                 }
               ],
-              [
+              /*[
                 {
                   appliances: [
                     {
@@ -56,7 +56,7 @@
                   },
                   icons: ['battery_charging_full']
                 }
-              ],
+              ],*/
               [
                 {
                   appliances: [
@@ -155,35 +155,9 @@
                 {
                   appliances: [
                     {
-                      id: 146,
-                      indexes: [0, 1, 2]
-                    }
-                  ],
-                  gradient: {
-                    from: [255, 100, 0, 0.3],
-                    to: [255, 120, 0, 1]
-                  },
-                  max: 8000,
-                  icons: ['local_fire_department']
-                }
-              ],
-              [
-                {
-                  appliances: [
-                    {
                       id: 156,
                       indexes: [0]
-                    }
-                  ],
-                  gradient: {
-                    from: [255, 100, 0, 0.3],
-                    to: [255, 120, 0, 1]
-                  },
-                  max: 80,
-                  icons: ['kitchen', 'arrow_upward']
-                },
-                {
-                  appliances: [
+                    },
                     {
                       id: 155,
                       indexes: [0]
@@ -193,8 +167,22 @@
                     from: [255, 100, 0, 0.3],
                     to: [255, 120, 0, 1]
                   },
-                  max: 100,
-                  icons: ['kitchen', 'arrow_downward']
+                  max: 180,
+                  icons: ['kitchen']
+                },
+                {
+                  appliances: [
+                    {
+                      id: 146,
+                      indexes: [0, 1, 2]
+                    }
+                  ],
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
+                  max: 1000,
+                  icons: ['local_fire_department']
                 }
               ]
             ]"
