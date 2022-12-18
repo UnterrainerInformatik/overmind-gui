@@ -3,7 +3,7 @@
     fab
     :max-width="size"
     :max-height="size"
-    v-if="level"
+    v-if="level != undefined && level != null"
     :class="'ma-0 pa-0 mr-1 ' + overmindUtils.getBatteryColor(Math.round(level))"
     @click="() => {}"
     v-bind="$attrs"

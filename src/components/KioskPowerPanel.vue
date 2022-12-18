@@ -169,7 +169,9 @@ export default {
     getPower (appliance, indexes) {
       let power = 0
       for (let i = 0; i < indexes.length; i++) {
-        power += appliance.state.relays[i].power
+        if (appliance.state && appliance.state.relays && appliance.state.relays[i] && appliance.state.relays[i].power) {
+          power += appliance.state.relays[i].power
+        }
       }
       return Math.round(power)
     },
