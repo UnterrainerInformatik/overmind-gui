@@ -87,6 +87,10 @@
                     {
                       id: 155,
                       indexes: [0]
+                    },
+                    {
+                      id: 154,
+                      indexes: [0]
                     }
                   ],
                   gradient: {
@@ -101,6 +105,18 @@
                     {
                       id: 148,
                       indexes: [0, 1, 2]
+                    },
+                    {
+                      id: 55,
+                      indexes: [0]
+                    },
+                    {
+                      id: 38,
+                      indexes: [0]
+                    },
+                    {
+                      id: 46,
+                      indexes: [0]
                     }
                   ],
                   gradient: {
@@ -117,17 +133,7 @@
                     {
                       id: 146,
                       indexes: [0, 1, 2]
-                    }
-                  ],
-                  gradient: {
-                    from: [255, 100, 0, 0.3],
-                    to: [255, 120, 0, 1]
-                  },
-                  max: 1000,
-                  icons: ['local_fire_department']
-                },
-                {
-                  appliances: [
+                    },
                     {
                       id: 162,
                       indexes: [0]
@@ -141,8 +147,30 @@
                     from: [255, 100, 0, 0.3],
                     to: [255, 120, 0, 1]
                   },
-                  max: 300,
+                  max: 1500,
                   icons: ['fireplace']
+                },
+                {
+                  appliances: [
+                    {
+                      id: 161,
+                      indexes: [0]
+                    },
+                    {
+                      id: 131,
+                      indexes: [0]
+                    },
+                    {
+                      id: 129,
+                      indexes: [0]
+                    }
+                  ],
+                  gradient: {
+                    from: [255, 100, 0, 0.3],
+                    to: [255, 120, 0, 1]
+                  },
+                  max: 400,
+                  icons: ['lan']
                 },
                 {
                   appliances: [
