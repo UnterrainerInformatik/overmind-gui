@@ -9,9 +9,8 @@
         (app.state.relays[0].state === 'ON' ? 'on ' : 'off ') + ' darken-1'
       "
       thumb-label="always"
-      @mouseup="mouseUp"
-      @mousedown="mouseDown"
-      @start="start"
+      @start="mouseDown"
+      @end="mouseUp"
     ></v-slider>
     <!--
     brightness: {{ brightness }}<br>
@@ -52,16 +51,6 @@ export default {
   },
 
   methods: {
-    async start () {
-      console.log('start')
-    },
-    async touchStart (event) {
-      console.log('touchStart')
-      if (event.target && event.target === this.$refs.slider) {
-        console.log('MATCH')
-        this.$refs.slider.mousedown(event)
-      }
-    },
     async mouseUp () {
       console.log('mouseUp')
       this.waitForNextAppChange = true
