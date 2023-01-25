@@ -1,6 +1,7 @@
 <template>
   <div v-if="app && item">
     <v-slider
+      ref="slider"
       v-if="brightness !== undefined"
       class="mb-4"
       v-model="brightness"
@@ -8,8 +9,8 @@
         (app.state.relays[0].state === 'ON' ? 'on ' : 'off ') + ' darken-1'
       "
       thumb-label="always"
-      @mouseup="mouseUp"
-      @mousedown="mouseDown"
+      @start="mouseDown"
+      @end="mouseUp"
     ></v-slider>
     <!--
     brightness: {{ brightness }}<br>
@@ -51,11 +52,13 @@ export default {
 
   methods: {
     async mouseUp () {
-      await this.setBrightness()
+      console.log('mouseUp')
       this.waitForNextAppChange = true
+      await this.setBrightness()
       this.pause = false
     },
     mouseDown () {
+      console.log('mouseDown')
       this.pause = true
     },
     getBrightness (app) {
