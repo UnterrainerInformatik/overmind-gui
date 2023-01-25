@@ -10,6 +10,11 @@
       thumb-label="always"
       @mouseup="mouseUp"
       @mousedown="mouseDown"
+      @change="change"
+      @click="click"
+      @touchstart="touchStart"
+      @touchend="touchEnd"
+      @touchcancel="touchCancel"
     ></v-slider>
     <!--
     brightness: {{ brightness }}<br>
@@ -50,6 +55,21 @@ export default {
   },
 
   methods: {
+    async touchStart () {
+      console.log('touchStart')
+    },
+    async touchEnd () {
+      console.log('touchEnd')
+    },
+    async touchCancel () {
+      console.log('touchCancel')
+    },
+    async change () {
+      console.log('change')
+    },
+    async click () {
+      console.log('click')
+    },
     async mouseUp () {
       console.log('mouseUp')
       this.waitForNextAppChange = true
