@@ -11,6 +11,7 @@
       thumb-label="always"
       @mouseup="mouseUp"
       @mousedown="mouseDown"
+      @start="start"
     ></v-slider>
     <!--
     brightness: {{ brightness }}<br>
@@ -51,6 +52,9 @@ export default {
   },
 
   methods: {
+    async start () {
+      console.log('start')
+    },
     async touchStart (event) {
       console.log('touchStart')
       if (event.target && event.target === this.$refs.slider) {
