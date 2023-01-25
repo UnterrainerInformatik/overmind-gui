@@ -88,13 +88,13 @@ export default {
       this.getBrightness(this.app)
     }, 500)
 
-    addEventListener('touchstart', function (event) {
+    addEventListener('touchstart', () => {
       this.touchStart()
     }, true)
-    addEventListener('touchend', function (event) {
+    addEventListener('touchend', () => {
       this.touchEnd()
     }, true)
-    addEventListener('touchcancel', function (event) {
+    addEventListener('touchcancel', () => {
       this.touchCancel()
     }, true)
   },
