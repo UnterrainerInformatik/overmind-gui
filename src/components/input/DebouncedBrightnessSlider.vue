@@ -50,8 +50,11 @@ export default {
   },
 
   methods: {
-    async touchStart () {
+    async touchStart (event) {
       console.log('touchStart')
+      console.log('target', event.target)
+      console.log('targetTouches', event.targetTouches)
+      console.log('event', event)
     },
     async touchEnd () {
       console.log('touchEnd')
@@ -88,8 +91,8 @@ export default {
       this.getBrightness(this.app)
     }, 500)
 
-    addEventListener('touchstart', () => {
-      this.touchStart()
+    addEventListener('touchstart', (event) => {
+      this.touchStart(event)
     }, true)
     addEventListener('touchend', () => {
       this.touchEnd()
