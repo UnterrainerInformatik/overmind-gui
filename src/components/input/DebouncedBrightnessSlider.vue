@@ -1,6 +1,7 @@
 <template>
   <div v-if="app && item">
     <v-slider
+      ref="slider"
       v-if="brightness !== undefined"
       class="mb-4"
       v-model="brightness"
@@ -52,15 +53,10 @@ export default {
   methods: {
     async touchStart (event) {
       console.log('touchStart')
-      console.log('target', event.target)
-      console.log('targetTouches', event.targetTouches)
-      console.log('event', event)
-    },
-    async touchEnd () {
-      console.log('touchEnd')
-    },
-    async touchCancel () {
-      console.log('touchCancel')
+      if (event.target && event.target === this.$refs.slider) {
+        console.log('MATCH')
+        this.$refs.slider.mousedown(event)
+      }
     },
     async mouseUp () {
       console.log('mouseUp')
@@ -93,12 +89,6 @@ export default {
 
     addEventListener('touchstart', (event) => {
       this.touchStart(event)
-    }, true)
-    addEventListener('touchend', () => {
-      this.touchEnd()
-    }, true)
-    addEventListener('touchcancel', () => {
-      this.touchCancel()
     }, true)
   },
 
