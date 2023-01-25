@@ -79,10 +79,6 @@ export default {
       }
       this.getBrightness(this.app)
     }, 500)
-
-    addEventListener('touchstart', (event) => {
-      this.touchStart(event)
-    }, true)
   },
 
   beforeDestroy () {
