@@ -29,8 +29,8 @@
           (app.state.relays[0].state === 'ON' ? 'on ' : 'off ') + ' darken-1'
         "
         thumb-label="always"
-        @mouseup="mouseUp"
-        @mousedown="mouseDown"
+        @start="mouseDown"
+        @end="mouseUp"
       ></v-slider>
         </v-col>
         <v-col cols="2">
