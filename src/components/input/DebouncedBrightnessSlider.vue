@@ -10,11 +10,6 @@
       thumb-label="always"
       @mouseup="mouseUp"
       @mousedown="mouseDown"
-      @change="change"
-      @click="click"
-      @touchstart="touchStart"
-      @touchend="touchEnd"
-      @touchcancel="touchCancel"
     ></v-slider>
     <!--
     brightness: {{ brightness }}<br>
@@ -64,12 +59,6 @@ export default {
     async touchCancel () {
       console.log('touchCancel')
     },
-    async change () {
-      console.log('change')
-    },
-    async click () {
-      console.log('click')
-    },
     async mouseUp () {
       console.log('mouseUp')
       this.waitForNextAppChange = true
@@ -98,6 +87,16 @@ export default {
       }
       this.getBrightness(this.app)
     }, 500)
+
+    addEventListener('touchstart', function (event) {
+      this.touchStart()
+    }, true)
+    addEventListener('touchend', function (event) {
+      this.touchEnd()
+    }, true)
+    addEventListener('touchcancel', function (event) {
+      this.touchCancel()
+    }, true)
   },
 
   beforeDestroy () {
