@@ -68,8 +68,8 @@
           :thumb-color="getThumbColor(white)"
           vertical
           thumb-label="always"
-          @mouseup="mouseUpWhite"
-          @mousedown="mouseDownWhite"
+          @start="mouseDownWhite"
+          @end="mouseUpWhite"
         ></v-slider>
       </v-col>
     </v-row>

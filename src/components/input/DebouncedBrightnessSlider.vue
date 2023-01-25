@@ -52,13 +52,11 @@ export default {
 
   methods: {
     async mouseUp () {
-      console.log('mouseUp')
-      this.waitForNextAppChange = true
       await this.setBrightness()
+      this.waitForNextAppChange = true
       this.pause = false
     },
     mouseDown () {
-      console.log('mouseDown')
       this.pause = true
     },
     getBrightness (app) {
