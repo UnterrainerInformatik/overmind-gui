@@ -2,7 +2,7 @@
   <KioskPanel
     :isEnabled="item.isEnabled"
     pa="1"
-    @click="triggerEvent(item.planId, item.sensorPath, item.eventPath)"
+    @click="triggerEvent(item.applianceId, item.sensorPath, item.eventPath)"
     class="noFocus"
   >
     <template v-slot:title="state">
