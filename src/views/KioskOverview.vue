@@ -370,7 +370,7 @@ export default {
   methods: {
     async reload () {
       this.allHereGoneItem = {
-        planId: 22,
+        applianceId: 22,
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'Alle weg / da',
@@ -379,7 +379,7 @@ export default {
         }
       }
       this.allAsleepItem = {
-        planId: 72,
+        applianceId: 72,
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'Alle schlafen',
@@ -388,7 +388,7 @@ export default {
         }
       }
       this.shuttersGroundFloor = {
-        planId: 73,
+        applianceId: 73,
         sensorPath: 'switch2',
         eventPath: 'off.click',
         description: 'Rollos Erdgeschoß runter',
@@ -397,7 +397,7 @@ export default {
         }
       }
       this.shuttersFirstFloor = {
-        planId: 72,
+        applianceId: 72,
         sensorPath: 'switch1',
         eventPath: 'on.click',
         description: 'Rollos 1.Stock rauf',
@@ -406,7 +406,7 @@ export default {
         }
       }
       this.tv = {
-        planId: 73,
+        applianceId: 73,
         sensorPath: 'switch1',
         eventPath: 'off.click',
         description: 'TV',
@@ -415,7 +415,7 @@ export default {
         }
       }
       this.snuggling = {
-        planId: 12,
+        applianceId: 12,
         sensorPath: 'switch1',
         eventPath: 'on.click',
         description: 'Kinderzimmer kuscheln',
@@ -424,7 +424,7 @@ export default {
         }
       }
       this.bioTrash = {
-        planId: 73,
+        applianceId: 73,
         sensorPath: 'switch1',
         eventPath: 'on.holdStart',
         description: 'Biomüll auf',
@@ -433,7 +433,7 @@ export default {
         }
       }
       this.patioOpened = {
-        planId: 71,
+        applianceId: 71,
         sensorPath: 'switch1',
         eventPath: 'on.click',
         description: 'Terrassentüre auf',
