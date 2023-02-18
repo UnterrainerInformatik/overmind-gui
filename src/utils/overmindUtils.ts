@@ -276,12 +276,13 @@ class OvermindUtils {
   }
 
   public formatPower (p, noCapSmallerOne) {
-    if (p < 1 && !noCapSmallerOne) {
-      return '<1 W'
+    if (p < 1 && p > -1 && !noCapSmallerOne) {
+      return '0 W'
     }
-    if (p >= 1000) {
+
+    if (Math.abs(p) >= 1000) {
       const sub = Math.round(p / 1000)
-      if (sub >= 1000) {
+      if (Math.abs(sub) >= 1000) {
         const subsub = Math.round(p / 1000000)
         return Math.floor(p / 1000000) + '.' + subsub + ' MW'
       }
