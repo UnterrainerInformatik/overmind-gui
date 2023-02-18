@@ -284,9 +284,9 @@ class OvermindUtils {
       const sub = Math.round(p / 1000)
       if (Math.abs(sub) >= 1000) {
         const subsub = Math.round(p / 1000000)
-        return Math.floor(p / 1000000) + '.' + subsub + ' MW'
+        return Math.floor(p / 1000000) + '.' + Math.abs(subsub) + ' MW'
       }
-      return Math.floor(p / 1000) + '.' + sub + ' kW'
+      return Math.floor(p / 1000) + '.' + Math.abs(sub) + ' kW'
     }
     return Math.round(p) + ' W'
   }

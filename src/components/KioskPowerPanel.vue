@@ -130,7 +130,7 @@ export default {
     detailApps: {
       get () {
         const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances.filter(e => {
-          return e.powerRaw > 0
+          return e.powerRaw > 1 || e.powerRaw < -1
         })
         a.sort((a, b) => {
           return a.powerRaw === b.powerRaw ? 0 : a.powerRaw < b.powerRaw ? 1 : -1
@@ -168,7 +168,8 @@ export default {
     },
     getPower (appliance, indexes) {
       let power = 0
-      for (let i = 0; i < indexes.length; i++) {
+      for (let u = 0; u < indexes.length; u++) {
+        const i = indexes[u]
         if (appliance.state && appliance.state.relays && appliance.state.relays[i] && appliance.state.relays[i].power) {
           power += appliance.state.relays[i].power
         }
