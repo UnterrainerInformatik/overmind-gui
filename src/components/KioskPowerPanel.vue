@@ -130,7 +130,7 @@ export default {
     detailApps: {
       get () {
         const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances.filter(e => {
-          return e.powerRaw > 0
+          return e.powerRaw > 1 || e.powerRaw < -1
         })
         a.sort((a, b) => {
           return a.powerRaw === b.powerRaw ? 0 : a.powerRaw < b.powerRaw ? 1 : -1
