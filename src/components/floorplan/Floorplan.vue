@@ -17,6 +17,7 @@
       <span v-if="loaded">
         <span v-for="(icon, k) in icons" :key="'A' + k">
           <v-icon
+            :color="icon.color ? icon.color : ''"
             :size="24 * icon.sizeMult"
             :style="`position: absolute; top: ${icon.y * scale}px; left: ${
               icon.x * scale
