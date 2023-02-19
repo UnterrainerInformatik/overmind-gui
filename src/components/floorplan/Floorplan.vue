@@ -103,12 +103,10 @@
           <v-avatar
             v-if="
               (!isError(area) || !appMap.get(area.appId)) &&
-                !displayBattery(area)
+                !displayBattery(area) && getDisplayOuterRing(area)
             "
             :size="avatarBaseSize * scale"
-            :color="
-              getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)
-            "
+            :color="allowQuickAction(area) ? getOuterRingColor(area) : 'grey darken-1'"
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
@@ -117,6 +115,23 @@
                 : 'cursor: default !important; ') +
                 `position: absolute; top: ${area.iconPos[1] *
                   scale}px; left: ${area.iconPos[0] * scale}px`
+            "
+          ></v-avatar>
+          <v-avatar
+            v-if="
+              (!isError(area) || !appMap.get(area.appId)) &&
+                !displayBattery(area)
+            "
+            :size="(avatarBaseSize - 4) * scale"
+            :color="(getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)) + (allowQuickAction(area) ? '' : getDisplayOuterRing(area) ? ' darken-2' : ' darken-3')"
+            v-on:click="areaClicked($event, area, true)"
+            class="noFocus"
+            :style="
+              (clickableIcons
+                ? 'cursor: pointer !important; '
+                : 'cursor: default !important; ') +
+                `position: absolute; top: ${(area.iconPos[1] + 2) *
+                  scale}px; left: ${(area.iconPos[0] + 2) * scale}px`
             "
           >
             <v-icon
@@ -314,6 +329,41 @@ export default {
       }
       return overmindUtils.getHumidity(app)
     },
+    getDisplayOuterRing (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return false
+      }
+      return app.switchable === undefined || app.switchable === null || app.switchable === 'TRUE' || app.switchable === 'DETAIL_ONLY'
+    },
+    allowQuickAction (area) {
+      const app = this.appMap.get(area.appId)
+      if (app === undefined) {
+        return false
+      }
+      return app.switchable === undefined || app.switchable === null || app.switchable === 'TRUE'
+    },
+    getOuterRingColor (area) {
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        return 'transparent'
+      }
+      const override = this.colorOverrides.find((e) => e.id === area.appId && e.index === area.index)
+      if (override) {
+        return 'grey'
+      }
+      let st = app.onOffState
+      if (Array.isArray(st)) {
+        st = st[area.index]
+      }
+      if (st === 'on') {
+        return 'off'
+      }
+      if (st === 'off') {
+        return 'on'
+      }
+      return 'transparent'
+    },
     displayWatts (area) {
       return this.isOn(area) && this.getPowerOf(area, area.index) !== undefined
     },
@@ -353,7 +403,9 @@ export default {
         if (this.displayEnhancedDialog) {
           this.$refs[this.constructIdFrom(area)][0].show()
         } else {
-          this.$refs[this.constructIdFrom(area)][0].defaultAction()
+          if (this.allowQuickAction(area)) {
+            this.$refs[this.constructIdFrom(area)][0].defaultAction()
+          }
         }
       }
     },
