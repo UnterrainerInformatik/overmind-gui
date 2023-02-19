@@ -16,11 +16,17 @@
                       indexes: [0, 1, 2]
                     }
                   ],
+                  isNegativeEnabled: true,
                   gradient: {
                     from: [255, 180, 0, 0.7],
                     to: [255, 0, 0, 1]
                   },
+                  negativeGradient: {
+                    from: [120, 255, 120, 0.7],
+                    to: [0, 255, 0, 1]
+                  },
                   max: 5000,
+                  negativeMax: 5000,
                   icons: ['electric_bolt']
                 }
               ],
@@ -43,7 +49,7 @@
                   },
                   icons: ['solar_power']
                 },
-                /*{
+                {
                   appliances: [
                     {
                       id: 142,
@@ -51,13 +57,19 @@
                     }
                   ],
                   isBattery: true,
-                  max: 800,
+                  isNegativeEnabled: true,
+                  max: 5500,
                   gradient: {
                     from: [120, 255, 120, 0.3],
                     to: [0, 255, 0, 0.6]
                   },
+                  negativeMax: 5500,
+                  negativeGradient: {
+                    from: [255, 255, 0, 0.3],
+                    to: [255, 255, 0, 0.6]
+                  },
                   icons: ['battery_charging_full']
-                }*/
+                }
               ],
               [
                 {

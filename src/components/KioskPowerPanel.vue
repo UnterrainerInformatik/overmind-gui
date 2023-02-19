@@ -26,34 +26,66 @@
                 <v-row>
                   <v-col>
                     <v-card v-if="app">
-                      <v-progress-linear
-                        v-ripple="true"
-                        striped
-                        :height="app.isBattery ? 28 : 32"
-                        :class="
-                          'ma-0 text-center' +
-                          (app.isBattery ? ' rounded-b-0' : ' mb-1')
-                        "
-                        :color="getColor(app)"
-                        :value="app.percent ? app.percent : undefined"
-                        @click.stop="frontClicked(i, j)"
-                      >
-                        <v-row>
-                          <v-col
-                            cols="1"
-                            v-for="(icon, g) in app.icons"
-                            :key="g"
+                      <v-row class="ma-0 pa-0">
+                        <v-col
+                          class="ma-0 pa-0"
+                          v-if="app && app.isNegativeEnabled"
+                        >
+                          <v-progress-linear
+                            :reverse="true"
+                            v-ripple="true"
+                            striped
+                            :height="app.isBattery ? 28 : 32"
+                            :class="
+                              'ma-0 text-center' +
+                              (app.isBattery ? ' rounded-b-0' : ' mb-1')
+                            "
+                            :color="getNegativeColor(app)"
+                            :value="app.percent ? app.percent < 0 ? -app.percent : undefined : undefined"
+                            @click.stop="frontClicked(i, j)"
                           >
-                            <v-icon>{{ icon }}</v-icon>
-                          </v-col>
-                          <v-col>{{ app.power }}</v-col>
-                        </v-row>
-                      </v-progress-linear>
+                            <v-row>
+                              <v-col
+                                cols="1"
+                                v-for="(icon, g) in app.icons"
+                                :key="g"
+                              >
+                                <v-icon>{{ icon }}</v-icon>
+                              </v-col>
+                              <v-col v-if="app.percent < 0">{{ app.power }}</v-col>
+                            </v-row>
+                          </v-progress-linear>
+                        </v-col>
+                        <v-col class="ma-0 pa-0">
+                          <v-progress-linear
+                            v-ripple="true"
+                            striped
+                            :height="app.isBattery ? 28 : 32"
+                            :class="
+                              'ma-0 text-center' +
+                              (app.isBattery ? ' rounded-b-0' : ' mb-1')
+                            "
+                            :color="getColor(app)"
+                            :value="app.percent ? app.percent >= 0 ? app.percent : undefined : undefined"
+                            @click.stop="frontClicked(i, j)"
+                          >
+                            <v-row>
+                              <v-col
+                                cols="1"
+                                v-for="(icon, g) in app.icons"
+                                :key="g"
+                              >
+                                <v-icon v-if="!app.isNegativeEnabled">{{ icon }}</v-icon>
+                              </v-col>
+                              <v-col v-if="app.percent >= 0">{{ app.power }}</v-col>
+                            </v-row>
+                          </v-progress-linear>
+                        </v-col>
+                      </v-row>
                     </v-card>
-                    <v-card v-if="app.isBattery">
+                    <v-card v-if="app && app.isBattery">
                       <v-progress-linear
                         striped
-                        stream
                         buffer-value="50"
                         height="4"
                         class="ma-0 mb-1 text-center rounded-t-0"
@@ -166,6 +198,15 @@ export default {
       const p = app.percent / 100
       return overmindUtils.lerpColorArrayToRgba(from, to, p)
     },
+    getNegativeColor (app) {
+      if (!app.negativeGradient || app.percent == null || app.percent === undefined) {
+        return app.negativeColor + ' darken-3'
+      }
+      const from = app.negativeGradient.from
+      const to = app.negativeGradient.to
+      const p = app.percent / 100
+      return overmindUtils.lerpColorArrayToRgba(from, to, p)
+    },
     getPower (appliance, indexes) {
       let power = 0
       for (let u = 0; u < indexes.length; u++) {
@@ -192,14 +233,21 @@ export default {
             p += a.powerRaw
             appliances.push(a)
           }
+          let max = d.max
+          if (d.isNegativeEnabled) {
+            max = d.negativeMax
+          }
           const obj = {
             appliances: appliances,
             icons: d.icons,
             isBattery: d.isBattery,
-            max: d.max,
+            isNegativeEnabled: d.isNegativeEnabled,
+            negativeGradient: d.negativeGradient,
+            negativeColor: d.negativeColor,
+            max: max,
             gradient: d.gradient,
             power: overmindUtils.formatPower(p),
-            percent: d.max ? (100 / d.max * p) : null,
+            percent: max ? (100 / max * p) : null,
             color: d.color ? d.color : 'orange'
           }
           row.push(obj)

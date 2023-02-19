@@ -15,11 +15,28 @@
         >Your browser does not support the HTML5 canvas tag.
       </canvas>
       <span v-if="loaded">
+        <span v-for="(icon, k) in icons" :key="'A' + k">
+          <v-icon
+            :size="24 * icon.sizeMult"
+            :style="`position: absolute; top: ${icon.y * scale}px; left: ${
+              icon.x * scale
+            }px`"
+            >{{ icon.icon }}</v-icon
+          >
+        </span>
         <span v-for="(area, i) in getAreasWithIcon()" :key="i">
-          <FloorplanDialogFactory v-if="constructIdFrom(area)" :item="area" :app="appMap.get(area.appId)" :ref="constructIdFrom(area)"></FloorplanDialogFactory>
+          <FloorplanDialogFactory
+            v-if="constructIdFrom(area)"
+            :item="area"
+            :app="appMap.get(area.appId)"
+            :ref="constructIdFrom(area)"
+          ></FloorplanDialogFactory>
           <BatteryIndicator
             v-if="
-              !isError(area) && displayBattery(area) && appMap.get(area.appId) && !isHT(area)
+              !isError(area) &&
+              displayBattery(area) &&
+              appMap.get(area.appId) &&
+              !isHT(area)
             "
             :size="avatarBaseSize * scale"
             :level="
@@ -32,16 +49,14 @@
               (clickableIcons
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
-                `position: absolute; top: ${area.iconPos[1] *
-                  scale}px; left: ${area.iconPos[0] * scale}px`
+              `position: absolute; top: ${area.iconPos[1] * scale}px; left: ${
+                area.iconPos[0] * scale
+              }px`
             "
           ></BatteryIndicator>
           <!-- Shelly HT additional info-field -->
           <v-card
-            v-if="
-              (!isError(area) || !appMap.get(area.appId)) &&
-                isHT(area)
-            "
+            v-if="(!isError(area) || !appMap.get(area.appId)) && isHT(area)"
             :color="getBatteryLevelColor(area.appId)"
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
@@ -49,89 +64,87 @@
               (clickableIcons
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
-                `position: absolute; top: ${(area.iconPos[1]) *
-                  scale}px; left: ${(area.iconPos[0]) * scale}px`
+              `position: absolute; top: ${area.iconPos[1] * scale}px; left: ${
+                area.iconPos[0] * scale
+              }px`
             "
           >
-            <v-row class="ma-0 pa-0" v-if="appMap.get(area.appId).state.hasExternalPower == false">
+            <v-row
+              class="ma-0 pa-0"
+              v-if="appMap.get(area.appId).state.hasExternalPower == false"
+            >
               <v-col class="ma-0 pa-0">
-                <v-icon
-                    class="ma-0 pa-0"
-                    size="15"
-                    color='white'
-                    >{{overmindUtils.getBatteryIcon(Math.round(
-                      appMap.get(area.appId).state.batteries[0].batteryLevel * 100
-                    ))}}<i class="" aria-hidden="true"></i></v-icon
-                  >
-              </v-col><v-col class="ma-0 mr-1 pa-0">
-                <span class="small">{{
-                  Math.round(
-                    appMap.get(area.appId).state.batteries[0].batteryLevel * 100
-                  )
-                }}&nbsp;%</span>
+                <v-icon class="ma-0 pa-0" size="15" color="white"
+                  >{{
+                    overmindUtils.getBatteryIcon(
+                      Math.round(
+                        appMap.get(area.appId).state.batteries[0].batteryLevel *
+                          100
+                      )
+                    )
+                  }}<i class="" aria-hidden="true"></i
+                ></v-icon> </v-col
+              ><v-col class="ma-0 mr-1 pa-0">
+                <span class="small"
+                  >{{
+                    Math.round(
+                      appMap.get(area.appId).state.batteries[0].batteryLevel *
+                        100
+                    )
+                  }}&nbsp;%</span
+                >
               </v-col>
             </v-row>
             <v-row class="ma-0 pa-0">
               <v-col class="ma-0 pa-0">
-                <v-icon
-                    class="ma-0 pa-0"
-                    size="15"
-                    color='white'
-                    >thermostat</v-icon
-                  >
-              </v-col><v-col class="ma-0 mr-1 pa-0">
-                <span class="small">{{
-                  getTemperatureOf(area)
-                }}&nbsp;°C</span>
+                <v-icon class="ma-0 pa-0" size="15" color="white"
+                  >thermostat</v-icon
+                > </v-col
+              ><v-col class="ma-0 mr-1 pa-0">
+                <span class="small">{{ getTemperatureOf(area) }}&nbsp;°C</span>
               </v-col>
             </v-row>
             <v-row class="ma-0 pa-0">
               <v-col class="ma-0 pa-0">
-                <v-icon
-                    class="ma-0 pa-0"
-                    size="15"
-                    color='white'
-                    >water_drop</v-icon
-                  >
-              </v-col><v-col class="ma-0 mr-1 pa-0">
-                <span class="small">{{
-                  getHumidityOf(area)
-                }}&nbsp;%</span>
+                <v-icon class="ma-0 pa-0" size="15" color="white"
+                  >water_drop</v-icon
+                > </v-col
+              ><v-col class="ma-0 mr-1 pa-0">
+                <span class="small">{{ getHumidityOf(area) }}&nbsp;%</span>
               </v-col>
             </v-row>
           </v-card>
           <v-avatar
             v-if="
               (!isError(area) || !appMap.get(area.appId)) &&
-                !displayBattery(area) && getDisplayOuterRing(area)
-            "
-            :size="avatarBaseSize * scale"
-            :color="allowQuickAction(area) ? getOuterRingColor(area) : 'grey darken-1'"
-            v-on:click="areaClicked($event, area, true)"
-            class="noFocus"
-            :style="
-              (clickableIcons
-                ? 'cursor: pointer !important; '
-                : 'cursor: default !important; ') +
-                `position: absolute; top: ${area.iconPos[1] *
-                  scale}px; left: ${area.iconPos[0] * scale}px`
-            "
-          ></v-avatar>
-          <v-avatar
-            v-if="
-              (!isError(area) || !appMap.get(area.appId)) &&
-                !displayBattery(area)
+              !displayBattery(area)
             "
             :size="(avatarBaseSize - 4) * scale"
-            :color="(getColor(area) == 'transparent' ? 'grey darken-3' : getColor(area)) + (allowQuickAction(area) ? '' : getDisplayOuterRing(area) ? ' darken-2' : ' darken-3')"
+            :color="
+              (getColor(area) == 'transparent'
+                ? 'grey darken-3'
+                : getColor(area)) +
+              (allowQuickAction(area)
+                ? ''
+                : appMap.get(area.appId) === undefined ||
+                  appMap.get(area.appId).switchable !== 'DETAIL_ONLY' ||
+                  !displayEnhancedDialog
+                ? ' darken-2'
+                : '')
+            "
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
             :style="
-              (clickableIcons
+              (clickableIcons &&
+              (allowQuickAction(area) ||
+                (appMap.get(area.appId) !== undefined &&
+                  appMap.get(area.appId).switchable === 'DETAIL_ONLY' &&
+                  displayEnhancedDialog))
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
-                `position: absolute; top: ${(area.iconPos[1] + 2) *
-                  scale}px; left: ${(area.iconPos[0] + 2) * scale}px`
+              `position: absolute; top: ${area.iconPos[1] * scale}px; left: ${
+                area.iconPos[0] * scale
+              }px`
             "
           >
             <v-icon
@@ -154,8 +167,9 @@
               (clickableIcons
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
-                `position: absolute; top: ${area.iconPos[1] *
-                  scale}px; left: ${area.iconPos[0] * scale}px`
+              `position: absolute; top: ${area.iconPos[1] * scale}px; left: ${
+                area.iconPos[0] * scale
+              }px`
             "
           >
             <v-icon size="20" color="white">bolt</v-icon>
@@ -181,7 +195,7 @@
           :alt="area.title"
           :title="area.title"
           href="#"
-          :coords="area.coords.map(e => e * scale).toString()"
+          :coords="area.coords.map((e) => e * scale).toString()"
           shape="poly"
         />
       </map>
@@ -214,6 +228,7 @@ export default {
   props: {
     displayEnhancedDialog: { default: false },
     icon: {},
+    icons: { default: [] },
     additionalAreas: {},
     applianceTypeFilter: [],
     classFqnFilter: [],
@@ -328,13 +343,6 @@ export default {
         return undefined
       }
       return overmindUtils.getHumidity(app)
-    },
-    getDisplayOuterRing (area) {
-      const app = this.appMap.get(area.appId)
-      if (app === undefined) {
-        return false
-      }
-      return app.switchable === undefined || app.switchable === null || app.switchable === 'TRUE' || app.switchable === 'DETAIL_ONLY'
     },
     allowQuickAction (area) {
       const app = this.appMap.get(area.appId)

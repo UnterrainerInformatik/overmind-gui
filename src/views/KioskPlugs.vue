@@ -12,6 +12,32 @@
         colorGrey="rgba(60, 60, 60, 0.8)"
         colorTransparent="rgba(0, 0, 0, 0)"
         :applianceTypeFilter="['PLUG']"
+        :icons="[
+          {
+            icon: 'electric_bolt',
+            sizeMult: 1,
+            x: 65,
+            y: 420
+          },
+          {
+            icon: 'solar_power',
+            sizeMult: 1,
+            x: 482,
+            y: 430
+          },
+          {
+            icon: 'solar_power',
+            sizeMult: 1,
+            x: 720,
+            y: 365
+          },
+          {
+            icon: 'fireplace',
+            sizeMult: 1,
+            x: 70,
+            y: 5
+          }
+        ]"
       >
       </Floorplan>
       <KioskLinkPanel
