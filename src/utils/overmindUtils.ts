@@ -266,13 +266,23 @@ class OvermindUtils {
     }
 
     let i = 0
+    let single = false
     if (item.type === 'RELAY_DUAL') {
       i = index
+      single = true
     }
-    if (!item || !item.state || !item.state.relays || !item.state.relays[i] || !item.state.relays[i].state || item.state.relays[i].power === undefined) {
+    if (!item || !item.state || !item.state.relays) {
       return undefined
     }
-    return Number.parseFloat(item.state.relays[i].power)
+    let r = 0
+    while (item.state.relays[i] && item.state.relays[i].power !== undefined) {
+      r += Number.parseFloat(item.state.relays[i].power)
+      if (single) {
+        break
+      }
+      i++
+    }
+    return r
   }
 
   public formatPower (p, noCapSmallerOne) {
