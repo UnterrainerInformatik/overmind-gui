@@ -15,25 +15,29 @@
         :icons="[
           {
             icon: 'electric_bolt',
-            sizeMult: 1,
+            sizeMult: 1.2,
+            color: 'rgba(255, 255, 255, 0.6)',
             x: 65,
             y: 420
           },
           {
             icon: 'solar_power',
-            sizeMult: 1,
+            sizeMult: 1.2,
+            color: 'rgba(255, 255, 255, 0.6)',
             x: 482,
             y: 430
           },
           {
             icon: 'solar_power',
-            sizeMult: 1,
+            sizeMult: 1.2,
+            color: 'rgba(255, 255, 255, 0.6)',
             x: 720,
             y: 365
           },
           {
             icon: 'fireplace',
-            sizeMult: 1,
+            sizeMult: 1.2,
+            color: 'rgba(255, 255, 255, 0.6)',
             x: 70,
             y: 5
           }
