@@ -209,6 +209,9 @@ export default {
     mapFqn () {
       // console.log(this.app.classFqn)
       switch (this.app.classFqn) {
+        case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlus4PMAppliance':
+        case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlus1PMAppliance':
+        case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.Shelly3EmAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellySwitch1PMAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlugAppliance':
         case 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellySwitch25Appliance':

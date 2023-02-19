@@ -1,5 +1,5 @@
 <template>
-  <DebouncedOnOffButton ref="defaultActor" :item="item" :app="app"></DebouncedOnOffButton>
+  <DebouncedOnOffButton v-if="showPowerButton(app)" ref="defaultActor" :item="item" :app="app"></DebouncedOnOffButton>
 </template>
 
 <script lang="js">
@@ -27,6 +27,9 @@ export default {
   },
 
   methods: {
+    showPowerButton (app) {
+      return app.switchable === undefined || app.switchable === null || app.switchable === 'TRUE' || app.switchable === 'DETAIL_ONLY'
+    }
   }
 }
 </script>
