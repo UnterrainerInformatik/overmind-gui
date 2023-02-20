@@ -212,10 +212,14 @@ export default {
       for (let u = 0; u < indexes.length; u++) {
         const i = indexes[u]
         if (appliance.state && appliance.state.relays && appliance.state.relays[i] && appliance.state.relays[i].power) {
-          power += appliance.state.relays[i].power
+          if (appliance.negate) {
+            power -= appliance.state.relays[i].power
+          } else {
+            power += appliance.state.relays[i].power
+          }
         }
       }
-      return Math.round(power)
+      return power
     },
     async getAppliances () {
       const r = []
@@ -228,6 +232,7 @@ export default {
             const a = await appliancesService.getById(appliance.id)
             overmindUtils.parseState(a)
             overmindUtils.parseConfig(a)
+            a.negate = appliance.negate
             a.powerRaw = this.getPower(a, appliance.indexes)
             a.power = overmindUtils.formatPower(a.powerRaw, true)
             p += a.powerRaw

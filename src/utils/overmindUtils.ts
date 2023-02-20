@@ -260,14 +260,14 @@ class OvermindUtils {
     return Number.parseFloat(item.state.humidities[0].humidity)
   }
 
-  public getPowerOf (item, index) {
+  public getPowerOf (item, index, negate) {
     if (item === undefined) {
       return
     }
 
     let i = 0
     let single = false
-    if (item.type === 'RELAY_DUAL') {
+    if (index) {
       i = index
       single = true
     }
@@ -282,7 +282,7 @@ class OvermindUtils {
       }
       i++
     }
-    return r
+    return negate ? -r : r
   }
 
   public formatPower (p, noCapSmallerOne) {
@@ -290,15 +290,22 @@ class OvermindUtils {
       return '0 W'
     }
 
-    if (Math.abs(p) >= 1000) {
-      const sub = Math.round(p / 1000)
-      if (Math.abs(sub) >= 1000) {
-        const subsub = Math.round(p / 1000000)
-        return Math.floor(p / 1000000) + '.' + Math.abs(subsub) + ' MW'
-      }
-      return Math.floor(p / 1000) + '.' + Math.abs(sub) + ' kW'
+    const isNegative = p < 0
+    if (isNegative) {
+      p = -p
     }
-    return Math.round(p) + ' W'
+    if (Math.abs(p) >= 1000) {
+      const floor = Math.floor(p / 1000)
+      if (Math.abs(floor) >= 1000) {
+        const floorfloor = Math.floor(p / 1000000)
+        const val = floorfloor + '.' + (Math.floor((p - 1000000 * floorfloor)) + '').substring(0, 2) + ' MW'
+        return isNegative ? '-' + val : val
+      }
+      const val = floor + '.' + (Math.floor((p - 1000 * floor)) + '').substring(0, 2) + ' kW'
+      return isNegative ? '-' + val : val
+    }
+    const val = Math.round(p) + ' W'
+    return isNegative ? '-' + val : val
   }
 
   public opened (contact) {
