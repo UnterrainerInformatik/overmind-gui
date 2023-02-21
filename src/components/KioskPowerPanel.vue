@@ -41,7 +41,13 @@
                               (app.isBattery ? ' rounded-b-0' : ' mb-1')
                             "
                             :color="getNegativeColor(app)"
-                            :value="app.percent ? app.percent < 0 ? -app.percent : undefined : undefined"
+                            :value="
+                              app.percent
+                                ? app.percent < 0
+                                  ? -app.percent
+                                  : undefined
+                                : undefined
+                            "
                             @click.stop="frontClicked(i, j)"
                           >
                             <v-row>
@@ -52,7 +58,9 @@
                               >
                                 <v-icon>{{ icon }}</v-icon>
                               </v-col>
-                              <v-col v-if="app.percent < 0">{{ app.power }}</v-col>
+                              <v-col v-if="app.percent < 0">{{
+                                app.power
+                              }}</v-col>
                             </v-row>
                           </v-progress-linear>
                         </v-col>
@@ -66,7 +74,19 @@
                               (app.isBattery ? ' rounded-b-0' : ' mb-1')
                             "
                             :color="getColor(app)"
-                            :value="app.percent ? app.percent >= 0 ? app.percent : undefined : undefined"
+                            :value="
+                              app.isBattery
+                                ? app.batteryPercent
+                                  ? app.batteryPercent >= 0
+                                    ? app.batteryPercent
+                                    : undefined
+                                  : undefined
+                                : app.percent
+                                ? app.percent >= 0
+                                  ? app.percent
+                                  : undefined
+                                : undefined
+                            "
                             @click.stop="frontClicked(i, j)"
                           >
                             <v-row>
@@ -75,9 +95,13 @@
                                 v-for="(icon, g) in app.icons"
                                 :key="g"
                               >
-                                <v-icon v-if="!app.isNegativeEnabled">{{ icon }}</v-icon>
+                                <v-icon v-if="!app.isNegativeEnabled">{{
+                                  icon
+                                }}</v-icon>
                               </v-col>
-                              <v-col v-if="app.percent >= 0">{{ app.power }}</v-col>
+                              <v-col v-if="app.percent >= 0">{{
+                                app.isBattery ? app.batteryPower : app.power
+                              }}</v-col>
                             </v-row>
                           </v-progress-linear>
                         </v-col>
@@ -86,11 +110,17 @@
                     <v-card v-if="app && app.isBattery">
                       <v-progress-linear
                         striped
-                        buffer-value="50"
+                        buffer-value="100"
                         height="4"
                         class="ma-0 mb-1 text-center rounded-t-0"
                         color="yellow darken-3"
-                        :value="60"
+                        :value="
+                          app.batteryPercent
+                            ? app.batteryPercent >= 0
+                              ? app.batteryPercent
+                              : undefined
+                            : undefined
+                        "
                       >
                       </v-progress-linear>
                     </v-card>
@@ -207,6 +237,15 @@ export default {
       const p = app.percent / 100
       return overmindUtils.lerpColorArrayToRgba(from, to, p)
     },
+    getBatteryColor (app) {
+      if (!app.batteryGradient || app.batteryPercent == null || app.batteryPercent === undefined) {
+        return app.batteryColor + ' darken-3'
+      }
+      const from = app.batteryGradient.from
+      const to = app.batteryGradient.to
+      const p = app.batterPercent / 100
+      return overmindUtils.lerpColorArrayToRgba(from, to, p)
+    },
     getPower (appliance, indexes) {
       let power = 0
       for (let u = 0; u < indexes.length; u++) {
@@ -227,39 +266,62 @@ export default {
         const row = []
         for (const d of dataRow) {
           const appliances = []
-          let p = 0
-          for (const appliance of d.appliances) {
-            const a = await appliancesService.getById(appliance.id)
-            overmindUtils.parseState(a)
-            overmindUtils.parseConfig(a)
-            a.negate = appliance.negate
-            a.powerRaw = this.getPower(a, appliance.indexes)
-            a.power = overmindUtils.formatPower(a.powerRaw, true)
-            p += a.powerRaw
-            appliances.push(a)
-          }
+          const p = await this.getAppliancesData(d.appliances, appliances)
+
+          const batteryAppliances = []
+          const bp = await this.getAppliancesData(d.batteryAppliances, batteryAppliances)
+
           let max = d.max
-          if (d.isNegativeEnabled) {
+          if (d.isNegativeEnabled && p < 0) {
             max = d.negativeMax
           }
+          const percent = max ? (100 / max * p) : null
+          const batteryPercent = d.batteryMax ? (100 / d.batteryMax * bp) : null
           const obj = {
-            appliances: appliances,
             icons: d.icons,
-            isBattery: d.isBattery,
-            isNegativeEnabled: d.isNegativeEnabled,
-            negativeGradient: d.negativeGradient,
-            negativeColor: d.negativeColor,
-            max: max,
-            gradient: d.gradient,
+
+            appliances: appliances,
             power: overmindUtils.formatPower(p),
-            percent: max ? (100 / max * p) : null,
-            color: d.color ? d.color : 'orange'
+            max: max,
+            percent: percent,
+            gradient: d.gradient,
+            color: d.color ? d.color : 'green',
+
+            isNegativeEnabled: d.isNegativeEnabled,
+            negativeMax: d.negativeMax,
+            negativeGradient: d.negativeGradient,
+            negativeColor: d.negativeColor ? d.negativeColor : 'orange',
+
+            isBattery: d.batteryAppliances !== undefined && d.batteryAppliances !== null,
+            batteryAppliances: batteryAppliances,
+            batteryPower: overmindUtils.formatPower(bp),
+            batteryMax: d.batteryMax,
+            batteryPercent: batteryPercent,
+            batteryGradient: d.batteryGradient,
+            batteryColor: d.batteryColor ? d.batteryColor : 'yellow'
           }
           row.push(obj)
         }
         r.push(row)
       }
       this.appliances = r
+    },
+    async getAppliancesData (appliances, list) {
+      let p = 0
+      if (!appliances) {
+        return p
+      }
+      for (const appliance of appliances) {
+        const a = await appliancesService.getById(appliance.id)
+        overmindUtils.parseState(a)
+        overmindUtils.parseConfig(a)
+        a.negate = appliance.negate
+        a.powerRaw = this.getPower(a, appliance.indexes)
+        a.power = overmindUtils.formatPower(a.powerRaw, true)
+        p += a.powerRaw
+        list.push(a)
+      }
+      return p
     }
   },
 

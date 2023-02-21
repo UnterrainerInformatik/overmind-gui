@@ -56,7 +56,12 @@
                       indexes: [0]
                     }
                   ],
-                  isBattery: true,
+                  batteryAppliances: [
+                    {
+                      id: 142,
+                      indexes: [0]
+                    }
+                  ],
                   isNegativeEnabled: true,
                   max: 5500,
                   gradient: {
@@ -67,6 +72,11 @@
                   negativeGradient: {
                     from: [255, 255, 0, 0.3],
                     to: [255, 255, 0, 0.6]
+                  },
+                  batteryMax: 10,
+                  batteryGradient: {
+                    from: [255, 255, 120, 0.6],
+                    to: [255, 255, 0, 1]
                   },
                   icons: ['battery_charging_full']
                 }
