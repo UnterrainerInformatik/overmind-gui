@@ -75,11 +75,6 @@ export default {
     displayEnhancedDialog: false,
     areas: [
       {
-        title: 'cellar-computer',
-        appId: 0,
-        iconPos: [90, 230]
-      },
-      {
         title: '1st-playroom-window',
         appId: 0,
         iconPos: [790, 126]
@@ -163,11 +158,6 @@ export default {
         title: '2nd-steven-entrance',
         appId: 0,
         iconPos: [965, 272]
-      },
-      {
-        title: '2nd-steven',
-        appId: 0,
-        iconPos: [965, 320]
       }
     ]
   }),
