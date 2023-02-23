@@ -145,11 +145,6 @@ export default {
         iconPos: [920, 186]
       },
       {
-        title: '2nd-alex',
-        appId: 0,
-        iconPos: [935, 60]
-      },
-      {
         title: '2nd-steven-bed',
         appId: 0,
         iconPos: [920, 235]
