@@ -193,6 +193,22 @@
                     {
                       id: 129,
                       indexes: [0]
+                    },
+                    {
+                      id: 173,
+                      indexes: [0]
+                    },
+                    {
+                      id: 174,
+                      indexes: [0]
+                    },
+                    {
+                      id: 175,
+                      indexes: [0]
+                    },
+                    {
+                      id: 176,
+                      indexes: [0]
                     }
                   ],
                   gradient: {
