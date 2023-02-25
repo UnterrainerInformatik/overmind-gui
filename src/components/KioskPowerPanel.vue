@@ -75,13 +75,7 @@
                             "
                             :color="getColor(app)"
                             :value="
-                              app.isBattery
-                                ? app.batteryPercent
-                                  ? app.batteryPercent >= 0
-                                    ? app.batteryPercent
-                                    : undefined
-                                  : undefined
-                                : app.percent
+                              app.percent
                                 ? app.percent >= 0
                                   ? app.percent
                                   : undefined
@@ -100,7 +94,7 @@
                                 }}</v-icon>
                               </v-col>
                               <v-col v-if="app.percent >= 0">{{
-                                app.isBattery ? app.batteryPower : app.power
+                                app.power
                               }}</v-col>
                             </v-row>
                           </v-progress-linear>
@@ -114,13 +108,7 @@
                         height="4"
                         class="ma-0 mb-1 text-center rounded-t-0"
                         color="yellow darken-3"
-                        :value="
-                          app.batteryPercent
-                            ? app.batteryPercent >= 0
-                              ? app.batteryPercent
-                              : undefined
-                            : undefined
-                        "
+                        :value="app.batteryPercent"
                       >
                       </v-progress-linear>
                     </v-card>
@@ -246,7 +234,17 @@ export default {
       const p = app.batterPercent / 100
       return overmindUtils.lerpColorArrayToRgba(from, to, p)
     },
-    getPower (appliance, indexes) {
+    getPower (appliance, indexes, names) {
+      let power = 0
+      if (indexes) {
+        power = this.getPowerByIndexes(appliance, indexes)
+      }
+      if (names) {
+        power = this.getPowerByNames(appliance, names)
+      }
+      return power
+    },
+    getPowerByIndexes (appliance, indexes) {
       let power = 0
       for (let u = 0; u < indexes.length; u++) {
         const i = indexes[u]
@@ -255,6 +253,20 @@ export default {
             power -= appliance.state.relays[i].power
           } else {
             power += appliance.state.relays[i].power
+          }
+        }
+      }
+      return power
+    },
+    getPowerByNames (appliance, names) {
+      let power = 0
+      for (let u = 0; u < names.length; u++) {
+        const name = names[u]
+        if (appliance.state && appliance.state[name]) {
+          if (appliance.negate) {
+            power -= appliance.state[name]
+          } else {
+            power += appliance.state[name]
           }
         }
       }
@@ -276,7 +288,6 @@ export default {
             max = d.negativeMax
           }
           const percent = max ? (100 / max * p) : null
-          const batteryPercent = d.batteryMax ? (100 / d.batteryMax * bp) : null
           const obj = {
             icons: d.icons,
 
@@ -294,9 +305,8 @@ export default {
 
             isBattery: d.batteryAppliances !== undefined && d.batteryAppliances !== null,
             batteryAppliances: batteryAppliances,
-            batteryPower: overmindUtils.formatPower(bp),
             batteryMax: d.batteryMax,
-            batteryPercent: batteryPercent,
+            batteryPercent: bp < 0 ? 0 : bp > 100 ? 100 : bp,
             batteryGradient: d.batteryGradient,
             batteryColor: d.batteryColor ? d.batteryColor : 'yellow'
           }
@@ -316,7 +326,7 @@ export default {
         overmindUtils.parseState(a)
         overmindUtils.parseConfig(a)
         a.negate = appliance.negate
-        a.powerRaw = this.getPower(a, appliance.indexes)
+        a.powerRaw = this.getPower(a, appliance.indexes, appliance.names)
         a.power = overmindUtils.formatPower(a.powerRaw, true)
         p += a.powerRaw
         list.push(a)
