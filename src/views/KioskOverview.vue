@@ -38,8 +38,8 @@
                       indexes: [0]
                     },
                     {
-                      id: 151,
-                      indexes: [0, 1, 2]
+                      id: 177,
+                      names: ['acPower']
                     }
                   ],
                   max: 9500,
@@ -52,14 +52,14 @@
                 {
                   appliances: [
                     {
-                      id: 142,
-                      indexes: [0]
+                      id: 177,
+                      names: ['batteryPower']
                     }
                   ],
                   batteryAppliances: [
                     {
-                      id: 142,
-                      indexes: [0]
+                      id: 177,
+                      names: ['battery']
                     }
                   ],
                   isNegativeEnabled: true,
