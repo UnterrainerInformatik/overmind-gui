@@ -104,7 +104,7 @@
                     <v-card v-if="app && app.isBattery">
                       <div class="progress-container">
                         <v-progress-linear
-                          v-for="i in 4"
+                          v-for="i in 6"
                           :key="i"
                           striped
                           buffer-value="100"
@@ -349,25 +349,39 @@ export default {
         if (i === 1) {
           return this.percentInverse(0, lb, p)
         }
-      } else if (p > lb && p <= 50) {
+      } else if (p > lb && p <= 25) {
         if (i === 2) {
-          return this.percentInverse(lb, 50, p)
+          return this.percentInverse(lb, 25, p)
         }
         if (i < 2) {
           return 100
         }
-      } else if (p > 50 && p <= ub) {
+      } else if (p > 25 && p <= 50) {
         if (i === 3) {
-          return this.percentInverse(50, ub, p)
+          return this.percentInverse(25, 50, p)
         }
         if (i < 3) {
           return 100
         }
-      } else {
+      } else if (p > 50 && p <= 75) {
         if (i === 4) {
-          return this.percentInverse(ub, 100, p)
+          return this.percentInverse(50, 75, p)
         }
         if (i < 4) {
+          return 100
+        }
+      } else if (p > 75 && p <= ub) {
+        if (i === 5) {
+          return this.percentInverse(75, ub, p)
+        }
+        if (i < 5) {
+          return 100
+        }
+      } else {
+        if (i === 6) {
+          return this.percentInverse(ub, 100, p)
+        }
+        if (i < 6) {
           return 100
         }
       }
@@ -377,16 +391,10 @@ export default {
       if (i === 1) {
         return 'rgb(255, 255, 0, 0.7)'
       }
-      if (i === 2) {
-        return 'rgb(0, 255, 0, 0.9)'
-      }
-      if (i === 3) {
-        return 'rgb(0, 255, 0, 0.9)'
-      }
-      if (i === 4) {
+      if (i === 6) {
         return 'rgb(200, 130, 0, 0.8)'
       }
-      return 'rgb(217, 217, 217, 0.5)'
+      return 'rgb(0, 255, 0, 0.9)'
     }
   },
 
@@ -429,11 +437,11 @@ export default {
   margin-left: 2px;
 }
 .segment:first-child {
-  width: 20%;
+  width: 40%;
   border-bottom-left-radius: 10px;
 }
 .segment:last-child {
-  width: 20%;
+  width: 40%;
   border-bottom-right-radius: 10px;
 }
 </style>
