@@ -102,15 +102,19 @@
                       </v-row>
                     </v-card>
                     <v-card v-if="app && app.isBattery">
-                      <v-progress-linear
-                        striped
-                        buffer-value="100"
-                        height="4"
-                        class="ma-0 mb-1 text-center rounded-t-0"
-                        color="yellow darken-3"
-                        :value="app.batteryPercent"
-                      >
-                      </v-progress-linear>
+                      <div class="progress-container">
+                        <v-progress-linear
+                          v-for="i in 4"
+                          :key="i"
+                          striped
+                          buffer-value="100"
+                          height="4"
+                          class="segment"
+                          :color="segmentColor(app.batteryPercent, i)"
+                          :value="segmentPercent(app.batteryPercent, i)"
+                        >
+                        </v-progress-linear>
+                      </div>
                     </v-card>
                   </v-col>
                 </v-row>
@@ -332,6 +336,57 @@ export default {
         list.push(a)
       }
       return p
+    },
+    percentInverse (lb, ub, p) {
+      const a = p - lb
+      const b = 100 / (ub - lb)
+      return a * b
+    },
+    segmentPercent (p, i) {
+      const lb = 10
+      const ub = 95
+      if (p <= 10) {
+        if (i === 1) {
+          return this.percentInverse(0, lb, p)
+        }
+      } else if (p > lb && p <= 50) {
+        if (i === 2) {
+          return this.percentInverse(lb, 50, p)
+        }
+        if (i < 2) {
+          return 100
+        }
+      } else if (p > 50 && p <= ub) {
+        if (i === 3) {
+          return this.percentInverse(50, ub, p)
+        }
+        if (i < 3) {
+          return 100
+        }
+      } else {
+        if (i === 4) {
+          return this.percentInverse(ub, 100, p)
+        }
+        if (i < 4) {
+          return 100
+        }
+      }
+      return 0
+    },
+    segmentColor (p, i) {
+      if (i === 1) {
+        return 'rgb(255, 255, 0, 0.7)'
+      }
+      if (i === 2) {
+        return 'rgb(0, 255, 0, 0.9)'
+      }
+      if (i === 3) {
+        return 'rgb(0, 255, 0, 0.9)'
+      }
+      if (i === 4) {
+        return 'rgb(200, 130, 0, 0.8)'
+      }
+      return 'rgb(217, 217, 217, 0.5)'
     }
   },
 
@@ -361,5 +416,24 @@ export default {
 }
 .bold {
   font-weight: bold;
+}
+
+.progress-container {
+  display: flex;
+}
+.segment {
+  width: 100%;
+  height: 0.3rem;
+}
+.segment:not(:first-child) {
+  margin-left: 2px;
+}
+.segment:first-child {
+  width: 20%;
+  border-bottom-left-radius: 10px;
+}
+.segment:last-child {
+  width: 20%;
+  border-bottom-right-radius: 10px;
 }
 </style>
