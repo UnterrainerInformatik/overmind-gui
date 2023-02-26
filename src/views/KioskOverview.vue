@@ -39,7 +39,7 @@
                     },
                     {
                       id: 177,
-                      names: ['acPower']
+                      names: ['dcPower']
                     }
                   ],
                   max: 9500,
