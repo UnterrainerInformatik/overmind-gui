@@ -24,7 +24,7 @@
             icon: 'solar_power',
             sizeMult: 1.2,
             color: 'rgba(255, 255, 255, 0.6)',
-            x: 482,
+            x: 477,
             y: 430
           },
           {
