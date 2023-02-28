@@ -169,6 +169,9 @@ class OvermindUtils {
       case 'DIMMER':
       case 'BULB_RGB':
         if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
+          if (item && item.state && item.iconPos1) {
+            return item.state[item.iconPos1] > 0
+          }
           item.onOffState = 'error'
           return
         }
@@ -272,6 +275,9 @@ class OvermindUtils {
       single = true
     }
     if (!item || !item.state || !item.state.relays) {
+      if (item && item.state && item.iconPos1) {
+        return item.state[item.iconPos1]
+      }
       return undefined
     }
     let r = 0

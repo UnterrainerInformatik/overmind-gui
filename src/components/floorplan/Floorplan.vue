@@ -583,6 +583,13 @@ export default {
       if (st === 'off') {
         return 'off'
       }
+      if (app && app.state && app.iconPos1) {
+        if (app.state[app.iconPos1] > 0) {
+          return 'on'
+        } else {
+          return 'off'
+        }
+      }
       return 'transparent'
     },
     isOn (area) {
@@ -595,6 +602,9 @@ export default {
         st = st[area.index]
       }
       if (st === 'on') {
+        return true
+      }
+      if (app && app.state && app.iconPos1 && app.state[app.iconPos1] > 0) {
         return true
       }
       return false
