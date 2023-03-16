@@ -9,6 +9,20 @@ class JsUtils {
     return this.instanceField
   }
 
+  public async resolveCollection (collection, func: Function) {
+    const promises: Array<Promise<any>> = []
+    for (const item of collection) {
+      promises.push(func(item))
+    }
+    return this.resolve(promises)
+  }
+
+  public async resolve (promises: Array<Promise<any>>) {
+    const locs = await Promise.allSettled(promises) as { status: 'fulfilled' | 'rejected'; value: any }[]
+    const results = locs.filter(({ status }) => status === 'fulfilled').map((p) => p.value)
+    return results
+  }
+
   public lerp (start, end, percent) {
     percent = this.clampTo(0, 1, percent)
     return (1 - percent) * start + percent * end

@@ -325,8 +325,10 @@ export default {
       if (!appliances) {
         return p
       }
+      const aa = await jsUtils.resolveCollection(appliances, async (item) => appliancesService.getById(item.id))
+      let i = 0
       for (const appliance of appliances) {
-        const a = await appliancesService.getById(appliance.id)
+        const a = aa[i]
         overmindUtils.parseState(a)
         overmindUtils.parseConfig(a)
         a.negate = appliance.negate
@@ -334,6 +336,7 @@ export default {
         a.power = overmindUtils.formatPower(a.powerRaw, true)
         p += a.powerRaw
         list.push(a)
+        i++
       }
       return p
     },
