@@ -325,11 +325,7 @@ export default {
       if (!appliances) {
         return p
       }
-      const promises = []
-      for (const appliance of appliances) {
-        promises.push(appliancesService.getById(appliance.id))
-      }
-      const aa = await jsUtils.resolve(promises)
+      const aa = await jsUtils.resolveCollection(appliances, async (item) => appliancesService.getById(item.id))
       let i = 0
       for (const appliance of appliances) {
         const a = aa[i]
