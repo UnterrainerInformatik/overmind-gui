@@ -325,8 +325,14 @@ export default {
       if (!appliances) {
         return p
       }
+      const promises = []
       for (const appliance of appliances) {
-        const a = await appliancesService.getById(appliance.id)
+        promises.push(appliancesService.getById(appliance.id))
+      }
+      const aa = await jsUtils.resolve(promises)
+      let i = 0
+      for (const appliance of appliances) {
+        const a = aa[i]
         overmindUtils.parseState(a)
         overmindUtils.parseConfig(a)
         a.negate = appliance.negate
@@ -334,6 +340,7 @@ export default {
         a.power = overmindUtils.formatPower(a.powerRaw, true)
         p += a.powerRaw
         list.push(a)
+        i++
       }
       return p
     },

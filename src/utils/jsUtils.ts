@@ -9,6 +9,12 @@ class JsUtils {
     return this.instanceField
   }
 
+  public async resolve (promises: Array<Promise<any>>) {
+    const locs = await Promise.allSettled(promises) as {status: 'fulfilled' | 'rejected'; value: any}[]
+    const results = locs.filter(({ status }) => status === 'fulfilled').map((p) => p.value)
+    return results
+  }
+
   public lerp (start, end, percent) {
     percent = this.clampTo(0, 1, percent)
     return (1 - percent) * start + percent * end
