@@ -1,0 +1,47 @@
+# FROM Sid Palas via Twitter
+# https://twitter.com/sidpalas/status/1634194026500096000?s=20
+
+# In specific version for stability
+FROM node:12-alpine AS base
+
+# Specify working directory other than /
+WORKDIR /usr/src/app
+
+# Copy only files required to install
+# dependencies (better layer caching)
+COPY package*.json ./
+
+FROM base AS dev
+
+RUN node --version && npm --version
+RUN --mount=type=cache,target=/usr/scr/app/.npm \
+    npm set cache /usr/src/app/.npm && \
+    npm install
+
+COPY . .
+
+CMD ["npm", "run", "dev"]
+
+FROM base AS production
+
+# Set NODE_ENV
+ENV NODE_ENV production
+
+# Install only production dependencies
+# Use cache mount to speed up install of existing dependencies
+RUN --mount=type=cahce,target=/usr/src/app/.npm \
+    npm set cache /usr/src/app/.npm && \
+    npm ci --only=production
+
+# Use non-root user
+# Use --chown on COPY commands to set file permissions
+USER node
+
+# Copy remaining source code AFTER installing dependencies.
+# Again, copy only necessary files
+COPY --chown=node:node ./src/ .
+
+# Indicate expected port
+EXPOSE 3000
+
+CMD ["node", "index.js"]
