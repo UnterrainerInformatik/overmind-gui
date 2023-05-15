@@ -24,15 +24,15 @@
             icon: 'solar_power',
             sizeMult: 1.2,
             color: 'rgba(255, 255, 255, 0.6)',
-            x: 477,
-            y: 430
+            x: 480,
+            y: 435
           },
           {
             icon: 'solar_power',
             sizeMult: 1.2,
             color: 'rgba(255, 255, 255, 0.6)',
-            x: 720,
-            y: 365
+            x: 724,
+            y: 369
           },
           {
             icon: 'fireplace',
