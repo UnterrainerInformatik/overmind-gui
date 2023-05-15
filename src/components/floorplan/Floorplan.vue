@@ -120,7 +120,7 @@
               (!isError(area) || !appMap.get(area.appId)) &&
               !displayBattery(area)
             "
-            :size="(avatarBaseSize - 4) * scale"
+            :size="avatarBaseSize * scale"
             :color="
               (getColor(area) == 'transparent'
                 ? 'grey darken-3'
@@ -201,7 +201,7 @@
         />
       </map>
       <!--
-      img:{{ imgWidth }} / {{ imgHeight }} full:{{ fullImgWidth }} / {{ fullImgHeight }} scale:{{ scale }}
+      img:{{ imgWidth }} / {{ imgHeight }} full:{{ fullImgWidth }} / {{ fullImgHeight }} scale:{{ scale }} scaleX:{{ scaleX }} scaleY:{{ scaleY }}
       -->
     </div>
   </span>
@@ -266,6 +266,12 @@ export default {
   computed: {
     scale () {
       return this.imgWidth / this.fullImgWidth
+    },
+    scaleX () {
+      return this.imgWidth / this.fullImgWidth
+    },
+    scaleY () {
+      return this.imgHeight / this.fullImgHeight
     }
   },
 
