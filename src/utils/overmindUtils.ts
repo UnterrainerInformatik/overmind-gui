@@ -328,10 +328,10 @@ class OvermindUtils {
 
   public getOpenColorFor (contact) {
     if (this.opened(contact)) {
-      return 'on'
+      return 'warning'
     }
     if (this.tilted(contact)) {
-      return 'warning'
+      return 'on'
     }
     if (this.closed(contact)) {
       return 'off'
