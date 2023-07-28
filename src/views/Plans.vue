@@ -34,6 +34,7 @@
 // @ is an alias to /src
 import PlanPanel from '@/components/PlanPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'Plans',
@@ -49,7 +50,8 @@ export default {
     size: 1000,
     viewToggle: 1,
     onlyEnabled: false,
-    loading: true
+    loading: true,
+    debouncer: new Debouncer()
   }),
 
   watch: {
@@ -69,8 +71,8 @@ export default {
   },
 
   mounted () {
-    this.getPlans(true, this.size, this.offset)
-    this.interval = setInterval(() => this.getPlans(false, this.size, this.offset), 1000)
+    this.debouncer.debounce(this.getPlans(true, this.size, this.offset))
+    this.interval = setInterval(() => this.debouncer.debounce(this.getPlans(false, this.size, this.offset)), 1000)
   },
 
   beforeDestroy () {

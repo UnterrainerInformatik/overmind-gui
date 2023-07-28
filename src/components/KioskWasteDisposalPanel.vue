@@ -55,6 +55,7 @@
 import KioskPanel from '@/components/KioskPanel.vue'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'KioskWasteDisposalPanel',
@@ -78,7 +79,8 @@ export default {
     interval: null,
     dateUtils,
     wasteDisposalJson: null,
-    data: null
+    data: null,
+    debouncer: new Debouncer()
   }),
 
   computed: {
@@ -141,8 +143,8 @@ export default {
   },
 
   mounted () {
-    this.update()
-    this.interval = setInterval(() => this.update(), 10000)
+    this.debouncer.debounce(this.update())
+    this.interval = setInterval(() => this.debouncer.debounce(this.update()), 10000)
   },
 
   beforeDestroy () {

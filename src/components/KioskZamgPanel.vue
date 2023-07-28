@@ -110,6 +110,7 @@ import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
 import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetService'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'KioskZamgPanel',
@@ -128,7 +129,8 @@ export default {
     weather: null,
     sunRise: null,
     sunSet: null,
-    noon: null
+    noon: null,
+    debouncer: new Debouncer()
   }),
 
   computed: {
@@ -215,8 +217,8 @@ export default {
   },
 
   mounted () {
-    this.update()
-    this.interval = setInterval(() => this.update(), 10000)
+    this.debouncer.debounce(this.update())
+    this.interval = setInterval(() => this.debouncer.debounce(this.update()), 10000)
   },
 
   beforeDestroy () {

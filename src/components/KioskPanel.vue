@@ -87,7 +87,7 @@ export default {
   },
 
   mounted () {
-    this.interval = setInterval(() => this.calculateEnabledState(), 1000)
+    this.interval = setInterval(() => this.calculateEnabledState(), 500)
   },
 
   beforeDestroy () {

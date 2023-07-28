@@ -82,7 +82,7 @@
 </template>
 
 <script lang="js">
-import { Debouncer } from '@/utils/debouncer'
+import Debouncer from '@/utils/debouncer'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {
@@ -188,8 +188,8 @@ export default {
   mounted () {
     this.debouncer = new Debouncer({
       timeout: 500,
-      whenDebounceCalled: () => { this.pause = true },
-      whenEmptyEvent: () => {
+      enqueueing: () => { this.pause = true },
+      ending: () => {
         this.waitForNextAppChange = true
         this.pause = false
       }
