@@ -63,16 +63,15 @@ export default {
   methods: {
     async getPlans (showLoadingProgress, size, offset, additionalParams) {
       this.loading = showLoadingProgress
-      return plansService.getOrderedPlans(size, offset, additionalParams, this.onlyEnabled).then((response) => {
-        this.raw = response
-        this.loading = false
-      })
+      const response = await plansService.getOrderedPlans(size, offset, additionalParams, this.onlyEnabled)
+      this.raw = response
+      this.loading = false
     }
   },
 
   mounted () {
-    this.debouncer.debounce(this.getPlans(true, this.size, this.offset))
-    this.interval = setInterval(() => this.debouncer.debounce(this.getPlans(false, this.size, this.offset)), 1000)
+    this.debouncer.debounce(async () => this.getPlans(true, this.size, this.offset))
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getPlans(false, this.size, this.offset)), 1000)
   },
 
   beforeDestroy () {

@@ -43,36 +43,33 @@ export default {
       this.loading = showLoadingProgress
       const descriptions = []
       const allPromises = []
-      return guiSwitchesService.getList().then((response) => {
-        response.entries.forEach(element => {
-          allPromises.push(appliancesService.getById(element.applianceId).then((resp) => {
-            element.applianceName = resp.name
-            descriptions.push(element)
-          }))
-        })
-      }).then(() => {
-        Promise.allSettled(allPromises).then(() => {
-          descriptions.sort((a, b) => (a.applianceName > b.applianceName) ? 1 : (a.order > b.order) ? 1 : -1)
-          const appliances = []
-          const grouped = jsUtils.groupBy(descriptions, 'applianceId')
-          for (const [key, value] of Object.entries(grouped)) {
-            if (value.length === 0) {
-              continue
-            }
-            value.sort((a, b) => (a.description > b.description) ? 1 : -1)
-            appliances.push({ id: key, name: value[0].applianceName, modes: value })
-          }
-          appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
-          this.filtered = appliances
-          this.loading = false
-        })
+      const response = await guiSwitchesService.getList()
+      response.entries.forEach(element => {
+        allPromises.push(appliancesService.getById(element.applianceId).then((resp) => {
+          element.applianceName = resp.name
+          descriptions.push(element)
+        }))
       })
+      await Promise.allSettled(allPromises)
+      descriptions.sort((a, b) => (a.applianceName > b.applianceName) ? 1 : (a.order > b.order) ? 1 : -1)
+      const appliances = []
+      const grouped = jsUtils.groupBy(descriptions, 'applianceId')
+      for (const [key, value] of Object.entries(grouped)) {
+        if (value.length === 0) {
+          continue
+        }
+        value.sort((a, b) => (a.description > b.description) ? 1 : -1)
+        appliances.push({ id: key, name: value[0].applianceName, modes: value })
+      }
+      appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
+      this.filtered = appliances
+      this.loading = false
     }
   },
 
   mounted () {
-    this.debouncer.debounce(this.getUsedSwitches(true))
-    this.interval = setInterval(() => this.debouncer.debounce(this.getUsedSwitches(false)), 5000)
+    this.debouncer.debounce(async () => this.getUsedSwitches(true))
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getUsedSwitches(false)), 5000)
   },
 
   beforeDestroy () {
