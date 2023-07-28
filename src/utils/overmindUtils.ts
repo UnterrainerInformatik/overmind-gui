@@ -307,7 +307,7 @@ class OvermindUtils {
       power++
     }
 
-    const formattedValue = value % 1 === 0 ? value.toFixed(0) : value.toFixed(2).replace(/\.?0+$/, '')
+    const formattedValue = value % 1 === 0 || value.toFixed(0).length > 1 ? value.toFixed(0) : value.toFixed(2).replace(/\.?0+$/, '')
     return `${formattedValue} ${units[power]}`
   }
 
