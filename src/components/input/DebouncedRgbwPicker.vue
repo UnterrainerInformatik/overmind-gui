@@ -82,7 +82,7 @@
 </template>
 
 <script lang="js">
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {

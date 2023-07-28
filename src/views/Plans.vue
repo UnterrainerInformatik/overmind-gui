@@ -34,7 +34,7 @@
 // @ is an alias to /src
 import PlanPanel from '@/components/PlanPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'Plans',

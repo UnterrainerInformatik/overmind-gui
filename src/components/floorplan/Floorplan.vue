@@ -217,7 +217,7 @@ import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDial
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'Floorplan',

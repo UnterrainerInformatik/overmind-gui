@@ -110,7 +110,7 @@ import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
 import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetService'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'KioskZamgPanel',

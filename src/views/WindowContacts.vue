@@ -33,7 +33,7 @@ import { singleton as jsUtils } from '@/utils/jsUtils'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as guiWindowContactsService } from '@/utils/webservices/guiWindowContactsService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'WindowContacts',

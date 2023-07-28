@@ -55,7 +55,7 @@
 import KioskPanel from '@/components/KioskPanel.vue'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'KioskWasteDisposalPanel',
