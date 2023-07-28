@@ -230,7 +230,12 @@ export default {
   props: {
     displayEnhancedDialog: { default: false },
     icon: {},
-    icons: { default: [] },
+    icons: {
+      type: Array,
+      default () {
+        return []
+      }
+    },
     additionalAreas: {},
     applianceTypeFilter: [],
     classFqnFilter: [],
@@ -241,8 +246,7 @@ export default {
     colorMiddle: {},
     colorError: {},
     colorGrey: {},
-    colorTransparent: {},
-    debouncer: new Debouncer()
+    colorTransparent: {}
   },
 
   data: () => ({
@@ -262,7 +266,8 @@ export default {
     readWidth: undefined,
     readHeight: undefined,
     imgWidthOrHeightDebounce: false,
-    colorOverrides: []
+    colorOverrides: [],
+    debouncer: new Debouncer()
   }),
 
   computed: {
@@ -621,8 +626,8 @@ export default {
 
   mounted () {
     this.reCompose()
-    this.debouncer.debounce(this.getAppliances(true))
-    this.interval = setInterval(() => this.debouncer.debounce(this.getAppliances(false)), 2000)
+    this.debouncer.debounce(async () => this.getAppliances(true))
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getAppliances(false)), 2000)
   },
 
   beforeDestroy () {

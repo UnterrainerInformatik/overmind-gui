@@ -56,8 +56,8 @@ export default {
   },
 
   mounted () {
-    this.debouncer.debounce(this.getAppliances(true))
-    this.interval = setInterval(() => this.debouncer.debounce(this.getAppliances(false)), 3000)
+    this.debouncer.debounce(async () => this.getAppliances(true))
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getAppliances(false)), 3000)
   },
 
   beforeDestroy () {

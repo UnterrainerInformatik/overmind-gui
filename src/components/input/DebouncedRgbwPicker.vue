@@ -173,7 +173,7 @@ export default {
     },
     async saveValues () {
       const v = this.colorModel
-      this.debouncer.debounce(() => {
+      this.debouncer.debounce(async () => {
         appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, this.white / 100, v.a)
       })
     },

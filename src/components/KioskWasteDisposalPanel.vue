@@ -97,8 +97,8 @@ export default {
   },
 
   methods: {
-    update () {
-      localizedDataService.getByIdentifier('wasteDisposalEnns').then((response) => {
+    async update () {
+      await localizedDataService.getByIdentifier('wasteDisposalEnns').then((response) => {
         if (response == null) {
           return
         }
@@ -143,8 +143,8 @@ export default {
   },
 
   mounted () {
-    this.debouncer.debounce(this.update())
-    this.interval = setInterval(() => this.debouncer.debounce(this.update()), 10000)
+    this.debouncer.debounce(async () => this.update())
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.update()), 10000)
   },
 
   beforeDestroy () {

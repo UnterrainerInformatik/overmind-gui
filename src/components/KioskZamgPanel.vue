@@ -26,19 +26,27 @@
               style="font-weight: bold"
             >
               <v-avatar
-              size="36"
-              :color="overmindUtils.getTempColorFor(weather.temperature)"
+                size="36"
+                :color="overmindUtils.getTempColorFor(weather.temperature)"
               >
                 <v-icon color="black">thermostat</v-icon>
               </v-avatar>
-              {{ weather.temperature }}{{weather.temperatureUnit}}
+              {{ weather.temperature }}{{ weather.temperatureUnit }}
             </v-col>
             <v-col class="small ma-0 pa-0 text-center">
               <v-row class="ma-0 pa-0" cols="12"
                 ><v-col class="ma-0 mr-7 pa-0" cols="1">
                   <v-avatar
-                  size="36"
-                  :color="overmindUtils.getTempColorFor(calculateFeltTemperature(weather.temperature, weather.wind, weather.humidity).toFixed(1))"
+                    size="36"
+                    :color="
+                      overmindUtils.getTempColorFor(
+                        calculateFeltTemperature(
+                          weather.temperature,
+                          weather.wind,
+                          weather.humidity
+                        ).toFixed(1)
+                      )
+                    "
                   >
                     <v-icon color="black">psychology</v-icon>
                   </v-avatar>
@@ -52,7 +60,7 @@
                           weather.wind,
                           weather.humidity
                         ).toFixed(1)
-                      }}{{weather.temperatureUnit}}
+                      }}{{ weather.temperatureUnit }}
                     </v-col></v-row
                   >
                   <v-row class="ma-0 pa-0"
@@ -76,11 +84,15 @@
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0">
                 <v-icon color="white">wb_sunny</v-icon>
-                {{ weather.sun }}{{weather.sunUnit}}
-                &nbsp;&nbsp;<v-icon color="white">water_drop</v-icon>
-                {{ weather.rain }}{{weather.rainUnit}}
-                &nbsp;&nbsp;<v-icon color="white">air</v-icon>
-                {{ weather.wind }}{{weather.windUnit}}
+                {{ weather.sun }}{{ weather.sunUnit }} &nbsp;&nbsp;<v-icon
+                  color="white"
+                  >water_drop</v-icon
+                >
+                {{ weather.rain }}{{ weather.rainUnit }} &nbsp;&nbsp;<v-icon
+                  color="white"
+                  >air</v-icon
+                >
+                {{ weather.wind }}{{ weather.windUnit }}
               </div>
             </v-col>
           </v-row>
@@ -155,8 +167,8 @@ export default {
       const d = this.parseDate(date, time)
       return dateUtils.dateToShortTime(d, this.$i18n.locale)
     },
-    update () {
-      localizedDataService.getByIdentifier('zamg').then((response) => {
+    async update () {
+      await localizedDataService.getByIdentifier('zamg').then((response) => {
         if (response == null) {
           return
         }
@@ -166,18 +178,17 @@ export default {
         } else {
           this.weather = JSON.parse(response.en)
         }
-      }).then(() => {
-        sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc()).then((response) => {
-          if (response == null) {
-            this.sunRise = null
-            this.sunSet = null
-            this.noon = null
-          } else {
-            this.sunRise = dateUtils.dateToShortTime(new Date(response.sunRise + 'Z'), this.$i18n.locale)
-            this.noon = dateUtils.dateToShortTime(new Date(response.noon + 'Z'), this.$i18n.locale)
-            this.sunSet = dateUtils.dateToShortTime(new Date(response.sunSet + 'Z'), this.$i18n.locale)
-          }
-        })
+      })
+      await sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc()).then((response) => {
+        if (response == null) {
+          this.sunRise = null
+          this.sunSet = null
+          this.noon = null
+        } else {
+          this.sunRise = dateUtils.dateToShortTime(new Date(response.sunRise + 'Z'), this.$i18n.locale)
+          this.noon = dateUtils.dateToShortTime(new Date(response.noon + 'Z'), this.$i18n.locale)
+          this.sunSet = dateUtils.dateToShortTime(new Date(response.sunSet + 'Z'), this.$i18n.locale)
+        }
       })
     },
     calculateFeltTemperature (temperature, wind, hum) {
@@ -217,8 +228,8 @@ export default {
   },
 
   mounted () {
-    this.debouncer.debounce(this.update())
-    this.interval = setInterval(() => this.debouncer.debounce(this.update()), 10000)
+    this.debouncer.debounce(async () => this.update())
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.update()), 10000)
   },
 
   beforeDestroy () {
