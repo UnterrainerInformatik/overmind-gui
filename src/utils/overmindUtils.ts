@@ -291,27 +291,24 @@ class OvermindUtils {
     return negate ? -r : r
   }
 
-  public formatPower (p, noCapSmallerOne) {
-    if (p < 1 && p > -1 && !noCapSmallerOne) {
-      return '0 W'
+  public formatPower (value: number, cap: boolean): string {
+    if (value < 0) {
+      return '-' + this.formatPower(-value, cap)
     }
 
-    const isNegative = p < 0
-    if (isNegative) {
-      p = -p
+    if (value < 1) {
+      return cap ? '1 W' : '0 W'
     }
-    if (Math.abs(p) >= 1000) {
-      const floor = Math.floor(p / 1000)
-      if (Math.abs(floor) >= 1000) {
-        const floorfloor = Math.floor(p / 1000000)
-        const val = floorfloor + '.' + (Math.floor((p - 1000000 * floorfloor)) + '').substring(0, 2) + ' MW'
-        return isNegative ? '-' + val : val
-      }
-      const val = floor + '.' + (Math.floor((p - 1000 * floor)) + '').substring(0, 2) + ' kW'
-      return isNegative ? '-' + val : val
+
+    const units = ['W', 'kW', 'MW', 'GW', 'TW']
+    let power = 0
+    while (value >= 1000 && power < units.length - 1) {
+      value /= 1000
+      power++
     }
-    const val = Math.round(p) + ' W'
-    return isNegative ? '-' + val : val
+
+    const formattedValue = value % 1 === 0 ? value.toFixed(0) : value.toFixed(2).replace(/\.?0+$/, '')
+    return `${formattedValue} ${units[power]}`
   }
 
   public opened (contact) {
