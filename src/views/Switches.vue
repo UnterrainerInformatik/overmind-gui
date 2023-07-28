@@ -14,7 +14,7 @@ import SwitchPanel from '@/components/SwitchPanel.vue'
 import { singleton as jsUtils } from '@/utils/jsUtils'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as guiSwitchesService } from '@/utils/webservices/guiSwitchesService'
-import Debouncer from '@/utils/debouncer'
+import { Debouncer } from '@/utils/debouncer'
 
 export default {
   name: 'Switches',
