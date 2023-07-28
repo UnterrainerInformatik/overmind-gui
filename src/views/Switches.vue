@@ -14,6 +14,7 @@ import SwitchPanel from '@/components/SwitchPanel.vue'
 import { singleton as jsUtils } from '@/utils/jsUtils'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as guiSwitchesService } from '@/utils/webservices/guiSwitchesService'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'Switches',
@@ -27,7 +28,8 @@ export default {
     raw: {},
     filtered: {},
     onlyActive: false,
-    loading: true
+    loading: true,
+    debouncer: new Debouncer()
   }),
 
   watch: {
@@ -69,8 +71,8 @@ export default {
   },
 
   mounted () {
-    this.getUsedSwitches(true)
-    this.interval = setInterval(() => this.getUsedSwitches(false), 10000)
+    this.debouncer.debounce(this.getUsedSwitches(true))
+    this.interval = setInterval(() => this.debouncer.debounce(this.getUsedSwitches(false)), 5000)
   },
 
   beforeDestroy () {

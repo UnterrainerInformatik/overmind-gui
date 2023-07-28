@@ -217,6 +217,7 @@ import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDial
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'Floorplan',
@@ -240,7 +241,8 @@ export default {
     colorMiddle: {},
     colorError: {},
     colorGrey: {},
-    colorTransparent: {}
+    colorTransparent: {},
+    debouncer: new Debouncer()
   },
 
   data: () => ({
@@ -619,8 +621,8 @@ export default {
 
   mounted () {
     this.reCompose()
-    this.getAppliances(true)
-    this.interval = setInterval(() => this.getAppliances(false), 2000)
+    this.debouncer.debounce(this.getAppliances(true))
+    this.interval = setInterval(() => this.debouncer.debounce(this.getAppliances(false)), 2000)
   },
 
   beforeDestroy () {

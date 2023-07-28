@@ -159,6 +159,7 @@ import FlipCard from '@/components/FlipCard.vue'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as jsUtils } from '@/utils/jsUtils'
+import Debouncer from '@/utils/debouncer'
 
 export default {
   name: 'KioskPowerPanel',
@@ -177,7 +178,8 @@ export default {
     overmindUtils,
     interval: null,
     appliances: null,
-    showDetailsOf: null
+    showDetailsOf: null,
+    debouncer: new Debouncer()
   }),
 
   computed: {
@@ -402,8 +404,8 @@ export default {
   },
 
   mounted () {
-    this.getAppliances()
-    this.interval = setInterval(() => this.getAppliances(), 2000)
+    this.debouncer.debounce(this.getAppliances())
+    this.interval = setInterval(() => this.debouncer.debounce(this.getAppliances()), 2000)
   },
 
   beforeDestroy () {
