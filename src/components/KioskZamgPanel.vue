@@ -185,9 +185,9 @@ export default {
           this.sunSet = null
           this.noon = null
         } else {
-          this.sunRise = dateUtils.dateToShortTime(new Date(response.sunRise + 'Z'), this.$i18n.locale)
-          this.noon = dateUtils.dateToShortTime(new Date(response.noon + 'Z'), this.$i18n.locale)
-          this.sunSet = dateUtils.dateToShortTime(new Date(response.sunSet + 'Z'), this.$i18n.locale)
+          this.sunRise = dateUtils.dateToShortTime(new Date(response.sunRise), this.$i18n.locale)
+          this.noon = dateUtils.dateToShortTime(new Date(response.noon), this.$i18n.locale)
+          this.sunSet = dateUtils.dateToShortTime(new Date(response.sunSet), this.$i18n.locale)
         }
       })
     },
