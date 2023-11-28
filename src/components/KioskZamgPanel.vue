@@ -178,6 +178,7 @@ export default {
         } else {
           this.weather = JSON.parse(response.en)
         }
+        console.log(this.weather)
       })
       await sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc()).then((response) => {
         if (response == null) {
@@ -192,6 +193,14 @@ export default {
       })
     },
     calculateFeltTemperature (temperature, wind, hum) {
+      if (typeof wind !== 'number') {
+        console.log('weather.wind is not a number')
+        wind = 0
+      }
+      if (typeof hum !== 'number') {
+        console.log('weather.humidity is not a number')
+        hum = 0
+      }
       const temp = parseFloat(temperature)
       if (temp < 15) {
         return this.calculateWindChillTemperature(temp, parseFloat(wind))
