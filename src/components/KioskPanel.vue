@@ -4,7 +4,7 @@
     :class="`ma-1 pa-${borderSize - 1} ${
       borderColor ? borderColor : (enabled ? 'on ' : 'off ') + 'darken-1'
     }`"
-    max-width="180px"
+    :max-width="maxWidth"
     :min-width="minWidth"
     v-bind="$attrs"
     v-on="$listeners"
@@ -36,6 +36,7 @@ export default {
     borderColor: {},
     bgColor: {},
     minWidth: { default: '140px' },
+    maxWidth: { default: '180px' },
     renderTitle: { default: true },
     borderSize: { default: 1 },
     pa: { default: null }

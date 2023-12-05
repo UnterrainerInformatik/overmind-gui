@@ -365,6 +365,11 @@
           ></KioskLinkPanel>
         </v-col>
       </v-row>
+      <v-row>
+        <v-col cols="12">
+          <KioskVideoPanel></KioskVideoPanel>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>
@@ -378,6 +383,7 @@ import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
 import KioskPowerPanel from '@/components/KioskPowerPanel.vue'
+import KioskVideoPanel from '@/components/KioskVideoPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -389,7 +395,8 @@ export default {
     KioskZamgPanel,
     KioskPowerPanel,
     KioskWasteDisposalPanel,
-    KioskSwitchPanel
+    KioskSwitchPanel,
+    KioskVideoPanel
   },
 
   data: () => ({
