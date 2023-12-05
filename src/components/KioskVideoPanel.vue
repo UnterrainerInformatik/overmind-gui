@@ -61,9 +61,9 @@
       >
       </a>
       <div>
-        <!-- http://admin:pamelaan@10.10.196.10/cgi/jpg/image.cgi -->
-        <!-- http://admin:pamelaan@10.10.196.10:80/video/mjpg.cgi?resolution=VGA -->
-        <video src="http://10.10.196.2:1984/stream.html?src=alex&mode=mjpeg" autoplay></video>
+        <video src="http://10.10.196.2:1984/api/stream.mp4?src=alex&mp4=flac" type="video/mp4" autoplay></video>
+        <video src="http://10.10.196.2:1984/api/stream.mp4?src=alex&mp4=flac" type="video/mp4" autoplay></video>
+        <video src="http://10.10.196.2:1984/api/stream.mp4?src=stefan&mp4=flac" type="video/mp4" autoplay></video>
       </div>
     </template>
   </KioskPanel>
@@ -108,57 +108,6 @@ export default {
   },
 
   methods: {
-    startMjpgFetching (url, username, password) {
-      const canvas = this.$refs.mjpg
-      const FRAME_RATE = 30
-      const u = url
-      const base64Credentials = Buffer.from(`${username}:${password}`).toString('base64')
-
-      const fetchImage = async () => {
-        const response = await fetch(u, {
-          headers: {
-            Authorization: `Basic ${base64Credentials}`
-          }
-        })
-        const blob = await response.blob()
-        const url = URL.createObjectURL(blob)
-        this.fetchingBackingImage = new Image()
-        const img = this.fetchingBackingImage
-        img.onload = () => {
-          URL.revokeObjectURL(url)
-          canvas.width = img.width
-          canvas.height = img.height
-          const context = canvas.getContext('2d')
-          context.clearRect(0, 0, canvas.width, canvas.height)
-          context.drawImage(img, 0, 0, canvas.width, canvas.height)
-        }
-        img.src = url
-      }
-
-      this.fetchInterval = setInterval(fetchImage, 1000 / FRAME_RATE)
-    },
-    startMjpg () {
-      const canvas = this.$refs.mjpg
-      this.mjpgBackingImage = new Image()
-
-      // this.mjpgBackingImage.src = 'http://admin:pamelaan@10.10.196.10:80/video/mjpg.cgi?resolution=VGA'
-      this.mjpgBackingImage.src = 'http://10.10.196.10:80/video/mjpg.cgi?resolution=VGA'
-
-      const FRAME_RATE = 30
-
-      this.mjpgBackingImage.onload = () => {
-        canvas.width = this.mjpgBackingImage.width
-        canvas.height = this.mjpgBackingImage.height
-
-        this.mjpgInterval = setInterval(() => {
-          const context = canvas.getContext('2d')
-          // Clear the canvas before drawing each frame
-          context.clearRect(0, 0, canvas.width, canvas.height)
-          // Draw the image onto the canvas
-          context.drawImage(this.mjpgBackingImage, 0, 0, canvas.width, canvas.height)
-        }, 1000 / FRAME_RATE)
-      }
-    },
     async update () {
       const devices = await navigator.mediaDevices.enumerateDevices()
       const videoDevices = devices.filter(device => device.kind === 'videoinput')
@@ -199,7 +148,7 @@ export default {
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
-        console.log({ stream })
+        // console.log({ stream })
         this.$refs.video.srcObject = stream
         this.isLoading = false
         this.isVideoRunning = true
@@ -235,8 +184,6 @@ export default {
   },
 
   mounted () {
-    this.startMjpg()
-    // this.startMjpgFetching('http://10.10.196.13:80/video/mjpg.cgi?resolution=VGA', 'admin', 'pamelaan')
     this.update()
     this.interval = setInterval(() => this.update(), 1000)
   },
@@ -244,12 +191,6 @@ export default {
   beforeDestroy () {
     if (this.interval) {
       clearInterval(this.interval)
-    }
-    if (this.mjpgInterval) {
-      clearInterval(this.mjpgInterval)
-    }
-    if (this.fetchInterval) {
-      clearInterval(this.fetchInterval)
     }
   }
 }
