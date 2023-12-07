@@ -178,7 +178,7 @@ export default {
         } else {
           this.weather = JSON.parse(response.en)
         }
-        console.log(this.weather)
+        // console.log(this.weather)
       })
       await sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc()).then((response) => {
         if (response == null) {
