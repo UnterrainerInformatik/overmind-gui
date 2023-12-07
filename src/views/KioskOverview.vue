@@ -363,6 +363,14 @@
             :text="$t('page.kiosk.linkMovement')"
             route="/app/kioskmovement"
           ></KioskLinkPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkCamera')"
+            route="/app/kioskcamera"
+          ></KioskLinkPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkVideo')"
+            route="/app/kioskvideo"
+          ></KioskLinkPanel>
         </v-col>
       </v-row>
     </v-container>

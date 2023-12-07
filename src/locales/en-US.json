@@ -55,10 +55,12 @@
 		"kiosk": {
 			"linkBack": "back",
 			"linkBatteries": "Batteries",
+			"linkCamera": "Camera",
 			"linkContact": "Windows / Air",
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"linkVideo": "Video",
 			"power": "Power Consumption",
 			"solarPower": "Solar Power",
 			"toggleDetails": "Details anzeigen",

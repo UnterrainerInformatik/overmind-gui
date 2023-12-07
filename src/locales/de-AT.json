@@ -55,10 +55,12 @@
 		"kiosk": {
 			"linkBack": "zurück",
 			"linkBatteries": "Batterien",
+			"linkCamera": "Kamera",
 			"linkContact": "Fenster / Klima",
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
+			"linkVideo": "Video",
 			"power": "Stromverbrauch",
 			"solarPower": "Photovoltaik",
 			"toggleDetails": "Show details",
