@@ -363,11 +363,14 @@
             :text="$t('page.kiosk.linkMovement')"
             route="/app/kioskmovement"
           ></KioskLinkPanel>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="12">
-          <KioskVideoPanel></KioskVideoPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkCamera')"
+            route="/app/kioskcamera"
+          ></KioskLinkPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkVideo')"
+            route="/app/kioskvideo"
+          ></KioskLinkPanel>
         </v-col>
       </v-row>
     </v-container>
@@ -383,7 +386,6 @@ import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
 import KioskPowerPanel from '@/components/KioskPowerPanel.vue'
-import KioskVideoPanel from '@/components/KioskVideoPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -395,8 +397,7 @@ export default {
     KioskZamgPanel,
     KioskPowerPanel,
     KioskWasteDisposalPanel,
-    KioskSwitchPanel,
-    KioskVideoPanel
+    KioskSwitchPanel
   },
 
   data: () => ({

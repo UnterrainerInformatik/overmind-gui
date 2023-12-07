@@ -1,6 +1,6 @@
 <template>
-  <KioskPanel borderColor="secondary" bgColor="black" maxWidth="800">
-    <template>
+  <div class="home">
+    <v-container fluid class="ma-0 pa-0 d-flex flex-wrap">
       <v-row cols="12">
         <v-col cols="12">
           <v-select
@@ -13,77 +13,72 @@
           ></v-select>
         </v-col>
       </v-row>
+      <v-row>
+        <KioskLinkPanel
+          :text="$t('page.kiosk.linkBack')"
+          route="/app/kioskoverview"
+        ></KioskLinkPanel>
 
-      <v-progress-circular
-        v-if="isLoading"
-        indeterminate
-        color="primary"
-      ></v-progress-circular>
+        <v-progress-circular
+          v-if="isLoading"
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
 
-      <div class="camera-shutter"></div>
-      <v-hover>
-        <template v-slot:default="{ hover }">
-          <div>
-            <video
-              id="video"
-              ref="video"
-              autoplay
-              :style="hover ? transformHoverIn : transformHoverOut"
-            ></video>
-            <canvas
-              @click="takePhoto"
-              class="video-overlay"
-              :style="
-                `position: absolute;
+        <v-hover>
+          <template v-slot:default="{ hover }">
+            <div>
+              <video
+                id="video"
+                ref="video"
+                autoplay
+                :style="hover ? transformHoverIn : transformHoverOut"
+              ></video>
+              <canvas
+                @click="takePhoto"
+                class="video-overlay"
+                :style="
+                  `position: absolute;
                  top: ${$refs.video ? $refs.video.offsetTop : 0}px;
                  left: ${$refs.video ? $refs.video.offsetLeft : 0}px;
                  width: ${$refs.video ? $refs.video.videoWidth : 0}px;
                  height: ${$refs.video ? $refs.video.videoHeight : 0}px;
                  transition: background-color 0.3s ease-in-out;
               ` +
-                (hover
-                  ? ' background-color: rgba(0, 100, 0, 0.2); ' +
-                    transformHoverIn
-                  : ' ' + transformHoverOut)
-              "
-            ></canvas>
-          </div>
-        </template>
-      </v-hover>
+                  (hover
+                    ? ' background-color: rgba(0, 100, 0, 0.2); ' +
+                      transformHoverIn
+                    : ' ' + transformHoverOut)
+                "
+              ></canvas>
+            </div>
+          </template>
+        </v-hover>
+      </v-row>
       <canvas ref="canvas" hidden></canvas>
       <a
         hidden
         id="downloadPhoto"
         ref="downloadPhoto"
-        download="my-photo.jpg"
+        download="overmind-camera-still.jpg"
         class="button"
         role="button"
       >
       </a>
-      <div>
-        <video src="http://10.10.196.2:1984/api/stream.mp4?src=alex&mp4=flac" type="video/mp4" autoplay></video>
-        <video src="http://10.10.196.2:1984/api/stream.mp4?src=alex&mp4=flac" type="video/mp4" autoplay></video>
-        <video src="http://10.10.196.2:1984/api/stream.mp4?src=stefan&mp4=flac" type="video/mp4" autoplay></video>
-      </div>
-    </template>
-  </KioskPanel>
+    </v-container>
+  </div>
 </template>
 
-<style lang="scss">
-@import 'index.scss';
-</style>
-
-<script lang="js">
-import KioskPanel from '@/components/KioskPanel.vue'
+<script type="js">
+// @ is an alias to /src
+import { mapActions } from 'vuex'
+import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 
 export default {
-  name: 'KioskVideoPanel',
-
-  props: {
-  },
+  name: 'kioskCamera',
 
   components: {
-    KioskPanel
+    KioskLinkPanel
   },
 
   data: () => ({
@@ -92,19 +87,14 @@ export default {
     selectedVideoDeviceId: null,
     isVideoRunning: false,
     isLoading: false,
-    link: '#',
     transformHoverIn: 'transform: scale(1.015); transform-origin: center, center; transition: transform 0.3s ease-in-out;',
-    transformHoverOut: 'transition: transform 0.3s ease-in-out;',
-    mjpgInterval: null,
-    mjpgBackingImage: null,
-    fetchInterval: null,
-    fetchingBackingImage: null
+    transformHoverOut: 'transition: transform 0.3s ease-in-out;'
   }),
 
-  computed: {
+  watch: {
   },
 
-  watch: {
+  computed: {
   },
 
   methods: {
@@ -180,10 +170,14 @@ export default {
     },
     downloadImage () {
       this.$refs.downloadPhoto.click()
-    }
+    },
+    ...mapActions('gui', {
+      kioskMode: 'kioskMode'
+    })
   },
 
   mounted () {
+    this.kioskMode(true)
     this.update()
     this.interval = setInterval(() => this.update(), 1000)
   },
@@ -198,4 +192,8 @@ export default {
 
 <style lang="scss">
 @import 'index.scss';
+
+.noFocus:focus::before {
+  opacity: 0 !important;
+}
 </style>
