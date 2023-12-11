@@ -6,12 +6,9 @@
         route="/app/kioskoverview"
       ></KioskLinkPanel>
 
-      <VideoStream
-        :url="'http://babylon5.unterrainer.info:5000/live/webrtc/api/stream.mp4?src=alex&video=h264,h265&audio=aac,opus,mp3,pcma,pcmu'"
-      ></VideoStream>
-      <VideoStream
-        :url="'http://babylon5.unterrainer.info:5000/live/webrtc/api/stream.mp4?src=stefan&video=h264,h265&audio=aac,opus,mp3,pcma,pcmu'"
-      ></VideoStream>
+      <KioskVideoStreamPanel width="640" height="480"
+        :url="'http://10.10.196.2:5000/live/webrtc/api/stream.mp4?src=birdseye'"
+      ></KioskVideoStreamPanel>
     </v-container>
   </div>
 </template>
@@ -19,14 +16,14 @@
 <script type="js">
 // @ is an alias to /src
 import { mapActions } from 'vuex'
-import VideoStream from '@/components/VideoStream.vue'
+import KioskVideoStreamPanel from '@/components/KioskVideoStreamPanel.vue'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 
 export default {
   name: 'kioskVideo',
 
   components: {
-    VideoStream,
+    KioskVideoStreamPanel,
     KioskLinkPanel
   },
 
