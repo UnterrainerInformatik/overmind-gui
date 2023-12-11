@@ -2,14 +2,19 @@
   <div>
     <v-hover>
       <template v-slot:default="{ hover }">
-        <div>
+        <v-card :color="isLoading ? 'grey darken-3' : 'transparent'" :width="width" :height="height">
           <v-progress-circular
+            :style="'top: 50%; left: 50%; transform: translate(-50%, -50%);'"
             v-if="isLoading"
             indeterminate
-            color="primary"
+            color="grey"
           ></v-progress-circular>
           <video
+            v-bind="$attrs"
+            v-on="$listeners"
             v-show="!isLoading"
+            :width="width"
+            :height="height"
             ref="video"
             :src="url"
             type="video/mp4"
@@ -34,7 +39,7 @@
                 : ' ' + transformHoverOut)
             "
           ></canvas>
-        </div>
+        </v-card>
       </template>
     </v-hover>
     <canvas ref="canvas" hidden></canvas>
@@ -67,6 +72,12 @@ export default {
     photoEnabled: {
       type: Boolean,
       default: true
+    },
+    width: {
+      type: String
+    },
+    height: {
+      type: String
     }
   },
 
@@ -76,11 +87,21 @@ export default {
   data: () => ({
     interval: null,
     isLoading: true,
-    transformHoverIn: 'transform: scale(1.015); transform-origin: center, center; transition: transform 0.3s ease-in-out;',
     transformHoverOut: 'transition: transform 0.3s ease-in-out;'
   }),
 
   computed: {
+    transformHoverIn () {
+      return `transform: scale(${(this.width + 4) / this.width}); transform-origin: center, center; transition: transform 0.3s ease-in-out;`
+    },
+    size () {
+      if (this.width === undefined || this.width === null || this.height === undefined || this.height === null) {
+        return undefined
+      }
+      const width = parseInt(this.width.replace(/\D/g, ''), 10)
+      const height = parseInt(this.height.replace(/\D/g, ''), 10)
+      return Math.min(width, height) + 'px'
+    }
   },
 
   watch: {
