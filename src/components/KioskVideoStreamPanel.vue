@@ -27,10 +27,10 @@ export default {
       default: true
     },
     width: {
-      type: String
+      type: Number
     },
     height: {
-      type: String
+      type: Number
     }
   },
 

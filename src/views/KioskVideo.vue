@@ -6,8 +6,8 @@
         route="/app/kioskoverview"
       ></KioskLinkPanel>
 
-      <KioskVideoStreamPanel width="640" height="480"
-        :url="'http://10.10.196.2:5000/live/webrtc/api/stream.mp4?src=birdseye'"
+      <KioskVideoStreamPanel :width="640" :height="480"
+        :url="'https://frigate.unterrainer.info/live/webrtc/api/stream.mp4?src=birdseye'"
       ></KioskVideoStreamPanel>
     </v-container>
   </div>
