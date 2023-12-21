@@ -7,7 +7,7 @@ const store = {
       servers: {
         uinf: {
           protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'https',
-          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'overmind-server.unterrainer.info',
+          address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'overmindserver.unterrainer.info',
           port: process.env.VUE_APP_PORT ? process.env.VUE_APP_PORT : '443'
           // protocol: process.env.VUE_APP_PROTOCOL ? process.env.VUE_APP_PROTOCOL : 'http', // DEV
           // address: process.env.VUE_APP_ADDRESS ? process.env.VUE_APP_ADDRESS : 'localhost', // DEV
