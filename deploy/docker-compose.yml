@@ -2,6 +2,7 @@ version: "3"
 services:
   web:
     image: gufalcon/overmind-gui:latest
+    container_name: overmind-gui
     restart: always
     ports:
       - "1880:80"
@@ -14,11 +15,10 @@ services:
       - "/app/deploy/cms-gui/config.js:/usr/share/nginx/html/config.js"
     command: ["nginx", "-g", "daemon off;"]
     labels:
-      - "traefik.enable=true"
-      - "traefik.overmind-gui.port=80"
-      - "traefik.overmind-gui.backend=overmind-gui"
-      - "traefik.overmind-gui.frontend.rule=Host:overmind.unterrainer.info"
-      - "traefik.overmind-gui.frontend.entryPoints=http,https"
+      - traefik.enable=true
+      - traefik.http.routers.overmind-gui.rule=Host(`overmind.unterrainer.info`)
+      - traefik.http.routers.overmind-gui.middlewares=std-headers@file,https-redirect@file
+      - traefik.http.services.overmind-gui.loadbalancer.server.port=1880
 
 networks:
   default:
