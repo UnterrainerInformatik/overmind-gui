@@ -7,7 +7,7 @@
       ></KioskLinkPanel>
 
       <KioskVideoStreamPanel :width="640" :height="480"
-        :url="'https://frigate.unterrainer.info/live/webrtc/api/stream.mp4?src=birdseye'"
+        :url="'https://frig.unterrainer.info/live/webrtc/api/stream.mp4?src=birdseye'"
       ></KioskVideoStreamPanel>
     </v-container>
   </div>
