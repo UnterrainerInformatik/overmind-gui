@@ -40,10 +40,19 @@ Webpack, or any other packer for that matter, minifies and packs files while com
 That is somewhat troublesome if you'd like to load configuration AFTER compiling (remember that the build-step is done BEFORE deploying and that it makes no sense to bake the configuration into the image for every deployment, since you'd have to change images...).
 
 # Installation as of 2022-07
-
+This project runs on NodeJS v14.15.0 and we cannot update it.
+So chances are that you already have some newer version of NodeJS installed on your development machine.
+To be able to switch between NodeJS versions you'll have to install a manager like [NVM (Node Version Manager)](https://github.com/coreybutler/nvm-windows).
+Install that and restart all your IDEs, since they hold consoles that were started before you've installed the new program.
+Then you can then enter your installation directory (of this project) and type:
 ```bash
 # Install node v14.15.0
-# download and install from website...
+nvm install 14.15.0
+# Get the list of installed NodeJS versions.
+nvm list
+# Switch the current NodeJS version to a particular one
+nvm use 14
+# When you want to run the other version, you can switch to that any time in a similar way.
 
 # Install npm v8.3.0
 npm install
