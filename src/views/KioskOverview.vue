@@ -343,6 +343,8 @@
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
           <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
           <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="parentsNap"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="parentsOpen"></KioskSwitchPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -408,7 +410,9 @@ export default {
     tv: {},
     snuggling: {},
     bioTrash: {},
-    patioOpened: {}
+    patioOpened: {},
+    parentsNap: {},
+    parentsOpen: {}
   }),
 
   watch: {
@@ -489,6 +493,24 @@ export default {
         description: 'Terrassentüre auf',
         isEnabled: () => {
           return plansService.isPlanEnabled(66)
+        }
+      }
+      this.parentsNap = {
+        applianceId: 183,
+        sensorPath: 'switch1',
+        eventPath: 'off.click',
+        description: 'Eltern-SZ Nickerchen',
+        isEnabled: () => {
+          return plansService.isPlanEnabled(100)
+        }
+      }
+      this.parentsOpen = {
+        applianceId: 183,
+        sensorPath: 'switch1',
+        eventPath: 'on.click',
+        description: 'Eltern-SZ rauf',
+        isEnabled: () => {
+          return plansService.isPlanEnabled(101)
         }
       }
     },
