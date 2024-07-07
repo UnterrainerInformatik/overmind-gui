@@ -3,107 +3,31 @@
     v-if="weather"
     borderColor="secondary"
     bgColor="black"
-    min-width="230"
-    max-width="230"
+    min-width="70"
+    max-width="70"
     :renderTitle="false"
   >
     <template>
-      <!--
-        <v-row><v-col>
-        <div v-for="(color, i) in overmindUtils.tempColors" :key="i" :class="color">{{overmindUtils.tempDescriptions[i]}}<br>{{color}}</div>
-        </v-col></v-row>
-      -->
       <v-card
         class="black ma-n3 pa-1"
-        min-width="220"
-        max-width="220"
+        min-width="60"
+        max-width="60"
         height="140"
       >
         <v-card-text class="pa-1">
           <v-row class="ma-0 mt-0 mb-5 pa-0 align-center">
             <v-col
-              class="middle ma-0 pa-0 text-center"
+              class="small ma-0 pa-0 text-center"
               style="font-weight: bold"
             >
               <v-avatar
+                class="mt-5 mb-5"
                 size="36"
-                :color="overmindUtils.getTempColorFor(weather.temperature)"
+                color="blue"
               >
-                <v-icon color="black">thermostat</v-icon>
+                <v-icon color="black">water_drop</v-icon>
               </v-avatar>
-              {{ weather.temperature }}{{ weather.temperatureUnit }}
-            </v-col>
-            <v-col class="small ma-0 pa-0 text-center">
-              <v-row class="ma-0 pa-0" cols="12"
-                ><v-col class="ma-0 mr-7 pa-0" cols="1">
-                  <v-avatar
-                    size="36"
-                    :color="
-                      overmindUtils.getTempColorFor(
-                        calculateFeltTemperature(
-                          weather.temperature,
-                          weather.wind,
-                          weather.humidity
-                        ).toFixed(1)
-                      )
-                    "
-                  >
-                    <v-icon color="black">psychology</v-icon>
-                  </v-avatar>
-                </v-col>
-                <v-col class="ma-0 ml-2 mt-1 pa-0 text-left">
-                  <v-row class="ma-0 mt-1 mb-1 pa-0">
-                    <v-col class="ma-0 pa-0">
-                      {{
-                        calculateFeltTemperature(
-                          weather.temperature,
-                          weather.wind,
-                          weather.humidity
-                        ).toFixed(1)
-                      }}{{ weather.temperatureUnit }}
-                    </v-col></v-row
-                  >
-                  <v-row class="ma-0 pa-0"
-                    ><v-col class="ma-0 pa-0">
-                      {{
-                        calculateTemperatureDescription(
-                          calculateFeltTemperature(
-                            weather.temperature,
-                            weather.wind,
-                            weather.humidity
-                          )
-                        )
-                      }}
-                    </v-col></v-row
-                  >
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-          <v-row class="ma-0 my-3 pa-0 align-center">
-            <v-col class="ma-0 pa-0 text-center">
-              <div class="small ma-0 pa-0">
-                <v-icon color="white">wb_sunny</v-icon>
-                {{ weather.sun }}{{ weather.sunUnit }} &nbsp;&nbsp;<v-icon
-                  color="white"
-                  >water_drop</v-icon
-                >
-                {{ weather.rain }}{{ weather.rainUnit }} &nbsp;&nbsp;<v-icon
-                  color="white"
-                  >air</v-icon
-                >
-                {{ weather.wind }}{{ weather.windUnit }}
-              </div>
-            </v-col>
-          </v-row>
-          <v-row class="ma-0 my-6 mt-7 mb-n2 pa-0 align-center">
-            <v-col class="ma-0 pa-0 text-center">
-              <div class="small ma-0 pa-0">
-                <v-icon x-small color="white">wb_sunny</v-icon>
-                &nbsp;&nbsp;{{ sunRise }} - {{ noon }} -
-                {{ sunSet }}&nbsp;&nbsp;
-                <v-icon x-small color="white">brightness_2</v-icon>
-              </div>
+              124,2536m³
             </v-col>
           </v-row>
         </v-card-text>
@@ -125,7 +49,7 @@ import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetSe
 import { Debouncer } from '@/utils/debouncer'
 
 export default {
-  name: 'KioskZamgPanel',
+  name: 'KioskWatermeterPanel',
 
   props: {
   },
