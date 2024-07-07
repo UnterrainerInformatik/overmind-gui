@@ -9,7 +9,7 @@
     </template>
     <template>
       <v-row class="ma-0 mb-2 pa-0">
-        <v-col class="ma-0 mt-2 pa-0 text-h4 text-center">
+        <v-col class="ma-0 mt-2 pa-0 text-h5 text-center">
           {{ dateUtils.dateToTime(date, $i18n.locale) }}
         </v-col>
       </v-row>
@@ -74,7 +74,7 @@ export default {
 @import 'index.scss';
 
 .heading {
-  font-size: 15px;
+  font-size: 16px;
   line-height: 20px;
 }
 </style>

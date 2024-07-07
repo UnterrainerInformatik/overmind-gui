@@ -331,6 +331,8 @@
               ]
             ]"
           ></KioskPowerPanel>
+          <KioskWatermeterPanel>
+          </KioskWatermeterPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -388,6 +390,7 @@ import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
 import KioskPowerPanel from '@/components/KioskPowerPanel.vue'
+import KioskWatermeterPanel from '@/components/KioskWatermeterPanel.vue'
 import { singleton as plansService } from '@/utils/webservices/plansService'
 
 export default {
@@ -398,6 +401,7 @@ export default {
     KioskClockPanel,
     KioskZamgPanel,
     KioskPowerPanel,
+    KioskWatermeterPanel,
     KioskWasteDisposalPanel,
     KioskSwitchPanel
   },

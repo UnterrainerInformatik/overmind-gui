@@ -3,7 +3,7 @@
     v-if="wasteDisposalJson"
     borderColor="secondary"
     bgColor="black"
-    min-width="140px"
+    min-width="125px"
     :renderTitle="false"
   >
     <template>
