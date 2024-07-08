@@ -20,28 +20,28 @@
         height="140"
       >
         <v-card-text class="pa-1">
-          <v-row class="ma-0 mt-0 mb-5 pa-0 align-center">
+          <v-row class="ma-0 mt-n1 mb-2 pa-0 justify-center" align="start">
             <v-col
-              class="middle ma-0 pa-0 text-center"
+              class="middle ma-0 pa-0 text-center" align="start"
               style="font-weight: bold"
             >
               <v-avatar
                 size="36"
-                :color="overmindUtils.getTempColorFor(weather.temperature)"
+                :color="overmindUtils.getTempColorFor(tempOutside)"
               >
                 <v-icon color="black">thermostat</v-icon>
               </v-avatar>
-              {{ weather.temperature }}{{ weather.temperatureUnit }}
+              <br />{{ tempOutside }}°
             </v-col>
-            <v-col class="small ma-0 pa-0 text-center">
-              <v-row class="ma-0 pa-0" cols="12"
-                ><v-col class="ma-0 mr-7 pa-0" cols="1">
+            <v-col class="small ma-0 pa-0 text-center"  align="start">
+              <v-row class="ma-0 pa-0 justify-center" align="start"
+                ><v-col class="middle ma-0 pa-0 text-center" align="start">
                   <v-avatar
                     size="36"
                     :color="
                       overmindUtils.getTempColorFor(
                         calculateFeltTemperature(
-                          weather.temperature,
+                          tempOutside,
                           weather.wind,
                           weather.humidity
                         ).toFixed(1)
@@ -51,24 +51,24 @@
                     <v-icon color="black">psychology</v-icon>
                   </v-avatar>
                 </v-col>
-                <v-col class="ma-0 ml-2 mt-1 pa-0 text-left">
-                  <v-row class="ma-0 mt-1 mb-1 pa-0">
-                    <v-col class="ma-0 pa-0">
+                <v-col class="ma-0 pa-0 text-center" align="start">
+                  <v-row class="ma-0 pa-0 justify-center" align="start">
+                    <v-col class="middle ma-0 pa-0 text-center" align="start">
                       {{
                         calculateFeltTemperature(
-                          weather.temperature,
+                          tempOutside,
                           weather.wind,
                           weather.humidity
                         ).toFixed(1)
                       }}{{ weather.temperatureUnit }}
                     </v-col></v-row
                   >
-                  <v-row class="ma-0 pa-0"
-                    ><v-col class="ma-0 pa-0">
+                  <v-row class="ma-0 pa-0 justify-center" align="start"
+                    ><v-col class="ma-0 pa-0 text-center" align="start" style="font-size: 12px !important">
                       {{
                         calculateTemperatureDescription(
                           calculateFeltTemperature(
-                            weather.temperature,
+                            tempOutside,
                             weather.wind,
                             weather.humidity
                           )
@@ -79,16 +79,28 @@
                 </v-col>
               </v-row>
             </v-col>
+            <v-col
+              class="middle ma-0 pa-0 text-center" justify="start"
+              style="font-weight: bold"
+            >
+              <v-avatar
+                size="36"
+                :color="overmindUtils.getTempColorFor(tempInside)"
+              >
+                <v-icon color="black">home</v-icon>
+              </v-avatar>
+              <br />{{ tempInside }}°
+            </v-col>
           </v-row>
-          <v-row class="ma-0 my-3 pa-0 align-center">
+          <v-row class="ma-0 mt-6 mb-4 pa-0 justify-center">
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0">
-                <v-icon color="white">wb_sunny</v-icon>
-                {{ weather.sun }}{{ weather.sunUnit }} &nbsp;&nbsp;<v-icon
+                <v-icon size="16" color="white">wb_sunny</v-icon>
+                {{ weather.sun }}{{ weather.sunUnit }} &nbsp;<v-icon size="16"
                   color="white"
                   >water_drop</v-icon
                 >
-                {{ weather.rain }}{{ weather.rainUnit }} &nbsp;&nbsp;<v-icon
+                {{ weather.rain }}{{ weather.rainUnit }} &nbsp;<v-icon size="16"
                   color="white"
                   >air</v-icon
                 >
@@ -96,12 +108,12 @@
               </div>
             </v-col>
           </v-row>
-          <v-row class="ma-0 my-6 mt-7 mb-n2 pa-0 align-center">
+          <v-row class="ma-0 pa-0 justify-center">
             <v-col class="ma-0 pa-0 text-center">
-              <div class="small ma-0 pa-0">
+              <div class="small ma-0 pa-0 height-auto">
                 <v-icon x-small color="white">wb_sunny</v-icon>
-                &nbsp;&nbsp;{{ sunRise }} - {{ noon }} -
-                {{ sunSet }}&nbsp;&nbsp;
+                &nbsp;{{ sunRise }} - {{ noon }} -
+                {{ sunSet }}&nbsp;
                 <v-icon x-small color="white">brightness_2</v-icon>
               </div>
             </v-col>
@@ -122,6 +134,7 @@ import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { singleton as localizedDataService } from '@/utils/webservices/localizedDataService'
 import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetService'
+import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { Debouncer } from '@/utils/debouncer'
 
 export default {
@@ -139,6 +152,8 @@ export default {
     overmindUtils,
     dateUtils,
     weather: null,
+    tempOutside: null,
+    tempInside: null,
     sunRise: null,
     sunSet: null,
     noon: null,
@@ -168,6 +183,11 @@ export default {
       return dateUtils.dateToShortTime(d, this.$i18n.locale)
     },
     async update () {
+      const app = await appliancesService.getById(178)
+      const state = JSON.parse(app.state)
+      console.log(state)
+      this.tempOutside = parseFloat(state.tempOutside).toFixed(1).replace(/\.0$/, '')
+      this.tempInside = parseFloat(state.tempInsideCurrent).toFixed(1).replace(/\.0$/, '')
       await localizedDataService.getByIdentifier('zamg').then((response) => {
         if (response == null) {
           return
@@ -253,12 +273,12 @@ export default {
 @import 'index.scss';
 
 .middle {
-  font-size: 15px;
+  font-size: 15px !important;
   font-weight: normal;
   line-height: 20px;
 }
 .small {
-  font-size: 10px;
+  font-size: 14px !important;
   font-weight: normal;
   line-height: 10px;
 }

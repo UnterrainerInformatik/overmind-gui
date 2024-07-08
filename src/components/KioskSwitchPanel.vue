@@ -17,7 +17,7 @@
       </v-avatar>
     </template>
     <template>
-      <span class="text-body-1">
+      <span>
         {{ item.description }}
       </span>
     </template>

@@ -7,7 +7,7 @@
     :renderTitle="false"
   >
     <template>
-      <v-container class="ma-0 pa-0 d-fluid" v-if="data">
+      <v-container class="ma-0 mt-3 pa-0 d-fluid" v-if="data">
         <v-row v-for="(item, i) in filteredData" :key="i">
           <v-col class="ma-1 pa-0" v-if="item.show">
             <v-card
@@ -21,8 +21,9 @@
                 "
                 ><v-row class="ma-0 pa-0"
                   ><v-col
+                    style="font-size: 12px !important; line-height: 10px;"
                     :class="
-                      'ma-0 ml-n2 pa-0 small ' +
+                      'ma-0 ml-n2 pa-0 ' +
                       (item.warn ? 'black--text' : '')
                     "
                     >{{ $t('page.kiosk.wasteBin.' + item.name) }}</v-col
@@ -33,7 +34,7 @@
                   </v-col>
                   <v-col
                     :class="
-                      'ma-0 mr-n3 pa-0 ' + (item.warn ? 'black--text' : '')
+                      'ma-0 mr-n2 pa-0 middle ' + (item.warn ? 'black--text' : '')
                     "
                     >{{ item.date.substring(0, 5) }}</v-col
                   ></v-row
@@ -159,12 +160,12 @@ export default {
 @import 'index.scss';
 
 .middle {
-  font-size: 15px;
+  font-size: 16px !important;
   font-weight: normal;
-  line-height: 20px;
+  line-height: 10px;
 }
 .small {
-  font-size: 10px;
+  font-size: 10px !important;
   font-weight: normal;
   line-height: 10px;
 }

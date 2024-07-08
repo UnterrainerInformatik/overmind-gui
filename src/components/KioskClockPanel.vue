@@ -2,14 +2,14 @@
   <KioskPanel borderColor="secondary" bgColor="black">
     <template v-slot:title>
       <v-row>
-        <v-col class="ma-0 pa-0 text-center text-button" style="font-weight: bold;">
+        <v-col class="ma-0 pa-0 text-center text-button" style="font-weight: bold; font-size: 18px !important;">
           {{ dateUtils.dateToDateLong(date, $i18n.locale).split(',')[0] }}<br />
         </v-col>
       </v-row>
     </template>
     <template>
       <v-row class="ma-0 mb-2 pa-0">
-        <v-col class="ma-0 mt-2 pa-0 text-h5 text-center">
+        <v-col class="ma-0 mt-2 pa-0 text-h5 text-center" style="font-size: 26px !important;">
           {{ dateUtils.dateToTime(date, $i18n.locale) }}
         </v-col>
       </v-row>
@@ -74,7 +74,7 @@ export default {
 @import 'index.scss';
 
 .heading {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 20px;
 }
 </style>

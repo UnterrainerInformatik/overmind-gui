@@ -13,14 +13,14 @@
       :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)"
     >
       <v-card-text
-        :class="`${
+        :class="`text-body-1 ${
           $vuetify.theme.dark ? 'grey--text' : 'black--text'
         } fill-height ${pa ? 'pa-' + pa : ''}`"
       >
-        <div v-if="renderTitle" class="mb-4">
+        <div v-if="renderTitle" class="mb-4 normal-text">
           <slot name="title" v-bind:enabled="enabled"></slot>
         </div>
-        <div><slot v-bind:enabled="enabled"></slot></div
+        <div class="normal-text"><slot v-bind:enabled="enabled"></slot></div
       ></v-card-text>
     </v-card>
   </v-card>
@@ -101,6 +101,11 @@ export default {
 
 <style lang="scss">
 @import 'index.scss';
+
+.normal-text {
+  font-size: 18px !important;
+  line-height: 18px !important;
+}
 
 .noFocus:focus::before {
   opacity: 0 !important;

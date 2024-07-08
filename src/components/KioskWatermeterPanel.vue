@@ -17,17 +17,19 @@
         <v-card-text class="pa-1">
           <v-row class="ma-0 mt-0 mb-5 pa-0 align-center">
             <v-col
-              class="small ma-0 pa-0 text-center"
+              class="middle ma-0 pa-0 text-center"
               style="font-weight: bold"
             >
               <v-avatar
-                class="mt-5 mb-5"
+                class="mt-3 mb-5"
                 size="36"
                 :color="error ? 'red' : 'blue'"
               >
                 <v-icon color="black">water_drop</v-icon>
               </v-avatar>
-              {{ value }}m³
+              <br />
+              {{ getCubicMeters(value) }} m³<br />
+              {{ getLiters(value) }} l
             </v-col>
           </v-row>
         </v-card-text>
@@ -74,6 +76,12 @@ export default {
       const state = JSON.parse(app.state)
       this.value = state.value
       this.error = state.error.toLowerCase() !== 'no error'
+    },
+    getCubicMeters (cm) {
+      return Math.floor(cm)
+    },
+    getLiters (cm) {
+      return ((cm * 1000) % 1000).toFixed(1)
     }
   },
 
@@ -94,7 +102,7 @@ export default {
 @import 'index.scss';
 
 .middle {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: normal;
   line-height: 20px;
 }
