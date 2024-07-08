@@ -15,9 +15,7 @@
       </v-avatar>
     </template>
     <template>
-      <span class="text-body-1">
-        {{ text }}
-      </span>
+      {{ text }}
     </template>
   </KioskPanel>
 </template>
