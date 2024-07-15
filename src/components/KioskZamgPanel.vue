@@ -26,29 +26,37 @@
               align="start"
               style="font-weight: bold"
             >
-              <v-avatar
-                size="66"
+              <v-card
+                class="rounded-r-0"
+                elevation="0"
+                min-height="70px"
+                max-height="70px"
                 :color="overmindUtils.getTempColorFor(tempOutside)"
               >
-                <div>
-                  <v-row>
-                    <v-col class="ma-0 pa-0">
-                      <v-icon color="black">thermostat</v-icon>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
-                      {{ tempOutside }}°
-                    </v-col>
-                  </v-row>
-                </div>
-              </v-avatar>
+                <v-card-text>
+                  <div>
+                    <v-row>
+                      <v-col class="ma-0 pa-0">
+                        <v-icon color="black">thermostat</v-icon>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
+                        {{ tempOutside }}°
+                      </v-col>
+                    </v-row>
+                  </div>
+                </v-card-text>
+              </v-card>
             </v-col>
             <v-col class="small ma-0 pa-0 text-center" align="start">
               <v-row class="ma-0 pa-0 justify-center" align="start"
                 ><v-col class="middle ma-0 pa-0 text-center" align="start">
-                  <v-avatar
-                    size="66"
+                  <v-card
+                    class="rounded-0"
+                    elevation="0"
+                    min-height="70px"
+                    max-height="70px"
                     :color="
                       overmindUtils.getTempColorFor(
                         calculateFeltTemperature(
@@ -59,50 +67,57 @@
                       )
                     "
                   >
-                    <div>
-                      <v-row>
-                        <v-col class="ma-0 pa-0">
-                          <v-icon color="black">psychology</v-icon>
-                        </v-col>
-                      </v-row>
-                      <v-row>
-                        <v-col class="ma-0 pa-0 text-center" align="start">
-                          <v-row class="ma-0 pa-0 justify-center" align="start">
-                            <v-col
-                              class="middle ma-0 pa-0 text-center black--text"
+                    <v-card-text>
+                      <div>
+                        <v-row>
+                          <v-col class="ma-0 pa-0">
+                            <v-icon color="black">psychology</v-icon>
+                          </v-col>
+                        </v-row>
+                        <v-row>
+                          <v-col class="ma-0 mt-1 pa-0 text-center" align="start">
+                            <v-row
+                              class="ma-0 pa-0 justify-center"
                               align="start"
-                              style="font-size: 12px !important"
                             >
-                            {{
-                                calculateTemperatureDescription(
+                              <v-col
+                                class="middle ma-0 pa-0 text-center black--text"
+                                align="start"
+                                style="font-size: 14px !important"
+                              >
+                              {{
                                   calculateFeltTemperature(
                                     tempOutside,
                                     weather.wind,
                                     weather.humidity
-                                  )
-                                )
-                              }}
-                            </v-col></v-row
-                          >
-                          <v-row class="ma-0 pa-0 justify-center" align="start"
-                            ><v-col
-                              class="ma-0 mt-n1 pa-0 text-center black--text"
-                              align="start"
-                              style="font-size: 10px !important"
+                                  ).toFixed(1)
+                                }}{{ weather.temperatureUnit }}
+                              </v-col></v-row
                             >
-                            {{
-                                calculateFeltTemperature(
-                                  tempOutside,
-                                  weather.wind,
-                                  weather.humidity
-                                ).toFixed(1)
-                              }}{{ weather.temperatureUnit }}
-                            </v-col></v-row
-                          >
-                        </v-col>
-                      </v-row>
-                    </div>
-                  </v-avatar>
+                            <v-row
+                              class="ma-0 pa-0 justify-center"
+                              align="start"
+                              ><v-col
+                                class="ma-0 mt-n1 pa-0 text-center black--text"
+                                align="start"
+                                style="font-size: 12px !important"
+                              >
+                              {{
+                                  calculateTemperatureDescription(
+                                    calculateFeltTemperature(
+                                      tempOutside,
+                                      weather.wind,
+                                      weather.humidity
+                                    )
+                                  )
+                                }}
+                              </v-col></v-row
+                            >
+                          </v-col>
+                        </v-row>
+                      </div>
+                    </v-card-text>
+                  </v-card>
                 </v-col>
               </v-row>
             </v-col>
@@ -111,23 +126,28 @@
               justify="start"
               style="font-weight: bold"
             >
-              <v-avatar
-                size="66"
+              <v-card
+                class="rounded-l-0"
+                elevation="0"
+                min-height="70px"
+                max-height="70px"
                 :color="overmindUtils.getTempColorFor(tempInside)"
               >
-                <div>
-                  <v-row>
-                    <v-col class="ma-0 pa-0">
-                      <v-icon color="black">home</v-icon>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
-                      {{ tempInside }}°
-                    </v-col>
-                  </v-row>
-                </div>
-              </v-avatar>
+                <v-card-text>
+                  <div>
+                    <v-row>
+                      <v-col class="ma-0 pa-0">
+                        <v-icon color="black">home</v-icon>
+                      </v-col>
+                    </v-row>
+                    <v-row>
+                      <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
+                        {{ tempInside }}°
+                      </v-col>
+                    </v-row>
+                  </div>
+                </v-card-text>
+              </v-card>
             </v-col>
           </v-row>
           <v-row class="ma-0 mt-6 mb-4 pa-0 justify-center">
