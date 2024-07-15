@@ -9,24 +9,28 @@
   >
     <template>
       <v-card
-        class="black ma-n3 pa-1"
+        class="black ma-n3 pa-0"
         min-width="80"
         max-width="80"
         height="140"
       >
-        <v-card-text class="pa-1">
+        <v-card-text class="ma-0 pa-0">
           <v-row class="ma-0 mt-0 mb-5 pa-0 align-center">
             <v-col
               class="middle ma-0 pa-0 text-center"
               style="font-weight: bold"
             >
-              <v-avatar
-                class="mt-3 mb-5"
-                size="36"
-                :color="error ? 'red' : 'blue'"
-              >
-                <v-icon color="black">water_drop</v-icon>
-              </v-avatar>
+              <v-card outlined class="ma-0 pa-0" :color="error ? 'red' : 'blue darken-4'">
+                <v-card-text class="ma-0 pa-0">
+                  <v-card class="ma-0 pa-0" size="36" color="black">
+                    <v-card-text>
+                      <v-icon :color="error ? 'red' : 'blue darken-4'"
+                        >water_drop</v-icon
+                      >
+                    </v-card-text>
+                  </v-card>
+                </v-card-text>
+              </v-card>
               <br />
               {{ getCubicMeters(value) }} m³<br />
               {{ getLiters(value) }} l
