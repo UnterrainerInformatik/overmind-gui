@@ -41,7 +41,10 @@
                       </v-col>
                     </v-row>
                     <v-row>
-                      <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
+                      <v-col
+                        class="ma-0 mt-1 mx-auto pa-0 black--text"
+                        style="font-size: 20px !important"
+                      >
                         {{ tempOutside }}°
                       </v-col>
                     </v-row>
@@ -75,7 +78,10 @@
                           </v-col>
                         </v-row>
                         <v-row>
-                          <v-col class="ma-0 mt-1 pa-0 text-center" align="start">
+                          <v-col
+                            class="ma-0 mt-1 pa-0 text-center"
+                            align="start"
+                          >
                             <v-row
                               class="ma-0 pa-0 justify-center"
                               align="start"
@@ -83,7 +89,7 @@
                               <v-col
                                 class="middle ma-0 pa-0 text-center black--text"
                                 align="start"
-                                style="font-size: 14px !important"
+                                style="font-size: 20px !important"
                               >
                               {{
                                   calculateFeltTemperature(
@@ -102,7 +108,7 @@
                                 align="start"
                                 style="font-size: 12px !important"
                               >
-                              {{
+                                {{
                                   calculateTemperatureDescription(
                                     calculateFeltTemperature(
                                       tempOutside,
@@ -141,7 +147,10 @@
                       </v-col>
                     </v-row>
                     <v-row>
-                      <v-col class="ma-0 mt-1 mx-auto pa-0 black--text">
+                      <v-col
+                        class="ma-0 mt-1 mx-auto pa-0 black--text"
+                        style="font-size: 20px !important"
+                      >
                         {{ tempInside }}°
                       </v-col>
                     </v-row>
