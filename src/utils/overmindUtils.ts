@@ -4,8 +4,8 @@ class OvermindUtils {
   private static instanceField: OvermindUtils
 
   // The next variable is just here to see the colors live...
-  public tempRawColors = ['rgba(0, 0, 200, 0.6)', 'rgba(255, 255, 255, 0.6)', 'rgba(144, 202, 249, 0.6)', 'rgba(38, 166, 154, 0.6)', 'rgba(0, 255, 0, 0.6)', 'rgba(212, 225, 70, 0.6)', 'rgba(255, 100, 50, 0.6)', 'rgba(255, 255, 255, 0.6)', 'rgba(200, 0, 0, 0.6)']
-  public tempRawColorsLerpable = [[0, 0, 200, 0.6], [255, 255, 255, 0.6], [144, 202, 249, 0.6], [38, 166, 154, 0.6], [0, 255, 0, 0.6], [255, 225, 70, 0.6], [255, 100, 50, 0.6], [255, 255, 255, 0.6], [200, 0, 0, 0.6]]
+  public tempRawColors = ['rgba(0, 0, 200, 0.6)', 'rgba(255, 255, 255, 0.6)', 'rgba(144, 202, 249, 0.6)', 'rgba(38, 166, 154, 0.6)', 'rgba(0, 255, 0, 0.6)', 'rgba(212, 225, 70, 0.6)', 'rgba(255, 100, 50, 0.6)', 'rgba(200, 0, 0, 0.6)', 'rgba(255, 255, 255, 0.6)']
+  public tempRawColorsLerpable = [[0, 0, 200, 0.6], [255, 255, 255, 0.6], [144, 202, 249, 0.6], [38, 166, 154, 0.6], [0, 255, 0, 0.6], [255, 225, 70, 0.6], [255, 100, 50, 0.6], [200, 0, 0, 0.6], [255, 255, 255, 0.6]]
   // Boundaries are oriented like in between the colors:
   // c1 --<b1>-- c2 --<b2>-- c3
   private tempBoundaries = [-10, 0, 10, 22, 24, 26, 30, 36]
