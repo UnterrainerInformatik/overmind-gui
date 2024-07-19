@@ -31,7 +31,11 @@
                 elevation="0"
                 min-height="70px"
                 max-height="70px"
-                :color="overmindUtils.getTempColorFor(tempOutside)"
+                :color="
+                  overmindUtils.getTempColorFor(
+                    overmindUtils.formatNumber(tempOutside, 1, true)
+                  )
+                "
               >
                 <v-card-text>
                   <div>
@@ -45,7 +49,7 @@
                         class="ma-0 mt-1 mx-auto pa-0 black--text"
                         style="font-size: 20px !important"
                       >
-                        {{ tempOutside }}°
+                        {{ overmindUtils.formatNumber(tempOutside, 1, true) }}°
                       </v-col>
                     </v-row>
                   </div>
@@ -91,12 +95,16 @@
                                 align="start"
                                 style="font-size: 20px !important"
                               >
-                              {{
-                                  calculateFeltTemperature(
-                                    tempOutside,
-                                    weather.wind,
-                                    weather.humidity
-                                  ).toFixed(1)
+                                {{
+                                  overmindUtils.formatNumber(
+                                    calculateFeltTemperature(
+                                      tempOutside,
+                                      weather.wind,
+                                      weather.humidity
+                                    ),
+                                    1,
+                                    true
+                                  )
                                 }}{{ weather.temperatureUnit }}
                               </v-col></v-row
                             >
@@ -110,10 +118,14 @@
                               >
                                 {{
                                   calculateTemperatureDescription(
-                                    calculateFeltTemperature(
-                                      tempOutside,
-                                      weather.wind,
-                                      weather.humidity
+                                    overmindUtils.formatNumber(
+                                      calculateFeltTemperature(
+                                        tempOutside,
+                                        weather.wind,
+                                        weather.humidity
+                                      ),
+                                      1,
+                                      true
                                     )
                                   )
                                 }}
@@ -137,7 +149,11 @@
                 elevation="0"
                 min-height="70px"
                 max-height="70px"
-                :color="overmindUtils.getTempColorFor(tempInside)"
+                :color="
+                  overmindUtils.getTempColorFor(
+                    overmindUtils.formatNumber(tempInside, 1, true)
+                  )
+                "
               >
                 <v-card-text>
                   <div>
@@ -151,7 +167,7 @@
                         class="ma-0 mt-1 mx-auto pa-0 black--text"
                         style="font-size: 20px !important"
                       >
-                        {{ tempInside }}°
+                        {{ overmindUtils.formatNumber(tempInside, 1, true) }}°
                       </v-col>
                     </v-row>
                   </div>
@@ -253,7 +269,6 @@ export default {
     async update () {
       const app = await appliancesService.getById(178)
       const state = JSON.parse(app.state)
-      console.log(state)
       this.tempOutside = parseFloat(state.tempOutside).toFixed(1).replace(/\.0$/, '')
       this.tempInside = parseFloat(state.tempInsideCurrent).toFixed(1).replace(/\.0$/, '')
       await localizedDataService.getByIdentifier('zamg').then((response) => {
