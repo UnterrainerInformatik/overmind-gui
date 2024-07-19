@@ -38,6 +38,7 @@ class OvermindUtils {
 
   public getTempColorFor (temperature) {
     const temp = Number.parseFloat(temperature)
+    console.log(temp)
     // console.log({ temp })
     const n = this.calculateTemperatureIndex(temp)
     let i = n - 1
@@ -61,6 +62,12 @@ class OvermindUtils {
       Math.round(jsUtils.lerp(from[2], to[2], p)),
       jsUtils.lerp(from[3], to[3], p)
     ]
+  }
+
+  public formatNumber (number, precision = 2, omitZero = false) {
+    const n = Number.parseFloat(number)
+    const formatted = omitZero && Number.isInteger(n) ? n : parseFloat(n.toFixed(precision))
+    return formatted
   }
 
   public colorArrayToRgba (c) {
