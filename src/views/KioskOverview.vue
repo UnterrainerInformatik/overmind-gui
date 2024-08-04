@@ -342,6 +342,7 @@
           <KioskSwitchPanel :item="shuttersFirstFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="vacation"></KioskSwitchPanel>
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
           <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
           <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
@@ -416,7 +417,8 @@ export default {
     bioTrash: {},
     patioOpened: {},
     parentsNap: {},
-    parentsOpen: {}
+    parentsOpen: {},
+    vacation: {}
   }),
 
   watch: {
@@ -515,6 +517,15 @@ export default {
         description: 'Eltern-SZ rauf',
         isEnabled: () => {
           return plansService.isPlanEnabled(101)
+        }
+      }
+      this.vacation = {
+        applianceId: 183,
+        sensorPath: 'switch2',
+        eventPath: 'on.click',
+        description: 'URLAUB',
+        isEnabled: () => {
+          return plansService.isPlanEnabled(102)
         }
       }
     },
