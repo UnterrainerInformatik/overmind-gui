@@ -14,7 +14,7 @@
  * This way you never lose the last function call (because of eventual consistency and stuff).
  */
 
-interface DebouncerOptions extends Partial<Debouncer> {
+interface DebouncerOptions {
   startImmediately?: boolean;
   enqueueing?: Function;
   ending?: Function;
@@ -73,10 +73,29 @@ export class Debouncer {
     return this
   }
 
+  public async cancel () {
+    this.lastFunc = null
+    if (this.timer) {
+      this.timer = null
+      if (this.ending) {
+        await this.ending()
+      }
+    }
+  }
+
+  public async force (func: Function) {
+    await this.cancel()
+    await func()
+  }
+
   private setupTimer (value?: number) {
+    let v = value
+    if (v === undefined || value === null) {
+      v = this.timeout
+    }
     this.timer = setTimeout(async () => {
       await this.cleanupRun()
-    }, value ?? this.timeout)
+    }, v)
   }
 
   private async cleanupRun () {
@@ -86,11 +105,14 @@ export class Debouncer {
     }
     if (this.isFunctionRunning) {
       this.setupTimer(10)
+      return
     }
     const func = this.lastFunc
     this.lastFunc = null
     this.timer = null
+    this.isFunctionRunning = true
     await func()
+    this.isFunctionRunning = false
     if (this.lastFunc) {
       // There is another function waiting to be debounced.
       this.setupTimer()
