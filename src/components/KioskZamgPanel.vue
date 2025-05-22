@@ -179,17 +179,17 @@
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0">
                 <v-icon size="16" color="white">wb_sunny</v-icon>
-                {{ weather.sun }}{{ weather.sunUnit }} &nbsp;<v-icon
+                {{ overmindUtils.formatNumber(weather.sun, 0, true) }}{{ weather.sunUnit }} &nbsp;<v-icon
                   size="16"
                   color="white"
                   >water_drop</v-icon
                 >
-                {{ weather.rain }}{{ weather.rainUnit }} &nbsp;<v-icon
+                {{ overmindUtils.formatNumber(weather.rain, 1, true) }}{{ weather.rainUnit }} &nbsp;<v-icon
                   size="16"
                   color="white"
                   >air</v-icon
                 >
-                {{ weather.wind }}{{ weather.windUnit }}
+                {{ overmindUtils.formatNumber(weather.wind, 1, true) }}{{ weather.windUnit }}
               </div>
             </v-col>
           </v-row>
