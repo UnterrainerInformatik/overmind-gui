@@ -4,6 +4,7 @@ COPY ./package.json ./
 RUN node --version && npm --version
 
 COPY . .
+RUN npm install
 RUN npm run build
 
 FROM nginx:stable-alpine
