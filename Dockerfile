@@ -1,10 +1,10 @@
-FROM node:12-alpine as builder
+FROM node:12-alpine AS builder
 WORKDIR '/app'
 COPY ./package.json ./
 RUN node --version && npm --version
 
 COPY . .
-RUN npm run build
+RUN npm run install
 
 FROM nginx:stable-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
