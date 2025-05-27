@@ -1,10 +1,9 @@
-FROM node:12-alpine AS builder
+FROM node:20.11.1-alpine AS builder
 WORKDIR '/app'
 COPY ./package.json ./
 RUN node --version && npm --version
 
 COPY . .
-RUN npm install
 RUN npm run build
 
 FROM nginx:stable-alpine
