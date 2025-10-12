@@ -80,11 +80,6 @@ export default {
         iconPos: [790, 126]
       },
       {
-        title: '1st-living-patio-right',
-        appId: 0,
-        iconPos: [582, 282]
-      },
-      {
         title: '2nd-bath-sink-left-upper',
         appId: 0,
         iconPos: [1118, 125]
