@@ -340,6 +340,7 @@
           <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersFirstFloor"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="shuttersFirstFloorDown"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
           <KioskSwitchPanel :item="vacation"></KioskSwitchPanel>
@@ -412,6 +413,7 @@ export default {
     allAsleepItem: {},
     shuttersGroundFloor: {},
     shuttersFirstFloor: {},
+    shuttersFirstFloorDown: {},
     tv: {},
     snuggling: {},
     bioTrash: {},
@@ -451,7 +453,7 @@ export default {
         applianceId: 73,
         sensorPath: 'switch2',
         eventPath: 'off.click',
-        description: 'Rollos Erdgeschoß runter',
+        description: 'Rollos<br><b>Erdgeschoß</b><br>runter',
         isEnabled: () => {
           return plansService.isPlanEnabled(64)
         }
@@ -460,9 +462,18 @@ export default {
         applianceId: 72,
         sensorPath: 'switch1',
         eventPath: 'on.click',
-        description: 'Rollos 1.Stock rauf',
+        description: 'Rollos<br><b>1.Stock</b><br>rauf',
         isEnabled: () => {
           return plansService.isPlanEnabled(86)
+        }
+      }
+      this.shuttersFirstFloorDown = {
+        applianceId: 183,
+        sensorPath: 'switch2',
+        eventPath: 'off.click',
+        description: 'Rollos<br><b>1.Stock</b><br>runter',
+        isEnabled: () => {
+          return plansService.isPlanEnabled(114)
         }
       }
       this.tv = {
