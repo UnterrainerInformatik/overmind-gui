@@ -339,9 +339,9 @@
         <v-col class="ma-0 pa-0 d-flex flex-wrap" cols="12">
           <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
+          <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersFirstFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersFirstFloorDown"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
           <KioskSwitchPanel :item="vacation"></KioskSwitchPanel>
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
@@ -507,7 +507,7 @@ export default {
         applianceId: 71,
         sensorPath: 'switch1',
         eventPath: 'on.click',
-        description: 'Terrassentüre auf',
+        description: 'Terrassentüre<br>auf',
         isEnabled: () => {
           return plansService.isPlanEnabled(66)
         }
@@ -516,7 +516,7 @@ export default {
         applianceId: 183,
         sensorPath: 'switch1',
         eventPath: 'off.click',
-        description: 'Eltern-SZ Nickerchen',
+        description: 'Eltern-SZ<br>Nickerchen',
         isEnabled: () => {
           return plansService.isPlanEnabled(100)
         }
@@ -525,7 +525,7 @@ export default {
         applianceId: 183,
         sensorPath: 'switch1',
         eventPath: 'on.click',
-        description: 'Eltern-SZ rauf',
+        description: 'Eltern-SZ<br>rauf',
         isEnabled: () => {
           return plansService.isPlanEnabled(101)
         }
