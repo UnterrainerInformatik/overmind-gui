@@ -340,8 +340,7 @@
           <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
           <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="shuttersFirstFloor"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="shuttersFirstFloorDown"></KioskSwitchPanel>
+          <KioskMultiStatePanel :config="shuttersFirstFloorMulti"></KioskMultiStatePanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
           <KioskSwitchPanel :item="vacation"></KioskSwitchPanel>
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
@@ -388,6 +387,7 @@
 import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
+import KioskMultiStatePanel from '@/components/KioskMultiStatePanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
@@ -405,7 +405,8 @@ export default {
     KioskPowerPanel,
     KioskWatermeterPanel,
     KioskWasteDisposalPanel,
-    KioskSwitchPanel
+    KioskSwitchPanel,
+    KioskMultiStatePanel
   },
 
   data: () => ({
@@ -420,7 +421,36 @@ export default {
     patioOpened: {},
     parentsNap: {},
     parentsOpen: {},
-    vacation: {}
+    vacation: {},
+    shuttersFirstFloorMulti: {
+      id: 'shuttersFirstFloorMulti',
+      label: 'Rollos 1.Stock',
+      icon: 'tune',
+      defaultStateId: 'auto',
+      states: [
+        {
+          id: 'auto',
+          label: 'AUTO',
+          icon: 'motion_photos_auto'
+        },
+        {
+          id: 'up',
+          label: 'RAUF',
+          icon: 'keyboard_double_arrow_up',
+          planIdForCheckIfOn: 86,
+          onAction: { kind: 'plan-toggle', planId: 86 },
+          offAction: { kind: 'plan-toggle', planId: 86 }
+        },
+        {
+          id: 'down',
+          label: 'RUNTER',
+          icon: 'keyboard_double_arrow_down',
+          planIdForCheckIfOn: 114,
+          onAction: { kind: 'plan-toggle', planId: 114 },
+          offAction: { kind: 'plan-toggle', planId: 114 }
+        }
+      ]
+    }
   }),
 
   watch: {
