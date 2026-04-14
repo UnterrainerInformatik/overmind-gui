@@ -46,12 +46,12 @@ To be able to switch between NodeJS versions you'll have to install a manager li
 Install that and restart all your IDEs, since they hold consoles that were started before you've installed the new program.
 Then you can then enter your installation directory (of this project) and type:
 ```bash
-# Install node v14.15.0
-nvm install 14.15.0
+# Install node v20
+nvm install 20
 # Get the list of installed NodeJS versions.
 nvm list
 # Switch the current NodeJS version to a particular one
-nvm use 14
+nvm use 20
 # When you want to run the other version, you can switch to that any time in a similar way.
 
 # Install npm v8.3.0

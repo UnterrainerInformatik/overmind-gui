@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "api-contract-review": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "ff7eddce45fd4da3b91aa83de2210bb030ebc992c50e8e5a4b1b7fec525ab1ea"
+    },
+    "changelog-generator": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "28b58a3d7553228f8ae2d72f6df9a54cc76763794e1f350b2c5a4f45d130cd33"
+    },
+    "clean-code": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "7b9645a1f59010c45ad5bdd09db9d0f346f034d527392275a98d9f9de0ad8ae1"
+    },
+    "frontend-design": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "1ab17c63cc500d53a9b15cf3c2c9d7673c6ea9e00db42c1f39dc0b53cdf4995a"
+    },
+    "git-commit": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "7d9cd300e9b325fd5a3957753f3698147b533b144bc372239a0734cc8dbe2c0c"
+    },
+    "issue-triage": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "7c75e7e6c5eb12bbd6596a6075c0aa6aee81db675ff3db29e4d5f1e585a3bcda"
+    },
+    "vue-frontend-design": {
+      "source": "UnterrainerInformatik/agent-skills",
+      "sourceType": "github",
+      "computedHash": "2f3cfd9e9b03758c10456704374833d8b563911cca206393df286871faee3769"
+    }
+  }
+}
