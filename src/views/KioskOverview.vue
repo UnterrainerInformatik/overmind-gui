@@ -436,7 +436,7 @@ export default {
         {
           id: 'up',
           label: 'RAUF',
-          icon: 'keyboard_arrow_up',
+          icon: 'keyboard_double_arrow_up',
           planIdForCheckIfOn: 86,
           onAction: { kind: 'plan-toggle', planId: 86 },
           offAction: { kind: 'plan-toggle', planId: 86 }
@@ -444,7 +444,7 @@ export default {
         {
           id: 'down',
           label: 'RUNTER',
-          icon: 'keyboard_arrow_down',
+          icon: 'keyboard_double_arrow_down',
           planIdForCheckIfOn: 114,
           onAction: { kind: 'plan-toggle', planId: 114 },
           offAction: { kind: 'plan-toggle', planId: 114 }

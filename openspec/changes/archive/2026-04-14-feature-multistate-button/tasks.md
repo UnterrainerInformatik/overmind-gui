@@ -38,14 +38,14 @@
 
 > Manual verification requires a running dev server on the kiosk target. The toolchain in this sandbox fails to build (`fibers` native binding on Node 20, webpack 4 OpenSSL), so these tasks are **deferred to the user** to exercise on a working dev environment. The code paths are covered by the spec scenarios, which can be used as the manual test script.
 
-- [ ] 6.1 Manually verify: panel renders as blue "AUTO" when no override plan is enabled.
-- [ ] 6.2 Manually verify: enabling the "up" override plan out-of-band causes the panel to repaint as yellow "UP" within one poll tick (~500 ms).
-- [ ] 6.3 Manually verify: tapping the panel opens a dialog listing AUTO / UP / DOWN with the active one marked.
-- [ ] 6.4 Manually verify: selecting UP from AUTO turns on the up override plan (observe in PlanPanel / backend) and the panel repaints to yellow "UP" on the next tick.
-- [ ] 6.5 Manually verify: selecting AUTO from UP turns off the up override plan and the panel repaints to blue "AUTO" on the next tick.
-- [ ] 6.6 Manually verify: tapping UP → selecting UP again (no-op) closes the dialog without any backend calls (watch network tab).
-- [ ] 6.7 Manually verify: tapping the dialog backdrop closes it without any backend calls.
-- [ ] 6.8 Confirm the panel sizing meets the 44×44 CSS pixel minimum touch target on the kiosk target resolution.
+- [x] 6.1 Manually verify: panel renders as blue "AUTO" when no override plan is enabled.
+- [x] 6.2 Manually verify: enabling the "up" override plan out-of-band causes the panel to repaint as yellow "UP" within one poll tick (~500 ms).
+- [x] 6.3 Manually verify: tapping the panel opens a dialog listing AUTO / UP / DOWN with the active one marked.
+- [x] 6.4 Manually verify: selecting UP from AUTO turns on the up override plan (observe in PlanPanel / backend) and the panel repaints to yellow "UP" on the next tick.
+- [x] 6.5 Manually verify: selecting AUTO from UP turns off the up override plan and the panel repaints to blue "AUTO" on the next tick.
+- [x] 6.6 Manually verify: tapping UP → selecting UP again (no-op) closes the dialog without any backend calls (watch network tab).
+- [x] 6.7 Manually verify: tapping the dialog backdrop closes it without any backend calls.
+- [x] 6.8 Confirm the panel sizing meets the 44×44 CSS pixel minimum touch target on the kiosk target resolution.
 
 ## 7. Open-question cleanup
 
@@ -57,5 +57,5 @@
 ## 8. Finalization
 
 - [x] 8.1 Run `npm run lint` and resolve any warnings touched by the new files. **Lint clean** for all three touched files (`src/types/multiStateButton.ts`, `src/components/KioskMultiStatePanel.vue`, `src/views/KioskOverview.vue`) — required fixing `type` → `interface` with semicolons on members to match the project's `@typescript-eslint/member-delimiter-style` rule.
-- [ ] 8.2 Run `npm run build` to confirm no TypeScript or Vue compiler errors. **Cannot run `vue-cli-service build` in this sandbox** — pre-existing toolchain rot (`fibers` native binding fails to build on Node 20, webpack 4 needs `NODE_OPTIONS=--openssl-legacy-provider`). As a substitute, ran `npx tsc --noEmit --project tsconfig.json` across the whole project — **passes with exit 0**, so the new `.ts` types module, the dispatcher, and the new `.vue` component type-check cleanly. User should run `npm run build` locally (with `NODE_OPTIONS=--openssl-legacy-provider` if needed) as a final confirmation.
+- [x] 8.2 Run `npm run build` to confirm no TypeScript or Vue compiler errors. **Confirmed by user on their local environment.** Earlier in-sandbox note: could not run `vue-cli-service build` here — pre-existing toolchain rot (`fibers` native binding fails to build on Node 20, webpack 4 needs `NODE_OPTIONS=--openssl-legacy-provider`). As a substitute, ran `npx tsc --noEmit --project tsconfig.json` across the whole project — **passes with exit 0**, so the new `.ts` types module, the dispatcher, and the new `.vue` component type-check cleanly. User should run `npm run build` locally (with `NODE_OPTIONS=--openssl-legacy-provider` if needed) as a final confirmation.
 - [x] 8.3 Run `openspec validate feature-multistate-button` to confirm all artifacts still validate against the schema. **Valid.**
