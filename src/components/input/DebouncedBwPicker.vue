@@ -11,8 +11,8 @@
           (app.state.relays[0].state === 'ON' ? 'on ' : 'off ') + ' darken-1'
         "
         thumb-label="always"
-        @mouseup="mouseUp"
-        @mousedown="mouseDown"
+        @start="mouseDown"
+        @end="mouseUp"
       ></v-slider>
         </v-col>
       </v-row>
@@ -37,18 +37,13 @@
           <v-avatar x-small color="blue lighten-3"></v-avatar>
         </v-col>
       </v-row>
-      <!--
-    brightness: {{ brightness }}<br>
-    temp: {{ temp }}<br>
-    color: {{ pause }}<br>
-    waitForNextAppChange: {{ waitForNextAppChange }}<br>
-    -->
     </v-sheet>
   </div>
 </template>
 
 <script lang="js">
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
+import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 
 export default {
   name: 'DebouncedBwPicker',
@@ -62,30 +57,31 @@ export default {
     interval: null,
     brightness: undefined,
     temp: undefined,
-    pause: false,
-    waitForNextAppChange: false
+    gate: null,
+    unwatchFields: null
   }),
 
   computed: {
   },
 
   watch: {
-    app: {
-      handler: function () {
-        this.waitForNextAppChange = false
-      },
-      deep: true
-    }
   },
 
   methods: {
+    packValues () {
+      return {
+        brightness: this.brightness / 100,
+        colorTemperature: this.temp / 100
+      }
+    },
     async mouseUp () {
-      await this.immediatelySetValues()
-      this.waitForNextAppChange = true
-      this.pause = false
+      const v = this.packValues()
+      this.gate.register(v)
+      this.gate.releaseInteraction()
+      await appliancesService.setWhite(this.app.id, 'light', v.brightness, v.colorTemperature)
     },
     mouseDown () {
-      this.pause = true
+      this.gate.holdForInteraction()
     },
     getValues (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].brightness !== undefined) {
@@ -96,19 +92,40 @@ export default {
       }
     },
     async immediatelySetValues () {
-      console.log('trying to send values')
       if (this.brightness !== undefined && this.temp !== undefined) {
-        console.log('sending values...')
-        await appliancesService.setWhite(this.app.id, 'light', this.brightness / 100, this.temp / 100)
-        console.log('sent bw:', this.brightness, this.temp)
+        const v = this.packValues()
+        this.gate.register(v)
+        this.gate.releaseInteraction()
+        await appliancesService.setWhite(this.app.id, 'light', v.brightness, v.colorTemperature)
       }
     }
   },
 
   mounted () {
+    this.gate = new EchoGate({
+      read: (app) => {
+        const r = app && app.state && app.state.rgbws && app.state.rgbws[0]
+        if (!r || r.brightness === undefined || r.colorTemperature === undefined) {
+          return null
+        }
+        return { brightness: r.brightness, colorTemperature: r.colorTemperature }
+      },
+      matches: floatEchoMatcher(0.005),
+      timeout: 3000,
+      debugLabel: 'bwPicker'
+    })
+    this.unwatchFields = this.$watch(
+      () => this.gate.read(this.app),
+      () => {
+        const released = this.gate.observe(this.app)
+        if (released || !this.gate.isInFlight()) {
+          this.getValues(this.app)
+        }
+      }
+    )
     this.getValues(this.app)
     this.interval = setInterval(() => {
-      if (this.pause || this.waitForNextAppChange) {
+      if (this.gate.isInFlight()) {
         return
       }
       this.getValues(this.app)
@@ -116,8 +133,16 @@ export default {
   },
 
   beforeDestroy () {
+    if (this.unwatchFields) {
+      this.unwatchFields()
+      this.unwatchFields = null
+    }
     if (this.interval) {
       clearInterval(this.interval)
+      this.interval = null
+    }
+    if (this.gate) {
+      this.gate.destroy()
     }
   }
 }

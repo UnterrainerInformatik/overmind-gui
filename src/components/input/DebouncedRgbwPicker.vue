@@ -73,16 +73,12 @@
         ></v-slider>
       </v-col>
     </v-row>
-    <!--
-    colorModel: {{ colorModel }}<br>
-    pause: {{ pause }}<br>
-    waitForNextAppChange: {{ waitForNextAppChange }}<br>
-    -->
   </div>
 </template>
 
 <script lang="js">
 import { Debouncer } from '@/utils/debouncer'
+import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {
@@ -97,10 +93,10 @@ export default {
   data: () => ({
     interval: null,
     debouncer: null,
-    pause: false,
     colorModel: null,
     white: null,
-    waitForNextAppChange: false
+    gate: null,
+    unwatchFields: null
   }),
 
   computed: {
@@ -112,12 +108,6 @@ export default {
   },
 
   watch: {
-    app: {
-      handler: function () {
-        this.waitForNextAppChange = false
-      },
-      deep: true
-    }
   },
 
   methods: {
@@ -142,11 +132,21 @@ export default {
       }
       return `rgba(${v}, ${v}, ${v}, 1)`
     },
+    packValues () {
+      const v = this.colorModel
+      return {
+        red: v.r / 255,
+        green: v.g / 255,
+        blue: v.b / 255,
+        white: this.white / 100,
+        gain: v.a
+      }
+    },
     async mouseUpWhite () {
       await this.saveValues()
     },
     mouseDownWhite () {
-      this.pause = true
+      this.gate.holdForInteraction()
     },
     getWhite (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].white !== undefined) {
@@ -155,6 +155,7 @@ export default {
       return null
     },
     async setColor () {
+      this.gate.holdForInteraction()
       await this.saveValues()
     },
     getValues (app) {
@@ -172,31 +173,49 @@ export default {
       }
     },
     async saveValues () {
-      const v = this.colorModel
       this.debouncer.debounce(async () => {
-        appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, this.white / 100, v.a)
+        const v = this.packValues()
+        this.gate.register(v)
+        this.gate.releaseInteraction()
+        appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
       })
     },
     async immediatelySetValues () {
-      const v = this.colorModel
-      if (v !== undefined && this.white !== undefined) {
-        appliancesService.setColor(this.app.id, 'light', v.r / 255, v.g / 255, v.b / 255, this.white / 100, v.a)
+      if (this.colorModel !== undefined && this.white !== undefined) {
+        const v = this.packValues()
+        this.gate.register(v)
+        this.gate.releaseInteraction()
+        appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
       }
     }
   },
 
   mounted () {
-    this.debouncer = new Debouncer({
-      timeout: 500,
-      enqueueing: () => { this.pause = true },
-      ending: () => {
-        this.waitForNextAppChange = true
-        this.pause = false
-      }
+    this.gate = new EchoGate({
+      read: (app) => {
+        const r = app && app.state && app.state.rgbws && app.state.rgbws[0]
+        if (!r || r.red === undefined || r.green === undefined || r.blue === undefined || r.white === undefined || r.gain === undefined) {
+          return null
+        }
+        return { red: r.red, green: r.green, blue: r.blue, white: r.white, gain: r.gain }
+      },
+      matches: floatEchoMatcher(0.005),
+      timeout: 3000,
+      debugLabel: 'rgbwPicker'
     })
+    this.debouncer = new Debouncer(500)
+    this.unwatchFields = this.$watch(
+      () => this.gate.read(this.app),
+      () => {
+        const released = this.gate.observe(this.app)
+        if (released || !this.gate.isInFlight()) {
+          this.getValues(this.app)
+        }
+      }
+    )
     this.getValues(this.app)
     this.interval = setInterval(() => {
-      if (this.pause || this.waitForNextAppChange) {
+      if (this.gate.isInFlight()) {
         return
       }
       this.getValues(this.app)
@@ -204,8 +223,16 @@ export default {
   },
 
   beforeDestroy () {
+    if (this.unwatchFields) {
+      this.unwatchFields()
+      this.unwatchFields = null
+    }
     if (this.interval) {
       clearInterval(this.interval)
+      this.interval = null
+    }
+    if (this.gate) {
+      this.gate.destroy()
     }
   }
 }

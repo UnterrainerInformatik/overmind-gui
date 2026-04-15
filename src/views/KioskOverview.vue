@@ -346,8 +346,7 @@
           <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
           <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
           <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="parentsNap"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="parentsOpen"></KioskSwitchPanel>
+          <KioskMultiStatePanel :config="shuttersParentsBedroomMulti"></KioskMultiStatePanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -418,13 +417,11 @@ export default {
     tv: {},
     snuggling: {},
     bioTrash: {},
-    patioOpened: {},
-    parentsNap: {},
     parentsOpen: {},
     vacation: {},
     shuttersFirstFloorMulti: {
       id: 'shuttersFirstFloorMulti',
-      label: 'Rollos 1.Stock',
+      label: 'Rollos <b>1.Stock</b>',
       icon: 'tune',
       defaultStateId: 'auto',
       states: [
@@ -437,9 +434,9 @@ export default {
           id: 'up',
           label: 'RAUF',
           icon: 'keyboard_double_arrow_up',
-          planIdForCheckIfOn: 86,
-          onAction: { kind: 'plan-toggle', planId: 86 },
-          offAction: { kind: 'plan-toggle', planId: 86 }
+          planIdForCheckIfOn: 115,
+          onAction: { kind: 'plan-toggle', planId: 115 },
+          offAction: { kind: 'plan-toggle', planId: 115 }
         },
         {
           id: 'down',
@@ -448,6 +445,35 @@ export default {
           planIdForCheckIfOn: 114,
           onAction: { kind: 'plan-toggle', planId: 114 },
           offAction: { kind: 'plan-toggle', planId: 114 }
+        }
+      ]
+    },
+    shuttersParentsBedroomMulti: {
+      id: 'shuttersParentsBedroomMulti',
+      label: 'Rollos <b>Elternschlafzimmer</b>',
+      icon: 'tune',
+      defaultStateId: 'auto',
+      states: [
+        {
+          id: 'auto',
+          label: 'AUTO',
+          icon: 'motion_photos_auto'
+        },
+        {
+          id: 'nap',
+          label: 'Nickerchen',
+          icon: 'cloud',
+          planIdForCheckIfOn: 100,
+          onAction: { kind: 'plan-toggle', planId: 100 },
+          offAction: { kind: 'plan-toggle', planId: 100 }
+        },
+        {
+          id: 'up',
+          label: 'RAUF',
+          icon: 'keyboard_double_arrow_up',
+          planIdForCheckIfOn: 101,
+          onAction: { kind: 'plan-toggle', planId: 101 },
+          offAction: { kind: 'plan-toggle', planId: 101 }
         }
       ]
     }
@@ -540,24 +566,6 @@ export default {
         description: 'Terrassentüre<br>auf',
         isEnabled: () => {
           return plansService.isPlanEnabled(66)
-        }
-      }
-      this.parentsNap = {
-        applianceId: 183,
-        sensorPath: 'switch1',
-        eventPath: 'off.click',
-        description: 'Eltern-SZ<br>Nickerchen',
-        isEnabled: () => {
-          return plansService.isPlanEnabled(100)
-        }
-      }
-      this.parentsOpen = {
-        applianceId: 183,
-        sensorPath: 'switch1',
-        eventPath: 'on.click',
-        description: 'Eltern-SZ<br>rauf',
-        isEnabled: () => {
-          return plansService.isPlanEnabled(101)
         }
       }
       this.vacation = {
