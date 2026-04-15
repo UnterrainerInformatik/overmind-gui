@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="multi-state-panel-wrapper">
+    <v-icon class="multi-state-hint-icon" small>format_list_bulleted</v-icon>
     <KioskPanel
       :isEnabled="calculateEnabled"
       pa="1"
@@ -32,11 +33,12 @@
 
     <v-dialog v-model="dialogOpen" max-width="320">
       <v-card>
-        <v-list dense>
+        <v-list class="multi-state-list">
           <v-list-item
             v-for="state in config.states"
             :key="state.id"
             @click="selectState(state)"
+            class="multi-state-item"
             :class="state.id === activeStateId ? 'multi-state-item-active' : 'multi-state-item-passive'"
           >
             <v-list-item-icon v-if="state.icon">
@@ -157,6 +159,20 @@ export default {
   opacity: 0 !important;
 }
 
+.multi-state-panel-wrapper {
+  position: relative;
+}
+
+.multi-state-hint-icon.v-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font-size: 16px !important;
+  color: #0d47a1 !important;
+  pointer-events: none;
+}
+
 .multi-state-panel-content {
   display: flex;
   flex-direction: column;
@@ -171,8 +187,24 @@ export default {
   margin-top: 2px;
 }
 
+.multi-state-list {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.multi-state-item {
+  min-height: 80px;
+}
+
+.multi-state-item .v-list-item__icon {
+  align-self: center;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .multi-state-item-active {
   opacity: 1;
+  background-color: rgba(25, 118, 210, 0.22);
 }
 
 .multi-state-item-passive {
