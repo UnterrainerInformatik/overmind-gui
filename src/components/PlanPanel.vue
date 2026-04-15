@@ -17,7 +17,7 @@
       <div
         class="text-caption text-md-subtitle-1 text-lg-subtitle-1 text-xl-subtitle-1"
       >
-        {{ item.name }}
+        {{ item.name }} <span style="font-size: xx-small !important;">[{{ item.id }}]</span>
       </div>
       <v-spacer></v-spacer>
 

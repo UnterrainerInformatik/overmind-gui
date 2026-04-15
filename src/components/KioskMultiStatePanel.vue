@@ -26,10 +26,10 @@
       <template>
         <div class="multi-state-panel-content">
           <div class="multi-state-panel-label text-caption">
-            {{ config.label }}
+            <span v-html="config.label"></span>
           </div>
           <div class="multi-state-panel-state text-body-1 font-weight-bold">
-            {{ activeState ? activeState.label : '' }}
+            <span v-html="activeState ? activeState.label : ''"></span>
           </div>
         </div>
       </template>
@@ -49,10 +49,8 @@
               <v-icon>{{ state.icon }}</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
-              <v-list-item-title>{{ state.label }}</v-list-item-title>
-              <v-list-item-subtitle v-if="state.description">
-                {{ state.description }}
-              </v-list-item-subtitle>
+              <v-list-item-title><span v-html="state.label"></span></v-list-item-title>
+              <v-list-item-subtitle v-if="state.description"><span v-html="state.description"></span></v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
         </v-list>
