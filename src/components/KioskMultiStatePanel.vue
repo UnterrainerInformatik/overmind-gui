@@ -1,6 +1,10 @@
 <template>
   <div class="multi-state-panel-wrapper">
-    <v-icon class="multi-state-hint-icon" small>format_list_bulleted</v-icon>
+    <v-icon
+      class="multi-state-hint-icon"
+      :class="{ 'multi-state-hint-icon-override': isOverrideActive }"
+      small
+    >format_list_bulleted</v-icon>
     <KioskPanel
       :isEnabled="calculateEnabled"
       pa="1"
@@ -171,6 +175,10 @@ export default {
   font-size: 16px !important;
   color: #0d47a1 !important;
   pointer-events: none;
+}
+
+.multi-state-hint-icon-override.v-icon {
+  color: #b8860b !important;
 }
 
 .multi-state-panel-content {
