@@ -434,9 +434,9 @@ export default {
           id: 'up',
           label: 'RAUF',
           icon: 'keyboard_double_arrow_up',
-          planIdForCheckIfOn: 86,
-          onAction: { kind: 'plan-toggle', planId: 86 },
-          offAction: { kind: 'plan-toggle', planId: 86 }
+          planIdForCheckIfOn: 115,
+          onAction: { kind: 'plan-toggle', planId: 115 },
+          offAction: { kind: 'plan-toggle', planId: 115 }
         },
         {
           id: 'down',
