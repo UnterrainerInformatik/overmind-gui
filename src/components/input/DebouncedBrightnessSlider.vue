@@ -12,16 +12,12 @@
       @start="mouseDown"
       @end="mouseUp"
     ></v-slider>
-    <!--
-    brightness: {{ brightness }}<br>
-    pause: {{ pause }}<br>
-    waitForNextAppChange: {{ waitForNextAppChange }}<br>
-    -->
   </div>
 </template>
 
 <script lang="js">
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
+import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 
 export default {
   name: 'DebouncedBrightnessSlider',
@@ -34,45 +30,55 @@ export default {
   data: () => ({
     interval: null,
     brightness: undefined,
-    pause: false,
-    waitForNextAppChange: false
+    gate: null,
+    unwatchFields: null
   }),
 
   computed: {
   },
 
   watch: {
-    app: {
-      handler: function () {
-        this.waitForNextAppChange = false
-      },
-      deep: true
-    }
   },
 
   methods: {
     async mouseUp () {
-      await this.setBrightness()
-      this.waitForNextAppChange = true
-      this.pause = false
+      const sent = this.brightness / 100
+      this.gate.register(sent)
+      this.gate.releaseInteraction()
+      await appliancesService.setBrightness(this.app.id, 'light', sent)
     },
     mouseDown () {
-      this.pause = true
+      this.gate.holdForInteraction()
     },
     getBrightness (app) {
       if (app && app.state && app.state.dimmers && app.state.dimmers[0] && app.state.dimmers[0].brightness !== undefined) {
         this.brightness = app.state.dimmers[0].brightness * 100
       }
-    },
-    async setBrightness () {
-      await appliancesService.setBrightness(this.app.id, 'light', this.brightness / 100)
     }
   },
 
   mounted () {
+    this.gate = new EchoGate({
+      read: (app) => {
+        const d = app && app.state && app.state.dimmers && app.state.dimmers[0]
+        return d && d.brightness !== undefined ? d.brightness : null
+      },
+      matches: floatEchoMatcher(0.005),
+      timeout: 3000,
+      debugLabel: 'brightness'
+    })
+    this.unwatchFields = this.$watch(
+      () => this.gate.read(this.app),
+      () => {
+        const released = this.gate.observe(this.app)
+        if (released || !this.gate.isInFlight()) {
+          this.getBrightness(this.app)
+        }
+      }
+    )
     this.getBrightness(this.app)
     this.interval = setInterval(() => {
-      if (this.pause || this.waitForNextAppChange) {
+      if (this.gate.isInFlight()) {
         return
       }
       this.getBrightness(this.app)
@@ -80,8 +86,16 @@ export default {
   },
 
   beforeDestroy () {
+    if (this.unwatchFields) {
+      this.unwatchFields()
+      this.unwatchFields = null
+    }
     if (this.interval) {
       clearInterval(this.interval)
+      this.interval = null
+    }
+    if (this.gate) {
+      this.gate.destroy()
     }
   }
 }

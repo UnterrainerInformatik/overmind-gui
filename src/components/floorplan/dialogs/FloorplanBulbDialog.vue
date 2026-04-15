@@ -26,8 +26,6 @@
     </v-tabs-items>
 
     <DebouncedOnOffButton ref="default" :item="item" :app="app"></DebouncedOnOffButton>
-    tab: {{ tab }}<br />
-    mode: {{ app.state.rgbws[0].mode }}
   </div>
 </template>
 
@@ -52,21 +50,13 @@ export default {
 
   data: () => ({
     tab: null,
-    pause: false,
-    waitForNextAppChange: false
+    unwatchMode: null
   }),
 
   computed: {
   },
 
   watch: {
-    app: {
-      handler: function () {
-        this.waitForNextAppChange = false
-        this.changeTabBasedOnMode()
-      },
-      deep: true
-    },
     tab: {
       handler: async function (v) {
         if (v === 0) {
@@ -75,28 +65,19 @@ export default {
             if (!o) {
               return
             }
-            this.pause = true
             await o.immediatelySetValues()
-            this.waitForNextAppChange = true
-            this.pause = false
           })
         }
         if (v === 1) {
-          console.log('changed from c->bw')
           await this.$nextTick(async () => {
             const o = this.$refs.bwPicker
             if (!o) {
-              console.log('cannot find picker')
               return
             }
-            this.pause = true
             await o.immediatelySetValues()
-            this.waitForNextAppChange = true
-            this.pause = false
           })
         }
-      },
-      deep: true
+      }
     }
   },
 
@@ -104,24 +85,40 @@ export default {
     defaultAction () {
       this.$refs.default.toggle()
     },
+    childInFlight () {
+      const picker = this.tab === 0 ? this.$refs.rgbwPicker : this.$refs.bwPicker
+      return !!(picker && picker.gate && picker.gate.isInFlight())
+    },
     changeTabBasedOnMode () {
+      if (this.childInFlight()) {
+        return
+      }
       if (this.app && this.app.state && this.app.state.rgbws && this.app.state.rgbws[0] && this.app.state.rgbws[0].mode !== undefined) {
         if (this.app.state.rgbws[0].mode === 'WHITE') {
           if (this.tab !== 1) {
-            if (this.pause || this.waitForNextAppChange) {
-              return
-            }
             this.tab = 1
           }
         } else {
           if (this.tab !== 0) {
-            if (this.pause || this.waitForNextAppChange) {
-              return
-            }
             this.tab = 0
           }
         }
       }
+    }
+  },
+
+  mounted () {
+    this.unwatchMode = this.$watch(
+      () => this.app && this.app.state && this.app.state.rgbws && this.app.state.rgbws[0] && this.app.state.rgbws[0].mode,
+      () => this.changeTabBasedOnMode(),
+      { immediate: true }
+    )
+  },
+
+  beforeDestroy () {
+    if (this.unwatchMode) {
+      this.unwatchMode()
+      this.unwatchMode = null
     }
   }
 }
