@@ -337,8 +337,7 @@
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
         <v-col class="ma-0 pa-0 d-flex flex-wrap" cols="12">
-          <KioskSwitchPanel :item="allHereGoneItem"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="allAsleepItem"></KioskSwitchPanel>
+          <KioskMultiStatePanel :config="allStateMulti"></KioskMultiStatePanel>
           <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
           <KioskMultiStatePanel :config="shuttersFirstFloorMulti"></KioskMultiStatePanel>
           <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
@@ -409,8 +408,6 @@ export default {
   },
 
   data: () => ({
-    allHereGoneItem: {},
-    allAsleepItem: {},
     shuttersGroundFloor: {},
     shuttersFirstFloor: {},
     shuttersFirstFloorDown: {},
@@ -419,6 +416,35 @@ export default {
     bioTrash: {},
     parentsOpen: {},
     vacation: {},
+    allStateMulti: {
+      id: 'allStateMulti',
+      label: 'Alle',
+      icon: 'group',
+      defaultStateId: 'home',
+      states: [
+        {
+          id: 'home',
+          label: 'Alle da',
+          icon: 'home'
+        },
+        {
+          id: 'away',
+          label: 'Alle weg',
+          icon: 'directions_walk',
+          planIdForCheckIfOn: 65,
+          onAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' },
+          offAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' }
+        },
+        {
+          id: 'asleep',
+          label: 'Alle schlafen',
+          icon: 'bedtime',
+          planIdForCheckIfOn: 70,
+          onAction: { kind: 'event-trigger', applianceId: 72, sensorPath: 'switch1', eventPath: 'off.click' },
+          offAction: { kind: 'event-trigger', applianceId: 72, sensorPath: 'switch1', eventPath: 'off.click' }
+        }
+      ]
+    },
     shuttersFirstFloorMulti: {
       id: 'shuttersFirstFloorMulti',
       label: 'Rollos <b>1.Stock</b>',
@@ -487,24 +513,6 @@ export default {
 
   methods: {
     async reload () {
-      this.allHereGoneItem = {
-        applianceId: 22,
-        sensorPath: 'switch1',
-        eventPath: 'off.click',
-        description: 'Alle weg / da',
-        isEnabled: () => {
-          return plansService.isPlanEnabled(65)
-        }
-      }
-      this.allAsleepItem = {
-        applianceId: 72,
-        sensorPath: 'switch1',
-        eventPath: 'off.click',
-        description: 'Alle schlafen',
-        isEnabled: () => {
-          return plansService.isPlanEnabled(70)
-        }
-      }
       this.shuttersGroundFloor = {
         applianceId: 73,
         sensorPath: 'switch2',

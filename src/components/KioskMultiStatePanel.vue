@@ -163,6 +163,12 @@ export default {
 
 .multi-state-panel-wrapper {
   position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.multi-state-panel-wrapper > .v-card {
+  flex: 1 1 auto;
 }
 
 .multi-state-hint-icon.v-icon {
