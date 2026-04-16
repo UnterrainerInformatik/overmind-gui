@@ -4,17 +4,18 @@
       class="multi-state-hint-icon"
       :class="{ 'multi-state-hint-icon-override': isOverrideActive }"
       small
+      :style="activeState && activeState.colorDialog ? { color: activeState.colorSelectedIcon + ' !important' } : {}"
     >format_list_bulleted</v-icon>
     <KioskPanel
       :isEnabled="calculateEnabled"
       pa="1"
       @click="openDialog"
       class="noFocus"
+      :borderColorRaw="activeState && activeState.colorSelectedIcon ? activeState.colorSelectedIcon : null"
     >
       <template v-slot:title>
         <v-avatar
-          :color="
-            (isOverrideActive ? 'on ' : 'off ') + ' darken-1'
+          :color="isOverrideActive && activeState.colorSelectedIcon ? activeState.colorSelectedIcon : (isOverrideActive ? 'on ' : 'off ') + ' darken-1'
           "
           size="38"
         >
@@ -44,6 +45,7 @@
             @click="selectState(state)"
             class="multi-state-item"
             :class="state.id === activeStateId ? 'multi-state-item-active' : 'multi-state-item-passive'"
+            :style="state.colorDialog ? { backgroundColor: state.colorDialog } : {}"
           >
             <v-list-item-icon v-if="state.icon">
               <v-icon>{{ state.icon }}</v-icon>
