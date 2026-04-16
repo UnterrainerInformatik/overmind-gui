@@ -424,24 +424,27 @@ export default {
       states: [
         {
           id: 'home',
-          label: 'Alle da',
+          label: 'daheim',
           icon: 'home'
         },
         {
-          id: 'away',
-          label: 'Alle weg',
-          icon: 'directions_walk',
-          planIdForCheckIfOn: 65,
-          onAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' },
-          offAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' }
-        },
-        {
           id: 'asleep',
-          label: 'Alle schlafen',
+          label: 'schlafen',
           icon: 'bedtime',
           planIdForCheckIfOn: 70,
           onAction: { kind: 'event-trigger', applianceId: 72, sensorPath: 'switch1', eventPath: 'off.click' },
           offAction: { kind: 'event-trigger', applianceId: 72, sensorPath: 'switch1', eventPath: 'off.click' }
+        },
+        {
+          id: 'away',
+          label: 'WEG',
+          icon: 'directions_walk',
+          planIdForCheckIfOn: 65,
+          colorSelectedIcon: 'rgba(255, 0, 0, 0.6)',
+          colorSelected: 'rgba(255, 0, 0, 0.3)',
+          colorDialog: 'rgba(255, 0, 0, 0.15)',
+          onAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' },
+          offAction: { kind: 'event-trigger', applianceId: 22, sensorPath: 'switch1', eventPath: 'off.click' }
         }
       ]
     },

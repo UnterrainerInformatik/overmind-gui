@@ -4,6 +4,7 @@
     :class="`ma-1 pa-${borderSize - 1} ${
       borderColor ? borderColor : (enabled ? 'on ' : 'off ') + 'darken-1'
     }`"
+    :style="borderColorRaw ? { borderColor: borderColorRaw + ' !important' } : {}"
     :max-width="maxWidth"
     :min-width="minWidth"
     v-bind="$attrs"
@@ -35,6 +36,8 @@ export default {
     isEnabled: {},
     borderColor: {},
     bgColor: {},
+    borderColorRaw: null,
+    bgColorRaw: null,
     minWidth: { default: '140px' },
     maxWidth: { default: '180px' },
     renderTitle: { default: true },
