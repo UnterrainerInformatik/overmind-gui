@@ -326,18 +326,33 @@ export default {
       if (!appliances) {
         return p
       }
-      const aa = await jsUtils.resolveCollection(appliances, async (item) => appliancesService.getById(item.id))
+      const sse = SseClient.getInstance()
+      const aa = await jsUtils.resolveCollection(appliances, async (item) => {
+        const cached = sse.getLatest(item.id)
+        if (cached) {
+          return cached
+        }
+        return appliancesService.getById(item.id)
+      })
       let i = 0
       for (const appliance of appliances) {
-        const a = aa[i]
-        overmindUtils.parseState(a)
-        overmindUtils.parseConfig(a)
+        const source = aa[i]
+        i++
+        if (!source) {
+          continue
+        }
+        const a = { ...source }
+        if (typeof a.state === 'string') {
+          overmindUtils.parseState(a)
+        }
+        if (typeof a.config === 'string') {
+          overmindUtils.parseConfig(a)
+        }
         a.negate = appliance.negate
         a.powerRaw = this.getPower(a, appliance.indexes, appliance.names)
         a.power = overmindUtils.formatPower(a.powerRaw, true)
         p += a.powerRaw
         list.push(a)
-        i++
       }
       return p
     },

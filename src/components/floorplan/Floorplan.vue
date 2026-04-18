@@ -627,14 +627,10 @@ export default {
     this.reCompose()
     await this.getAppliances(true)
 
-    const ids = this.appliances.map(a => a.id)
+    const ids = [...new Set(this.areas.map(a => a.appId).filter(id => id))]
     this.sseHandle = SseClient.getInstance().subscribe(ids, (updated) => {
       for (const app of updated) {
         this.appMap.map.set(app.id, app)
-        const idx = this.appliances.findIndex(a => a.id === app.id)
-        if (idx >= 0) {
-          this.$set(this.appliances, idx, app)
-        }
       }
       this.appMap.changed()
       this.redraw(false)
