@@ -78,7 +78,6 @@
 
 <script lang="js">
 import { Debouncer } from '@/utils/debouncer'
-import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 
 export default {
@@ -91,12 +90,10 @@ export default {
   },
 
   data: () => ({
-    interval: null,
     debouncer: null,
     colorModel: null,
     white: null,
-    gate: null,
-    unwatchFields: null
+    isDragging: false
   }),
 
   computed: {
@@ -108,6 +105,14 @@ export default {
   },
 
   watch: {
+    'app.state.rgbws': {
+      handler () {
+        if (!this.isDragging) {
+          this.getValues(this.app)
+        }
+      },
+      deep: true
+    }
   },
 
   methods: {
@@ -146,7 +151,7 @@ export default {
       await this.saveValues()
     },
     mouseDownWhite () {
-      this.gate.holdForInteraction()
+      this.isDragging = true
     },
     getWhite (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].white !== undefined) {
@@ -155,7 +160,7 @@ export default {
       return null
     },
     async setColor () {
-      this.gate.holdForInteraction()
+      this.isDragging = true
       await this.saveValues()
     },
     getValues (app) {
@@ -175,65 +180,21 @@ export default {
     async saveValues () {
       this.debouncer.debounce(async () => {
         const v = this.packValues()
-        this.gate.register(v)
-        this.gate.releaseInteraction()
-        appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
+        await appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
+        this.isDragging = false
       })
     },
     async immediatelySetValues () {
       if (this.colorModel !== undefined && this.white !== undefined) {
         const v = this.packValues()
-        this.gate.register(v)
-        this.gate.releaseInteraction()
-        appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
+        await appliancesService.setColor(this.app.id, 'light', v.red, v.green, v.blue, v.white, v.gain)
       }
     }
   },
 
   mounted () {
-    this.gate = new EchoGate({
-      read: (app) => {
-        const r = app && app.state && app.state.rgbws && app.state.rgbws[0]
-        if (!r || r.red === undefined || r.green === undefined || r.blue === undefined || r.white === undefined || r.gain === undefined) {
-          return null
-        }
-        return { red: r.red, green: r.green, blue: r.blue, white: r.white, gain: r.gain }
-      },
-      matches: floatEchoMatcher(0.005),
-      timeout: 3000,
-      debugLabel: 'rgbwPicker'
-    })
     this.debouncer = new Debouncer(500)
-    this.unwatchFields = this.$watch(
-      () => this.gate.read(this.app),
-      () => {
-        const released = this.gate.observe(this.app)
-        if (released || !this.gate.isInFlight()) {
-          this.getValues(this.app)
-        }
-      }
-    )
     this.getValues(this.app)
-    this.interval = setInterval(() => {
-      if (this.gate.isInFlight()) {
-        return
-      }
-      this.getValues(this.app)
-    }, 500)
-  },
-
-  beforeDestroy () {
-    if (this.unwatchFields) {
-      this.unwatchFields()
-      this.unwatchFields = null
-    }
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
-    }
-    if (this.gate) {
-      this.gate.destroy()
-    }
   }
 }
 </script>

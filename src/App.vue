@@ -1,6 +1,6 @@
 <template>
   <div id="main">
-    <v-app>
+    <v-app :class="{ 'sse-disconnected': !sseConnected }">
       <v-navigation-drawer
         v-if="!kioskMode"
         v-cloak
@@ -76,6 +76,7 @@ import NavDrawer from '@/components/NavDrawer.vue'
 import AppBarMenu from '@/components/AppBarMenu.vue'
 import Snackbar from '@/components/Snackbar.vue'
 import ModalLoading from '@/components/ModalLoading.vue'
+import { SseClient } from '@/utils/sseClient'
 
 export default {
   name: 'Main',
@@ -95,7 +96,9 @@ export default {
     localeBackingField: '',
     darkTheme: 'false',
     languageKey: 'de',
-    floorplan: new Image()
+    floorplan: new Image(),
+    sseConnected: true,
+    sseInterval: null
   }),
 
   computed: {
@@ -180,6 +183,16 @@ export default {
       console.log('Setting tooltips default')
       this.$store.dispatch('gui/tooltips/tooltips', true)
     }
+
+    this.sseInterval = setInterval(() => {
+      this.sseConnected = SseClient.getInstance().connected
+    }, 2000)
+  },
+
+  beforeDestroy () {
+    if (this.sseInterval) {
+      clearInterval(this.sseInterval)
+    }
   }
 }
 </script>
@@ -192,6 +205,10 @@ export default {
   max-height: 100vh;
   height: 100vh;
   border: 1px solid rgba(#000, 0.12);
+}
+
+.sse-disconnected {
+  background-color: #1a0000 !important;
 }
 
 .v-navigation-drawer {
