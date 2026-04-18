@@ -159,7 +159,7 @@ import FlipCard from '@/components/FlipCard.vue'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as jsUtils } from '@/utils/jsUtils'
-import { Debouncer } from '@/utils/debouncer'
+import { SseClient } from '@/utils/sseClient'
 
 export default {
   name: 'KioskPowerPanel',
@@ -176,10 +176,9 @@ export default {
   data: () => ({
     jsUtils,
     overmindUtils,
-    interval: null,
+    sseHandle: null,
     appliances: null,
-    showDetailsOf: null,
-    debouncer: new Debouncer()
+    showDetailsOf: null
   }),
 
   computed: {
@@ -403,13 +402,31 @@ export default {
     }
   },
 
-  mounted () {
-    this.debouncer.debounce(async () => this.getAppliances())
-    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getAppliances()), 3000)
+  async mounted () {
+    await this.getAppliances()
+
+    const ids = []
+    for (const dataRow of this.data) {
+      for (const d of dataRow) {
+        if (d.appliances) {
+          for (const a of d.appliances) {
+            if (!ids.includes(a.id)) ids.push(a.id)
+          }
+        }
+        if (d.batteryAppliances) {
+          for (const a of d.batteryAppliances) {
+            if (!ids.includes(a.id)) ids.push(a.id)
+          }
+        }
+      }
+    }
+    this.sseHandle = SseClient.getInstance().subscribe(ids, () => this.getAppliances(), 3000)
   },
 
   beforeDestroy () {
-    clearInterval(this.interval)
+    if (this.sseHandle) {
+      SseClient.getInstance().unsubscribe(this.sseHandle)
+    }
   }
 }
 </script>

@@ -43,7 +43,6 @@
 
 <script lang="js">
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
-import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 
 export default {
   name: 'DebouncedBwPicker',
@@ -54,17 +53,20 @@ export default {
   },
 
   data: () => ({
-    interval: null,
     brightness: undefined,
     temp: undefined,
-    gate: null,
-    unwatchFields: null
+    isDragging: false
   }),
 
-  computed: {
-  },
-
   watch: {
+    'app.state.rgbws': {
+      handler () {
+        if (!this.isDragging) {
+          this.getValues(this.app)
+        }
+      },
+      deep: true
+    }
   },
 
   methods: {
@@ -76,12 +78,11 @@ export default {
     },
     async mouseUp () {
       const v = this.packValues()
-      this.gate.register(v)
-      this.gate.releaseInteraction()
       await appliancesService.setWhite(this.app.id, 'light', v.brightness, v.colorTemperature)
+      this.isDragging = false
     },
     mouseDown () {
-      this.gate.holdForInteraction()
+      this.isDragging = true
     },
     getValues (app) {
       if (app && app.state && app.state.rgbws && app.state.rgbws[0] && app.state.rgbws[0].brightness !== undefined) {
@@ -94,56 +95,13 @@ export default {
     async immediatelySetValues () {
       if (this.brightness !== undefined && this.temp !== undefined) {
         const v = this.packValues()
-        this.gate.register(v)
-        this.gate.releaseInteraction()
         await appliancesService.setWhite(this.app.id, 'light', v.brightness, v.colorTemperature)
       }
     }
   },
 
   mounted () {
-    this.gate = new EchoGate({
-      read: (app) => {
-        const r = app && app.state && app.state.rgbws && app.state.rgbws[0]
-        if (!r || r.brightness === undefined || r.colorTemperature === undefined) {
-          return null
-        }
-        return { brightness: r.brightness, colorTemperature: r.colorTemperature }
-      },
-      matches: floatEchoMatcher(0.005),
-      timeout: 3000,
-      debugLabel: 'bwPicker'
-    })
-    this.unwatchFields = this.$watch(
-      () => this.gate.read(this.app),
-      () => {
-        const released = this.gate.observe(this.app)
-        if (released || !this.gate.isInFlight()) {
-          this.getValues(this.app)
-        }
-      }
-    )
     this.getValues(this.app)
-    this.interval = setInterval(() => {
-      if (this.gate.isInFlight()) {
-        return
-      }
-      this.getValues(this.app)
-    }, 500)
-  },
-
-  beforeDestroy () {
-    if (this.unwatchFields) {
-      this.unwatchFields()
-      this.unwatchFields = null
-    }
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
-    }
-    if (this.gate) {
-      this.gate.destroy()
-    }
   }
 }
 </script>

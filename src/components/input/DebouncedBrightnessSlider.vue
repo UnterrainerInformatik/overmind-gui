@@ -17,7 +17,6 @@
 
 <script lang="js">
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
-import { EchoGate, floatEchoMatcher } from '@/utils/echoGate'
 
 export default {
   name: 'DebouncedBrightnessSlider',
@@ -28,27 +27,29 @@ export default {
   },
 
   data: () => ({
-    interval: null,
     brightness: undefined,
-    gate: null,
-    unwatchFields: null
+    isDragging: false
   }),
 
-  computed: {
-  },
-
   watch: {
+    'app.state.dimmers': {
+      handler () {
+        if (!this.isDragging) {
+          this.getBrightness(this.app)
+        }
+      },
+      deep: true
+    }
   },
 
   methods: {
     async mouseUp () {
       const sent = this.brightness / 100
-      this.gate.register(sent)
-      this.gate.releaseInteraction()
       await appliancesService.setBrightness(this.app.id, 'light', sent)
+      this.isDragging = false
     },
     mouseDown () {
-      this.gate.holdForInteraction()
+      this.isDragging = true
     },
     getBrightness (app) {
       if (app && app.state && app.state.dimmers && app.state.dimmers[0] && app.state.dimmers[0].brightness !== undefined) {
@@ -58,45 +59,7 @@ export default {
   },
 
   mounted () {
-    this.gate = new EchoGate({
-      read: (app) => {
-        const d = app && app.state && app.state.dimmers && app.state.dimmers[0]
-        return d && d.brightness !== undefined ? d.brightness : null
-      },
-      matches: floatEchoMatcher(0.005),
-      timeout: 3000,
-      debugLabel: 'brightness'
-    })
-    this.unwatchFields = this.$watch(
-      () => this.gate.read(this.app),
-      () => {
-        const released = this.gate.observe(this.app)
-        if (released || !this.gate.isInFlight()) {
-          this.getBrightness(this.app)
-        }
-      }
-    )
     this.getBrightness(this.app)
-    this.interval = setInterval(() => {
-      if (this.gate.isInFlight()) {
-        return
-      }
-      this.getBrightness(this.app)
-    }, 500)
-  },
-
-  beforeDestroy () {
-    if (this.unwatchFields) {
-      this.unwatchFields()
-      this.unwatchFields = null
-    }
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
-    }
-    if (this.gate) {
-      this.gate.destroy()
-    }
   }
 }
 </script>
