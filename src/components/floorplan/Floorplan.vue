@@ -217,7 +217,7 @@ import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDial
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils } from '@/utils/overmindUtils'
-import { Debouncer } from '@/utils/debouncer'
+import { SseClient } from '@/utils/sseClient'
 
 export default {
   name: 'Floorplan',
@@ -250,7 +250,7 @@ export default {
   },
 
   data: () => ({
-    interval: null,
+    sseHandle: null,
     overmindUtils,
     areas: [],
     loaded: false,
@@ -266,8 +266,7 @@ export default {
     readWidth: undefined,
     readHeight: undefined,
     imgWidthOrHeightDebounce: false,
-    colorOverrides: [],
-    debouncer: new Debouncer()
+    colorOverrides: []
   }),
 
   computed: {
@@ -624,15 +623,27 @@ export default {
     }
   },
 
-  mounted () {
+  async mounted () {
     this.reCompose()
-    this.debouncer.debounce(async () => this.getAppliances(true))
-    this.interval = setInterval(() => this.debouncer.debounce(async () => this.getAppliances(false)), 2000)
+    await this.getAppliances(true)
+
+    const ids = this.appliances.map(a => a.id)
+    this.sseHandle = SseClient.getInstance().subscribe(ids, (updated) => {
+      for (const app of updated) {
+        this.appMap.map.set(app.id, app)
+        const idx = this.appliances.findIndex(a => a.id === app.id)
+        if (idx >= 0) {
+          this.$set(this.appliances, idx, app)
+        }
+      }
+      this.appMap.changed()
+      this.redraw(false)
+    }, 500)
   },
 
   beforeDestroy () {
-    if (this.interval) {
-      clearInterval(this.interval)
+    if (this.sseHandle) {
+      SseClient.getInstance().unsubscribe(this.sseHandle)
     }
   }
 }

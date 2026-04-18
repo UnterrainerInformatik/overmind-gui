@@ -38,7 +38,10 @@ const store = {
         initialize: '/setupappliance',
         reboot: '/restartappliance',
         reloadAppliances: '/setup/reload',
-        sunRiseSet: '/sunriseset'
+        sunRiseSet: '/sunriseset',
+        sseAppliances: '/sse/appliances',
+        sseAppliancesRegister: '/sse/appliances/register',
+        sseAppliancesDeregister: '/sse/appliances/deregister'
       }
     }
   }),
