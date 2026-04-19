@@ -631,6 +631,9 @@ export default {
 
     const seen = new Set()
     const perAppliance = []
+    const primaryChildToGroupIds = new Map()
+    const anyChildToGroupIds = new Map()
+    const groupChildPower = new Map()
     for (const area of this.areas) {
       if (!area.appId || seen.has(area.appId)) {
         continue
@@ -639,6 +642,20 @@ export default {
       const app = this.appMap.get(area.appId)
       if (!app) {
         continue
+      }
+      if (app.config && Array.isArray(app.config.applianceIds) && app.config.applianceIds.length > 0) {
+        const primaryChildId = app.config.applianceIds[0]
+        if (!primaryChildToGroupIds.has(primaryChildId)) {
+          primaryChildToGroupIds.set(primaryChildId, new Set())
+        }
+        primaryChildToGroupIds.get(primaryChildId).add(app.id)
+        for (const childId of app.config.applianceIds) {
+          if (!anyChildToGroupIds.has(childId)) {
+            anyChildToGroupIds.set(childId, new Set())
+          }
+          anyChildToGroupIds.get(childId).add(app.id)
+        }
+        groupChildPower.set(app.id, new Map())
       }
       const paths = pathsForApplianceType(app.type, 'compact')
       if (paths.length === 0) {
@@ -649,6 +666,15 @@ export default {
     if (perAppliance.length === 0) {
       return
     }
+    const writePath = (targetApp, path, value) => {
+      if (!targetApp) {
+        return
+      }
+      if (!targetApp.state) {
+        this.$set(targetApp, 'state', {})
+      }
+      setPathValue(targetApp.state, path, value)
+    }
     this.sseHandle = await SseClient.getInstance().registerTransport({
       minInterval: 1000,
       selection: { perAppliance }
@@ -657,21 +683,43 @@ export default {
         return
       }
       for (const triple of payload.values) {
-        const targetIds = [triple.applianceId]
+        writePath(this.appMap.get(triple.applianceId), triple.path, triple.value)
         if (Array.isArray(triple.representsGroups)) {
           for (const gid of triple.representsGroups) {
-            targetIds.push(gid)
+            writePath(this.appMap.get(gid), triple.path, triple.value)
           }
         }
-        for (const targetId of targetIds) {
-          const app = this.appMap.get(targetId)
-          if (!app) {
-            continue
+        const powerMatch = triple.path.match(/^relays\[(\d+)\]\.power$/)
+        if (powerMatch) {
+          // Aggregate relay power across all children of each containing group.
+          const relayIdx = Number(powerMatch[1])
+          const groups = anyChildToGroupIds.get(triple.applianceId)
+          if (groups) {
+            for (const gid of groups) {
+              const perGroup = groupChildPower.get(gid)
+              if (!perGroup.has(triple.applianceId)) {
+                perGroup.set(triple.applianceId, new Map())
+              }
+              perGroup.get(triple.applianceId).set(relayIdx, Number(triple.value) || 0)
+              let sum = 0
+              for (const perChild of perGroup.values()) {
+                const v = perChild.get(relayIdx)
+                if (v !== undefined) {
+                  sum += v
+                }
+              }
+              writePath(this.appMap.get(gid), triple.path, sum)
+            }
           }
-          if (!app.state) {
-            this.$set(app, 'state', {})
+        } else {
+          // Non-aggregate paths mirror from the primary child only, matching
+          // the initial-state copy in getAppliances().
+          const groups = primaryChildToGroupIds.get(triple.applianceId)
+          if (groups) {
+            for (const gid of groups) {
+              writePath(this.appMap.get(gid), triple.path, triple.value)
+            }
           }
-          setPathValue(app.state, triple.path, triple.value)
         }
       }
       this.appMap.changed()
