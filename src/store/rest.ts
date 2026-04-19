@@ -40,8 +40,8 @@ const store = {
         reloadAppliances: '/setup/reload',
         sunRiseSet: '/sunriseset',
         sseAppliances: '/sse/appliances',
-        sseAppliancesRegister: '/sse/appliances/register',
-        sseAppliancesDeregister: '/sse/appliances/deregister'
+        sseTransportsRegister: '/sse/transports/register',
+        sseTransportsDeregister: '/sse/transports/deregister'
       }
     }
   }),

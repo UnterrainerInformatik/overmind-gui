@@ -216,7 +216,7 @@ import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDialogFactory.vue'
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
-import { singleton as overmindUtils } from '@/utils/overmindUtils'
+import { singleton as overmindUtils, pathsForApplianceType, setPathValue } from '@/utils/overmindUtils'
 import { SseClient } from '@/utils/sseClient'
 
 export default {
@@ -495,7 +495,9 @@ export default {
         overmindUtils.parseConfig(element)
         appliances.push(element)
       })
-      // Resolve appliance-groups in a reasonable way.
+      // Resolve appliance-groups for initial render: the group inherits the first
+      // child's state/type/classFqn so display logic can treat it uniformly.
+      // Live updates arrive via `representsGroups` on transport-update triples.
       for (const appliance of appliances) {
         if ((appliance.type === 'GROUP_PARALLEL' || appliance.type === 'GROUP_SERIAL') && appliance.config && appliance.config.applianceIds) {
           for (const id of appliance.config.applianceIds) {
@@ -627,19 +629,60 @@ export default {
     this.reCompose()
     await this.getAppliances(true)
 
-    const ids = [...new Set(this.areas.map(a => a.appId).filter(id => id))]
-    this.sseHandle = SseClient.getInstance().subscribe(ids, (updated) => {
-      for (const app of updated) {
-        this.appMap.map.set(app.id, app)
+    const seen = new Set()
+    const perAppliance = []
+    for (const area of this.areas) {
+      if (!area.appId || seen.has(area.appId)) {
+        continue
+      }
+      seen.add(area.appId)
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        continue
+      }
+      const paths = pathsForApplianceType(app.type, 'compact')
+      if (paths.length === 0) {
+        continue
+      }
+      perAppliance.push({ applianceId: area.appId, paths })
+    }
+    if (perAppliance.length === 0) {
+      return
+    }
+    this.sseHandle = await SseClient.getInstance().registerTransport({
+      minInterval: 1000,
+      selection: { perAppliance }
+    }, (payload) => {
+      if (!payload || !payload.values) {
+        return
+      }
+      for (const triple of payload.values) {
+        const targetIds = [triple.applianceId]
+        if (Array.isArray(triple.representsGroups)) {
+          for (const gid of triple.representsGroups) {
+            targetIds.push(gid)
+          }
+        }
+        for (const targetId of targetIds) {
+          const app = this.appMap.get(targetId)
+          if (!app) {
+            continue
+          }
+          if (!app.state) {
+            this.$set(app, 'state', {})
+          }
+          setPathValue(app.state, triple.path, triple.value)
+        }
       }
       this.appMap.changed()
       this.redraw(false)
-    }, 500)
+    })
   },
 
   beforeDestroy () {
     if (this.sseHandle) {
-      SseClient.getInstance().unsubscribe(this.sseHandle)
+      SseClient.getInstance().unregisterTransport(this.sseHandle)
+      this.sseHandle = null
     }
   }
 }
