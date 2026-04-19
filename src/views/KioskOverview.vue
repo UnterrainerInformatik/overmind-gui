@@ -414,7 +414,7 @@ export default {
     tv: {},
     snuggling: {},
     bioTrash: {},
-    parentsOpen: {},
+    patioOpened: {},
     vacation: {},
     allStateMulti: {
       id: 'allStateMulti',

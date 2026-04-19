@@ -1,4 +1,76 @@
+import Vue from 'vue'
 import { singleton as jsUtils } from '@/utils/jsUtils'
+
+export type ApplianceType =
+  | 'PLUG'
+  | 'RELAY'
+  | 'RELAY_DUAL'
+  | 'DIMMER'
+  | 'BULB_RGB'
+  | 'HT'
+  | 'MOTION_SENSOR'
+  | 'CONTACT_SENSOR'
+  | string;
+
+const COMPACT_PATHS: Record<string, string[]> = {
+  PLUG: ['relays[*].power', 'relays[0].state'],
+  RELAY: ['relays[*].power', 'relays[0].state'],
+  RELAY_DUAL: ['relays[*].power', 'relays[*].state'],
+  DIMMER: ['relays[*].power', 'relays[0].state'],
+  BULB_RGB: ['relays[*].power', 'relays[0].state'],
+  HT: ['temperatures[0].temperature', 'humidities[0].humidity', 'batteries[0].batteryLevel', 'hasExternalPower'],
+  MOTION_SENSOR: ['motions[0].motion', 'batteries[0].batteryLevel'],
+  CONTACT_SENSOR: ['closures[0].open', 'closures[0].tilt', 'batteries[0].batteryLevel']
+}
+
+const DETAIL_PATHS: Record<string, string[]> = {
+  PLUG: ['**'],
+  RELAY: ['**'],
+  RELAY_DUAL: ['**'],
+  DIMMER: ['**'],
+  BULB_RGB: ['**'],
+  HT: ['**'],
+  MOTION_SENSOR: ['**'],
+  CONTACT_SENSOR: ['**']
+}
+
+export function pathsForApplianceType (type: ApplianceType, usage: 'compact' | 'detail'): string[] {
+  const table = usage === 'detail' ? DETAIL_PATHS : COMPACT_PATHS
+  const paths = table[type]
+  return paths ? paths.slice() : []
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function setPathValue (root: any, path: string, value: unknown): void {
+  if (!root || !path) {
+    return
+  }
+  const tokens: Array<string | number> = []
+  const re = /([^.[\]]+)|\[(\d+)\]/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(path)) !== null) {
+    if (m[1] !== undefined) {
+      tokens.push(m[1])
+    } else if (m[2] !== undefined) {
+      tokens.push(Number(m[2]))
+    }
+  }
+  if (tokens.length === 0) {
+    return
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let node: any = root
+  for (let i = 0; i < tokens.length - 1; i++) {
+    const t = tokens[i]
+    if (node[t] === undefined || node[t] === null) {
+      const nextT = tokens[i + 1]
+      Vue.set(node, t as any, typeof nextT === 'number' ? [] : {})
+    }
+    node = node[t]
+  }
+  const last = tokens[tokens.length - 1]
+  Vue.set(node, last as any, value)
+}
 
 class OvermindUtils {
   private static instanceField: OvermindUtils

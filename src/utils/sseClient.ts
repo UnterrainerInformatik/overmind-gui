@@ -1,19 +1,64 @@
+import Vue from 'vue'
 import store from '@/store'
-import { singleton as axiosUtils } from '@/utils/axiosUtils'
-import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as objectUtils } from '@/utils/objectUtils'
 
-interface LocalSubscription {
-  handle: string;
-  serverSubscriptionId: string | null;
-  applianceIds: number[];
+export type AggregateOp = 'sum' | 'avg'
+
+export interface PerApplianceSelection {
+  applianceId: number;
+  paths: string[];
+}
+
+export type SelectionShape =
+  | { applianceIds: number[]; paths: string[] }
+  | { perAppliance: PerApplianceSelection[] }
+
+export interface TransportSpec {
   minInterval: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  callback: (appliances: any[]) => void;
+  selection: SelectionShape;
+  aggregate?: { op: AggregateOp };
+}
+
+export interface ValueTriple {
+  applianceId: number;
+  path: string;
+  value: unknown;
+}
+
+export interface ValuesPayload {
+  values: ValueTriple[];
+  ts: string;
+}
+
+export interface AggregatePayload {
+  aggregate: {
+    op: AggregateOp;
+    value: number | null;
+    sampleCount: number;
+    totalCount: number;
+  };
+  ts: string;
+}
+
+export type TransportUpdate = ValuesPayload | AggregatePayload
+
+export type TransportCallback = (payload: TransportUpdate) => void
+
+export interface Handle {
+  id: string;
+}
+
+interface HandleRecord {
+  handle: Handle;
+  spec: TransportSpec;
+  callback: TransportCallback;
+  transportId: string | null;
+  initialResolve: ((h: Handle) => void) | null;
+  initialReject: ((err: Error) => void) | null;
 }
 
 let handleCounter = 0
-function nextHandle (): string {
+function nextHandleId (): string {
   handleCounter++
   return 'sse-' + handleCounter
 }
@@ -24,8 +69,9 @@ export class SseClient {
   private connectionId: string | null = null
   private eventSource: EventSource | null = null
   private reconnectTimer: any | null = null
-  private subscriptions: Map<string, LocalSubscription> = new Map()
-  private cache: Map<number, any> = new Map()
+  private handles: Map<string, HandleRecord> = new Map()
+  private byTransportId: Map<string, HandleRecord> = new Map()
+  private pathCache: Map<string, unknown> = new Map()
   private _connected = false
 
   public get connected (): boolean {
@@ -45,6 +91,20 @@ export class SseClient {
     return `${config.protocol}://${config.address}:${config.port}${endpoint}`
   }
 
+  private buildUrl (endpointKey: string): string {
+    const config = objectUtils.getDeepProperty('uinf', store.getters['rest/config'].servers)
+    const endpoint = objectUtils.getDeepProperty(endpointKey, store.getters['rest/config'].endpoint)
+    return `${config.protocol}://${config.address}:${config.port}${endpoint}`
+  }
+
+  private authHeader (): Record<string, string> {
+    const token = store.getters['keycloak/token']
+    if (!token) {
+      return {}
+    }
+    return { Authorization: 'Bearer ' + token }
+  }
+
   private ensureConnection (): void {
     if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
       return
@@ -60,8 +120,8 @@ export class SseClient {
     this.eventSource.addEventListener('connected', (e: any) => {
       this.onConnected(e)
     })
-    this.eventSource.addEventListener('update', (e: any) => {
-      this.onUpdate(e)
+    this.eventSource.addEventListener('transport-update', (e: any) => {
+      this.onTransportUpdate(e)
     })
     this.eventSource.onerror = () => {
       this._connected = false
@@ -86,7 +146,7 @@ export class SseClient {
     this.destroyConnection()
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
-      if (this.subscriptions.size > 0) {
+      if (this.handles.size > 0) {
         this.ensureConnection()
       }
     }, 3000)
@@ -97,105 +157,136 @@ export class SseClient {
     this.connectionId = data.connectionId
     this._connected = true
 
-    this.subscriptions.forEach(sub => {
-      this.registerOnServer(sub)
+    this.byTransportId.clear()
+    this.handles.forEach(record => {
+      record.transportId = null
+      this.registerOnServer(record)
     })
   }
 
-  private onUpdate (e: MessageEvent): void {
+  private onTransportUpdate (e: MessageEvent): void {
     const data = JSON.parse(e.data)
-    const entries: any[] = data.entries || []
-
-    for (const entry of entries) {
-      overmindUtils.parseState(entry)
-      overmindUtils.parseConfig(entry)
-      this.cache.set(entry.id, entry)
+    const transportId: string | undefined = data.transportId
+    if (!transportId) {
+      return
+    }
+    const record = this.byTransportId.get(transportId)
+    if (!record) {
+      return
     }
 
-    const batches: Map<string, any[]> = new Map()
-    for (const entry of entries) {
-      this.subscriptions.forEach((sub, handle) => {
-        if (sub.applianceIds.includes(entry.id)) {
-          let batch = batches.get(handle)
-          if (!batch) {
-            batch = []
-            batches.set(handle, batch)
-          }
-          batch.push(entry)
-        }
+    const payload: any = { ts: data.ts }
+    if (data.values !== undefined) {
+      payload.values = data.values
+      for (const triple of data.values as ValueTriple[]) {
+        this.pathCache.set(`${triple.applianceId}:${triple.path}`, triple.value)
+      }
+    } else if (data.aggregate !== undefined) {
+      payload.aggregate = data.aggregate
+    } else {
+      return
+    }
+
+    record.callback(payload as TransportUpdate)
+
+    if (record.initialResolve) {
+      const resolve = record.initialResolve
+      record.initialResolve = null
+      record.initialReject = null
+      resolve(record.handle)
+    }
+  }
+
+  private async registerOnServer (record: HandleRecord): Promise<void> {
+    if (!this.connectionId) {
+      return
+    }
+    const body: any = {
+      connectionId: this.connectionId,
+      minInterval: record.spec.minInterval,
+      selection: record.spec.selection
+    }
+    if (record.spec.aggregate) {
+      body.aggregate = record.spec.aggregate
+    }
+    try {
+      const axiosResponse = await Vue.axios.post(this.buildUrl('sseTransportsRegister'), body, {
+        headers: this.authHeader()
       })
+      const response = axiosResponse.data
+      const transportId: string = response.transportId
+      record.transportId = transportId
+      this.byTransportId.set(transportId, record)
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('SseClient: registerTransport failed', err)
+      if (record.initialReject) {
+        const reject = record.initialReject
+        record.initialResolve = null
+        record.initialReject = null
+        reject(err instanceof Error ? err : new Error(String(err)))
+      }
     }
+  }
 
-    batches.forEach((batch, handle) => {
-      const sub = this.subscriptions.get(handle)
-      if (sub) {
-        sub.callback(batch)
+  private async deregisterOnServer (record: HandleRecord): Promise<void> {
+    if (!this.connectionId || !record.transportId) {
+      return
+    }
+    const transportId = record.transportId
+    try {
+      await Vue.axios.post(this.buildUrl('sseTransportsDeregister'), {
+        connectionId: this.connectionId,
+        transportId
+      }, {
+        headers: this.authHeader()
+      })
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn('SseClient: deregisterTransport failed', err)
+    }
+  }
+
+  public async registerTransport (spec: TransportSpec, callback: TransportCallback): Promise<Handle> {
+    const handle: Handle = { id: nextHandleId() }
+    const record: HandleRecord = {
+      handle,
+      spec,
+      callback,
+      transportId: null,
+      initialResolve: null,
+      initialReject: null
+    }
+    this.handles.set(handle.id, record)
+    this.ensureConnection()
+
+    return new Promise<Handle>((resolve, reject) => {
+      record.initialResolve = resolve
+      record.initialReject = reject
+      if (this.connectionId) {
+        this.registerOnServer(record)
       }
     })
   }
 
-  private async registerOnServer (sub: LocalSubscription): Promise<void> {
-    if (!this.connectionId) {
+  public unregisterTransport (handle: Handle | null | undefined): void {
+    if (!handle) {
       return
     }
-    try {
-      const response = await axiosUtils.post('uinf', 'sseAppliancesRegister', () => ({
-        connectionId: this.connectionId,
-        applianceIds: sub.applianceIds,
-        minInterval: sub.minInterval
-      }))
-      sub.serverSubscriptionId = response.subscriptionId
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('SseClient: register failed', err)
-    }
-  }
-
-  private async deregisterOnServer (sub: LocalSubscription): Promise<void> {
-    if (!this.connectionId || !sub.serverSubscriptionId) {
+    const record = this.handles.get(handle.id)
+    if (!record) {
       return
     }
-    try {
-      await axiosUtils.post('uinf', 'sseAppliancesDeregister', () => ({
-        connectionId: this.connectionId,
-        subscriptionId: sub.serverSubscriptionId
-      }))
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('SseClient: deregister failed', err)
+    this.handles.delete(handle.id)
+    if (record.transportId) {
+      this.byTransportId.delete(record.transportId)
     }
+    this.deregisterOnServer(record)
   }
 
-  public subscribe (applianceIds: number[], callback: (appliances: any[]) => void, minInterval = 1000): string {
-    const handle = nextHandle()
-    const sub: LocalSubscription = {
-      handle,
-      serverSubscriptionId: null,
-      applianceIds,
-      minInterval,
-      callback
-    }
-    this.subscriptions.set(handle, sub)
-    this.ensureConnection()
-
-    if (this.connectionId) {
-      this.registerOnServer(sub)
-    }
-
-    return handle
-  }
-
-  public unsubscribe (handle: string): void {
-    const sub = this.subscriptions.get(handle)
-    if (!sub) {
-      return
-    }
-    this.subscriptions.delete(handle)
-    this.deregisterOnServer(sub)
-  }
-
-  public getLatest (applianceId: number): any | null {
-    return this.cache.get(applianceId) || null
+  public getLatestPath (applianceId: number, path: string): unknown | null {
+    const key = `${applianceId}:${path}`
+    return this.pathCache.has(key) ? this.pathCache.get(key) : null
   }
 }
 

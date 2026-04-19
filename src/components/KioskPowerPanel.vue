@@ -161,6 +161,18 @@ import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { singleton as jsUtils } from '@/utils/jsUtils'
 import { SseClient } from '@/utils/sseClient'
 
+function buildPerAppliance (appliances) {
+  if (!appliances) {
+    return []
+  }
+  return appliances.map(a => ({
+    applianceId: a.id,
+    paths: a.indexes
+      ? a.indexes.map(i => `relays[${i}].power`)
+      : (a.names ? a.names.slice() : [])
+  })).filter(e => e.paths.length > 0)
+}
+
 export default {
   name: 'KioskPowerPanel',
 
@@ -176,24 +188,14 @@ export default {
   data: () => ({
     jsUtils,
     overmindUtils,
-    sseHandle: null,
-    appliances: null,
-    showDetailsOf: null
+    appliances: [],
+    showDetailsOf: null,
+    detailApps: [],
+    detailHandle: null,
+    nameById: new Map()
   }),
 
   computed: {
-    detailApps: {
-      get () {
-        const a = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex].appliances.filter(e => {
-          return e.powerRaw > 1 || e.powerRaw < -1
-        })
-        a.sort((a, b) => {
-          return a.powerRaw === b.powerRaw ? 0 : a.powerRaw < b.powerRaw ? 1 : -1
-        })
-        a.splice(12)
-        return a
-      }
-    }
   },
 
   watch: {
@@ -206,11 +208,13 @@ export default {
           rowIndex,
           appIndex
         }
+        this.openDetailTransport(rowIndex, appIndex)
       }
       this.$refs.flipCard.flip()
     },
     backClicked () {
       this.$refs.flipCard.flip()
+      this.closeDetailTransport()
     },
     getColor (app) {
       if (!app.gradient || app.percent == null || app.percent === undefined) {
@@ -230,131 +234,164 @@ export default {
       const p = app.percent / 100
       return overmindUtils.lerpColorArrayToRgba(from, to, p)
     },
-    getBatteryColor (app) {
-      if (!app.batteryGradient || app.batteryPercent == null || app.batteryPercent === undefined) {
-        return app.batteryColor + ' darken-3'
-      }
-      const from = app.batteryGradient.from
-      const to = app.batteryGradient.to
-      const p = app.batterPercent / 100
-      return overmindUtils.lerpColorArrayToRgba(from, to, p)
-    },
-    getPower (appliance, indexes, names) {
-      let power = 0
-      if (indexes) {
-        power = this.getPowerByIndexes(appliance, indexes)
-      }
-      if (names) {
-        power = this.getPowerByNames(appliance, names)
-      }
-      return power
-    },
-    getPowerByIndexes (appliance, indexes) {
-      let power = 0
-      for (let u = 0; u < indexes.length; u++) {
-        const i = indexes[u]
-        if (appliance.state && appliance.state.relays && appliance.state.relays[i] && appliance.state.relays[i].power) {
-          if (appliance.negate) {
-            power -= appliance.state.relays[i].power
-          } else {
-            power += appliance.state.relays[i].power
-          }
-        }
-      }
-      return power
-    },
-    getPowerByNames (appliance, names) {
-      let power = 0
-      for (let u = 0; u < names.length; u++) {
-        const name = names[u]
-        if (appliance.state && appliance.state[name]) {
-          if (appliance.negate) {
-            power -= appliance.state[name]
-          } else {
-            power += appliance.state[name]
-          }
-        }
-      }
-      return power
-    },
-    async getAppliances () {
-      const r = []
-      for (const dataRow of this.data) {
+    initCells () {
+      const grid = []
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
         const row = []
-        for (const d of dataRow) {
-          const appliances = []
-          const p = await this.getAppliancesData(d.appliances, appliances)
-
-          const batteryAppliances = []
-          const bp = await this.getAppliancesData(d.batteryAppliances, batteryAppliances)
-
-          let max = d.max
-          if (d.isNegativeEnabled && p < 0) {
-            max = d.negativeMax
-          }
-          const percent = max ? (100 / max * p) : null
-          const obj = {
+        for (let appIndex = 0; appIndex < this.data[rowIndex].length; appIndex++) {
+          const d = this.data[rowIndex][appIndex]
+          row.push({
+            rowIndex,
+            appIndex,
+            d,
             icons: d.icons,
-
-            appliances: appliances,
-            power: overmindUtils.formatPower(p),
-            max: max,
-            percent: percent,
-            gradient: d.gradient,
-            color: d.color ? d.color : 'green',
-
             isNegativeEnabled: d.isNegativeEnabled,
-            negativeMax: d.negativeMax,
-            negativeGradient: d.negativeGradient,
-            negativeColor: d.negativeColor ? d.negativeColor : 'orange',
-
             isBattery: d.batteryAppliances !== undefined && d.batteryAppliances !== null,
-            batteryAppliances: batteryAppliances,
+            power: overmindUtils.formatPower(0),
+            percent: null,
+            color: d.color ? d.color : 'green',
+            gradient: d.gradient,
+            negativeColor: d.negativeColor ? d.negativeColor : 'orange',
+            negativeGradient: d.negativeGradient,
+            max: d.max,
+            negativeMax: d.negativeMax,
             batteryMax: d.batteryMax,
-            batteryPercent: bp < 0 ? 0 : bp > 100 ? 100 : bp,
+            batteryPercent: 0,
+            batteryColor: d.batteryColor ? d.batteryColor : 'yellow',
             batteryGradient: d.batteryGradient,
-            batteryColor: d.batteryColor ? d.batteryColor : 'yellow'
-          }
-          row.push(obj)
+            sampleCount: 0,
+            batterySampleCount: 0,
+            powerHandle: null,
+            batteryHandle: null
+          })
         }
-        r.push(row)
+        grid.push(row)
       }
-      this.appliances = r
+      this.appliances = grid
     },
-    async getAppliancesData (appliances, list) {
-      let p = 0
-      if (!appliances) {
-        return p
-      }
-      const sse = SseClient.getInstance()
-      const aa = await jsUtils.resolveCollection(appliances, async (item) => {
-        const cached = sse.getLatest(item.id)
-        if (cached) {
-          return cached
+    uniqueIds () {
+      const ids = new Set()
+      for (const row of this.data) {
+        for (const d of row) {
+          if (d.appliances) {
+            for (const a of d.appliances) {
+              ids.add(a.id)
+            }
+          }
+          if (d.batteryAppliances) {
+            for (const a of d.batteryAppliances) {
+              ids.add(a.id)
+            }
+          }
         }
-        return appliancesService.getById(item.id)
+      }
+      return ids
+    },
+    async loadNames () {
+      const ids = this.uniqueIds()
+      const nameById = new Map()
+      await jsUtils.resolveCollection(Array.from(ids), async (id) => {
+        const a = await appliancesService.getById(id)
+        nameById.set(id, a && a.name ? a.name : String(id))
+        return a
       })
-      let i = 0
-      for (const appliance of appliances) {
-        const source = aa[i]
-        i++
-        if (!source) {
-          continue
-        }
-        const a = { ...source }
-        if (typeof a.state === 'string') {
-          overmindUtils.parseState(a)
-        }
-        if (typeof a.config === 'string') {
-          overmindUtils.parseConfig(a)
-        }
-        a.negate = appliance.negate
-        a.powerRaw = this.getPower(a, appliance.indexes, appliance.names)
-        a.power = overmindUtils.formatPower(a.powerRaw, true)
-        p += a.powerRaw
-        list.push(a)
+      this.nameById = nameById
+    },
+    onCellPowerUpdate (cell, payload) {
+      if (!payload || !payload.aggregate) {
+        return
       }
-      return p
+      const agg = payload.aggregate
+      cell.sampleCount = agg.sampleCount
+      const value = agg.sampleCount === 0 ? 0 : (agg.value == null ? 0 : agg.value)
+      cell.power = overmindUtils.formatPower(value)
+      if (agg.sampleCount === 0) {
+        cell.percent = null
+      } else {
+        let max = cell.d.max
+        if (cell.d.isNegativeEnabled && value < 0) {
+          max = cell.d.negativeMax
+        }
+        cell.percent = max ? (100 / max * value) : null
+      }
+    },
+    onCellBatteryUpdate (cell, payload) {
+      if (!payload || !payload.aggregate) {
+        return
+      }
+      const agg = payload.aggregate
+      cell.batterySampleCount = agg.sampleCount
+      const value = agg.sampleCount === 0 ? 0 : (agg.value == null ? 0 : agg.value)
+      const bp = cell.batteryMax ? (100 / cell.batteryMax * value) : 0
+      cell.batteryPercent = bp < 0 ? 0 : bp > 100 ? 100 : bp
+    },
+    async registerCellPower (cell) {
+      const perAppliance = buildPerAppliance(cell.d.appliances)
+      if (perAppliance.length === 0) {
+        return
+      }
+      cell.powerHandle = await SseClient.getInstance().registerTransport({
+        minInterval: 3000,
+        selection: { perAppliance },
+        aggregate: { op: 'sum' }
+      }, (payload) => this.onCellPowerUpdate(cell, payload))
+    },
+    async registerCellBattery (cell) {
+      const perAppliance = buildPerAppliance(cell.d.batteryAppliances)
+      if (perAppliance.length === 0) {
+        return
+      }
+      cell.batteryHandle = await SseClient.getInstance().registerTransport({
+        minInterval: 3000,
+        selection: { perAppliance },
+        aggregate: { op: 'sum' }
+      }, (payload) => this.onCellBatteryUpdate(cell, payload))
+    },
+    onDetailUpdate (cell, payload) {
+      if (!payload || !payload.values) {
+        return
+      }
+      const sums = new Map()
+      for (const triple of payload.values) {
+        const current = sums.get(triple.applianceId) || 0
+        const v = typeof triple.value === 'number' ? triple.value : Number.parseFloat(triple.value)
+        sums.set(triple.applianceId, current + (isNaN(v) ? 0 : v))
+      }
+      const list = []
+      for (const a of cell.d.appliances) {
+        const raw = sums.get(a.id) || 0
+        list.push({
+          id: a.id,
+          name: this.nameById.get(a.id) || String(a.id),
+          powerRaw: raw,
+          power: overmindUtils.formatPower(raw, true)
+        })
+      }
+      list.sort((x, y) => {
+        return x.powerRaw === y.powerRaw ? 0 : x.powerRaw < y.powerRaw ? 1 : -1
+      })
+      const filtered = list.filter(e => e.powerRaw > 1 || e.powerRaw < -1)
+      filtered.splice(12)
+      this.detailApps = filtered
+    },
+    async openDetailTransport (rowIndex, appIndex) {
+      this.closeDetailTransport()
+      const cell = this.appliances[rowIndex][appIndex]
+      const perAppliance = buildPerAppliance(cell.d.appliances)
+      if (perAppliance.length === 0) {
+        return
+      }
+      this.detailHandle = await SseClient.getInstance().registerTransport({
+        minInterval: 2000,
+        selection: { perAppliance }
+      }, (payload) => this.onDetailUpdate(cell, payload))
+    },
+    closeDetailTransport () {
+      if (this.detailHandle) {
+        SseClient.getInstance().unregisterTransport(this.detailHandle)
+        this.detailHandle = null
+      }
+      this.detailApps = []
     },
     percentInverse (lb, ub, p) {
       const a = p - lb
@@ -418,29 +455,35 @@ export default {
   },
 
   async mounted () {
-    await this.getAppliances()
-
-    const ids = []
-    for (const dataRow of this.data) {
-      for (const d of dataRow) {
-        if (d.appliances) {
-          for (const a of d.appliances) {
-            if (!ids.includes(a.id)) ids.push(a.id)
-          }
-        }
-        if (d.batteryAppliances) {
-          for (const a of d.batteryAppliances) {
-            if (!ids.includes(a.id)) ids.push(a.id)
-          }
+    this.initCells()
+    await this.loadNames()
+    for (const row of this.appliances) {
+      for (const cell of row) {
+        await this.registerCellPower(cell)
+        if (cell.isBattery) {
+          await this.registerCellBattery(cell)
         }
       }
     }
-    this.sseHandle = SseClient.getInstance().subscribe(ids, () => this.getAppliances(), 3000)
   },
 
   beforeDestroy () {
-    if (this.sseHandle) {
-      SseClient.getInstance().unsubscribe(this.sseHandle)
+    const sse = SseClient.getInstance()
+    for (const row of this.appliances) {
+      for (const cell of row) {
+        if (cell.powerHandle) {
+          sse.unregisterTransport(cell.powerHandle)
+          cell.powerHandle = null
+        }
+        if (cell.batteryHandle) {
+          sse.unregisterTransport(cell.batteryHandle)
+          cell.batteryHandle = null
+        }
+      }
+    }
+    if (this.detailHandle) {
+      sse.unregisterTransport(this.detailHandle)
+      this.detailHandle = null
     }
   }
 }

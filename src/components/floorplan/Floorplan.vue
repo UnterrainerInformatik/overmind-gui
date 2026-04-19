@@ -216,7 +216,7 @@ import BatteryIndicator from '@/components/BatteryIndicator.vue'
 import FloorplanDialogFactory from '@/components/floorplan/dialogs/FloorplanDialogFactory.vue'
 import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
-import { singleton as overmindUtils } from '@/utils/overmindUtils'
+import { singleton as overmindUtils, pathsForApplianceType, setPathValue } from '@/utils/overmindUtils'
 import { SseClient } from '@/utils/sseClient'
 
 export default {
@@ -495,7 +495,9 @@ export default {
         overmindUtils.parseConfig(element)
         appliances.push(element)
       })
-      // Resolve appliance-groups in a reasonable way.
+      // Resolve appliance-groups for initial render: the group inherits the first
+      // child's state/type/classFqn so display logic can treat it uniformly.
+      // Live updates arrive via `representsGroups` on transport-update triples.
       for (const appliance of appliances) {
         if ((appliance.type === 'GROUP_PARALLEL' || appliance.type === 'GROUP_SERIAL') && appliance.config && appliance.config.applianceIds) {
           for (const id of appliance.config.applianceIds) {
@@ -627,19 +629,108 @@ export default {
     this.reCompose()
     await this.getAppliances(true)
 
-    const ids = [...new Set(this.areas.map(a => a.appId).filter(id => id))]
-    this.sseHandle = SseClient.getInstance().subscribe(ids, (updated) => {
-      for (const app of updated) {
-        this.appMap.map.set(app.id, app)
+    const seen = new Set()
+    const perAppliance = []
+    const primaryChildToGroupIds = new Map()
+    const anyChildToGroupIds = new Map()
+    const groupChildPower = new Map()
+    for (const area of this.areas) {
+      if (!area.appId || seen.has(area.appId)) {
+        continue
+      }
+      seen.add(area.appId)
+      const app = this.appMap.get(area.appId)
+      if (!app) {
+        continue
+      }
+      if (app.config && Array.isArray(app.config.applianceIds) && app.config.applianceIds.length > 0) {
+        const primaryChildId = app.config.applianceIds[0]
+        if (!primaryChildToGroupIds.has(primaryChildId)) {
+          primaryChildToGroupIds.set(primaryChildId, new Set())
+        }
+        primaryChildToGroupIds.get(primaryChildId).add(app.id)
+        for (const childId of app.config.applianceIds) {
+          if (!anyChildToGroupIds.has(childId)) {
+            anyChildToGroupIds.set(childId, new Set())
+          }
+          anyChildToGroupIds.get(childId).add(app.id)
+        }
+        groupChildPower.set(app.id, new Map())
+      }
+      const paths = pathsForApplianceType(app.type, 'compact')
+      if (paths.length === 0) {
+        continue
+      }
+      perAppliance.push({ applianceId: area.appId, paths })
+    }
+    if (perAppliance.length === 0) {
+      return
+    }
+    const writePath = (targetApp, path, value) => {
+      if (!targetApp) {
+        return
+      }
+      if (!targetApp.state) {
+        this.$set(targetApp, 'state', {})
+      }
+      setPathValue(targetApp.state, path, value)
+    }
+    this.sseHandle = await SseClient.getInstance().registerTransport({
+      minInterval: 1000,
+      selection: { perAppliance }
+    }, (payload) => {
+      if (!payload || !payload.values) {
+        return
+      }
+      for (const triple of payload.values) {
+        writePath(this.appMap.get(triple.applianceId), triple.path, triple.value)
+        if (Array.isArray(triple.representsGroups)) {
+          for (const gid of triple.representsGroups) {
+            writePath(this.appMap.get(gid), triple.path, triple.value)
+          }
+        }
+        const powerMatch = triple.path.match(/^relays\[(\d+)\]\.power$/)
+        if (powerMatch) {
+          // Aggregate relay power across all children of each containing group.
+          const relayIdx = Number(powerMatch[1])
+          const groups = anyChildToGroupIds.get(triple.applianceId)
+          if (groups) {
+            for (const gid of groups) {
+              const perGroup = groupChildPower.get(gid)
+              if (!perGroup.has(triple.applianceId)) {
+                perGroup.set(triple.applianceId, new Map())
+              }
+              perGroup.get(triple.applianceId).set(relayIdx, Number(triple.value) || 0)
+              let sum = 0
+              for (const perChild of perGroup.values()) {
+                const v = perChild.get(relayIdx)
+                if (v !== undefined) {
+                  sum += v
+                }
+              }
+              writePath(this.appMap.get(gid), triple.path, sum)
+            }
+          }
+        } else {
+          // Non-aggregate paths mirror from the primary child only, matching
+          // the initial-state copy in getAppliances().
+          const groups = primaryChildToGroupIds.get(triple.applianceId)
+          if (groups) {
+            for (const gid of groups) {
+              writePath(this.appMap.get(gid), triple.path, triple.value)
+            }
+          }
+        }
       }
       this.appMap.changed()
       this.redraw(false)
-    }, 500)
+    })
   },
 
   beforeDestroy () {
     if (this.sseHandle) {
-      SseClient.getInstance().unsubscribe(this.sseHandle)
+      SseClient.getInstance().unregisterTransport(this.sseHandle)
+      this.sseHandle = null
     }
   }
 }
