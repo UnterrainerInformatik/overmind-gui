@@ -29,20 +29,20 @@
           <FloorplanDialogFactory
             v-if="constructIdFrom(area)"
             :item="area"
-            :app="appMap.get(area.appId)"
+            :app="appFor(area.appId)"
             :ref="constructIdFrom(area)"
           ></FloorplanDialogFactory>
           <BatteryIndicator
             v-if="
               !isError(area) &&
               displayBattery(area) &&
-              appMap.get(area.appId) &&
+              appFor(area.appId) &&
               !isHT(area)
             "
             :size="avatarBaseSize * scale"
             :level="
               Math.round(
-                appMap.get(area.appId).state.batteries[0].batteryLevel * 100
+                appFor(area.appId).state.batteries[0].batteryLevel * 100
               )
             "
             v-on:click="areaClicked($event, area, true)"
@@ -57,7 +57,7 @@
           ></BatteryIndicator>
           <!-- Shelly HT additional info-field -->
           <v-card
-            v-if="(!isError(area) || !appMap.get(area.appId)) && isHT(area)"
+            v-if="(!isError(area) || !appFor(area.appId)) && isHT(area)"
             :color="getBatteryLevelColor(area.appId)"
             v-on:click="areaClicked($event, area, true)"
             class="noFocus"
@@ -72,14 +72,14 @@
           >
             <v-row
               class="ma-0 pa-0"
-              v-if="appMap.get(area.appId).state.hasExternalPower == false"
+              v-if="appFor(area.appId).state.hasExternalPower == false"
             >
               <v-col class="ma-0 pa-0">
                 <v-icon class="ma-0 pa-0" size="15" color="white"
                   >{{
                     overmindUtils.getBatteryIcon(
                       Math.round(
-                        appMap.get(area.appId).state.batteries[0].batteryLevel *
+                        appFor(area.appId).state.batteries[0].batteryLevel *
                           100
                       )
                     )
@@ -89,7 +89,7 @@
                 <span class="small"
                   >{{
                     Math.round(
-                      appMap.get(area.appId).state.batteries[0].batteryLevel *
+                      appFor(area.appId).state.batteries[0].batteryLevel *
                         100
                     )
                   }}&nbsp;%</span
@@ -117,7 +117,7 @@
           </v-card>
           <v-avatar
             v-if="
-              (!isError(area) || !appMap.get(area.appId)) &&
+              (!isError(area) || !appFor(area.appId)) &&
               !displayBattery(area)
             "
             :size="avatarBaseSize * scale"
@@ -127,8 +127,8 @@
                 : getColor(area)) +
               (allowQuickAction(area)
                 ? ''
-                : appMap.get(area.appId) === undefined ||
-                  appMap.get(area.appId).switchable !== 'DETAIL_ONLY' ||
+                : appFor(area.appId) === undefined ||
+                  appFor(area.appId).switchable !== 'DETAIL_ONLY' ||
                   !displayEnhancedDialog
                 ? ' darken-2'
                 : '')
@@ -138,8 +138,8 @@
             :style="
               (clickableIcons &&
               (allowQuickAction(area) ||
-                (appMap.get(area.appId) !== undefined &&
-                  appMap.get(area.appId).switchable === 'DETAIL_ONLY' &&
+                (appFor(area.appId) !== undefined &&
+                  appFor(area.appId).switchable === 'DETAIL_ONLY' &&
                   displayEnhancedDialog))
                 ? 'cursor: pointer !important; '
                 : 'cursor: default !important; ') +
@@ -159,7 +159,7 @@
             }}</span>
           </v-avatar>
           <v-avatar
-            v-if="isError(area) && appMap.get(area.appId)"
+            v-if="isError(area) && appFor(area.appId)"
             :size="avatarBaseSize * scale"
             color="red"
             class="noFocus"
@@ -219,6 +219,9 @@ import { singleton as appliancesService } from '@/utils/webservices/appliancesSe
 import { singleton as overmindUtils, pathsForApplianceType, setPathValue } from '@/utils/overmindUtils'
 import { SseClient } from '@/utils/sseClient'
 
+const DEBUG_TRANSPORTS = false
+let lastLoggedAppForSeq = -1
+
 export default {
   name: 'Floorplan',
 
@@ -256,6 +259,7 @@ export default {
     loaded: false,
     ctx: null,
     appMap: new DoubleBufferedObservableMap(),
+    updateSeq: 0,
     appliances: [],
     loading: true,
     fullImgWidth: 1276,
@@ -265,7 +269,6 @@ export default {
     avatarBaseSize: 46,
     readWidth: undefined,
     readHeight: undefined,
-    imgWidthOrHeightDebounce: false,
     colorOverrides: []
   }),
 
@@ -282,27 +285,29 @@ export default {
   },
 
   watch: {
-    imgWidth: {
-      handler: function () {
-        if (!this.imgWidthOrHeightDebounce) {
-          this.imgWidthOrHeightDebounce = true
-          setTimeout(() => this.reCompose(), 10)
-        }
-      },
-      deep: true
-    },
-    imgHeight: {
-      handler: function () {
-        if (!this.imgWidthOrHeightDebounce) {
-          this.imgWidthOrHeightDebounce = true
-          setTimeout(() => this.reCompose(), 10)
-        }
-      },
-      deep: true
+    updateSeq (newVal) {
+      if (DEBUG_TRANSPORTS) {
+        // eslint-disable-next-line no-console
+        console.debug('[Floorplan updateSeq watch]', { newVal })
+      }
     }
   },
 
   methods: {
+    appFor (id) {
+      // Reactive read of updateSeq: every bump in the transport-update callback
+      // invalidates template expressions that route through appFor, forcing a
+      // Vue-native re-render independent of the ObservableMap.changeTracker path.
+      // Assigning to a const prevents dead-code elimination from stripping
+      // the property access.
+      const seq = this.updateSeq
+      if (DEBUG_TRANSPORTS && id === 96 && seq !== lastLoggedAppForSeq) {
+        lastLoggedAppForSeq = seq
+        // eslint-disable-next-line no-console
+        console.debug('[Floorplan appFor]', { id, seq })
+      }
+      return this.appMap.get(id)
+    },
     constructIdFrom (area) {
       if (area.appId === 0) {
         return null
@@ -313,23 +318,41 @@ export default {
       if (!this.$refs.backgroundMeasurement) {
         return
       }
-      this.imgWidth = this.$refs.backgroundMeasurement.getBoundingClientRect().width
-      this.imgWidth = this.imgWidth - this.imgWidth / 30
-      this.imgHeight = this.fullImgHeight * this.scale
-      const canvas = this.$refs.canvas
-      this.ctx = canvas.getContext('2d')
-      this.redraw(false)
-      this.imgWidthOrHeightDebounce = false
+      const measured = this.$refs.backgroundMeasurement.getBoundingClientRect().width
+      const nextWidth = measured - measured / 30
+      const nextHeight = this.fullImgHeight * (nextWidth / this.fullImgWidth)
+      const sizeChanged = nextWidth !== this.imgWidth || nextHeight !== this.imgHeight
+      if (nextWidth !== this.imgWidth) {
+        this.imgWidth = nextWidth
+      }
+      if (nextHeight !== this.imgHeight) {
+        this.imgHeight = nextHeight
+      }
+      // Writing to <canvas> width/height attrs clears the pixel buffer, and
+      // Vue applies those attrs in the next DOM patch. Defer the redraw so it
+      // runs after the wipe, not before.
+      const paint = () => {
+        const canvas = this.$refs.canvas
+        if (canvas) {
+          this.ctx = canvas.getContext('2d')
+        }
+        this.redraw(false)
+      }
+      if (sizeChanged) {
+        this.$nextTick(paint)
+      } else {
+        paint()
+      }
     },
     displayBattery (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return false
       }
       return app.batteryDriven || this.isHT(area)
     },
     isHT (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return false
       }
@@ -337,35 +360,35 @@ export default {
         app.classFqn === 'info.unterrainer.server.overmindserver.vendors.shelly.appliances.ShellyPlusHTAppliance'
     },
     getBatteryLevelColor (id) {
-      const app = this.appMap.get(id)
+      const app = this.appFor(id)
       if (app.state.hasExternalPower) {
         return overmindUtils.getBatteryColor(100)
       }
       return overmindUtils.getBatteryColor(Math.round(app.state.batteries[0].batteryLevel * 100))
     },
     getTemperatureOf (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return undefined
       }
       return overmindUtils.getTemperature(app)
     },
     getHumidityOf (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return undefined
       }
       return overmindUtils.getHumidity(app)
     },
     allowQuickAction (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return false
       }
       return app.switchable === undefined || app.switchable === null || app.switchable === 'TRUE'
     },
     getOuterRingColor (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         return 'transparent'
       }
@@ -392,7 +415,7 @@ export default {
       return overmindUtils.formatPower(p)
     },
     getPowerOf (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (app === undefined) {
         return undefined
       }
@@ -412,7 +435,7 @@ export default {
       if (area.appId === 0) {
         return
       }
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         return
       }
@@ -437,7 +460,7 @@ export default {
       const scale = this.scale
       this.ctx.clearRect(0, 0, this.imgWidth, this.imgHeight)
       for (const area of this.areas) {
-        const item = this.appMap.get(area.appId)
+        const item = this.appFor(area.appId)
         overmindUtils.addOnOffStateTo(item, area.index)
       }
       for (const area of this.getAreasWithCoords()) {
@@ -447,7 +470,7 @@ export default {
           this.ctx.lineTo(area.coords[item] * scale, area.coords[item + 1] * scale)
         }
         this.ctx.closePath()
-        const app = this.appMap.get(area.appId)
+        const app = this.appFor(area.appId)
         if (!app) {
           this.ctx.fillStyle = this.colorTransparent
         } else {
@@ -565,7 +588,7 @@ export default {
       return a.split(',').filter(x => x.trim().length && !isNaN(x)).map(Number)
     },
     isError (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         return true
       }
@@ -579,7 +602,7 @@ export default {
       return false
     },
     getColor (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         return 'transparent'
       }
@@ -607,7 +630,7 @@ export default {
       return 'transparent'
     },
     isOn (area) {
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         return false
       }
@@ -639,7 +662,7 @@ export default {
         continue
       }
       seen.add(area.appId)
-      const app = this.appMap.get(area.appId)
+      const app = this.appFor(area.appId)
       if (!app) {
         continue
       }
@@ -666,7 +689,11 @@ export default {
     if (perAppliance.length === 0) {
       return
     }
-    const writePath = (targetApp, path, value) => {
+    const writePath = (targetApp, path, value, applianceId) => {
+      if (DEBUG_TRANSPORTS) {
+        // eslint-disable-next-line no-console
+        console.debug('[Floorplan writePath]', { applianceId, path, value, matched: !!targetApp })
+      }
       if (!targetApp) {
         return
       }
@@ -682,11 +709,25 @@ export default {
       if (!payload || !payload.values) {
         return
       }
+      if (DEBUG_TRANSPORTS) {
+        const firstTwo = payload.values.slice(0, 2).map(t => ({
+          applianceId: t.applianceId,
+          path: t.path,
+          value: t.value,
+          representsGroups: t.representsGroups
+        }))
+        // eslint-disable-next-line no-console
+        console.debug('[Floorplan transport-update]', {
+          sseHandleId: this.sseHandle ? this.sseHandle.id : null,
+          count: payload.values.length,
+          firstTwo
+        })
+      }
       for (const triple of payload.values) {
-        writePath(this.appMap.get(triple.applianceId), triple.path, triple.value)
+        writePath(this.appMap.get(triple.applianceId), triple.path, triple.value, triple.applianceId)
         if (Array.isArray(triple.representsGroups)) {
           for (const gid of triple.representsGroups) {
-            writePath(this.appMap.get(gid), triple.path, triple.value)
+            writePath(this.appMap.get(gid), triple.path, triple.value, gid)
           }
         }
         const powerMatch = triple.path.match(/^relays\[(\d+)\]\.power$/)
@@ -708,7 +749,7 @@ export default {
                   sum += v
                 }
               }
-              writePath(this.appMap.get(gid), triple.path, sum)
+              writePath(this.appMap.get(gid), triple.path, sum, gid)
             }
           }
         } else {
@@ -717,17 +758,25 @@ export default {
           const groups = primaryChildToGroupIds.get(triple.applianceId)
           if (groups) {
             for (const gid of groups) {
-              writePath(this.appMap.get(gid), triple.path, triple.value)
+              writePath(this.appMap.get(gid), triple.path, triple.value, gid)
             }
           }
         }
       }
-      this.appMap.changed()
+      this.updateSeq += 1
       this.redraw(false)
     })
+    if (DEBUG_TRANSPORTS) {
+      // eslint-disable-next-line no-console
+      console.debug('[Floorplan mounted]', { sseHandleId: this.sseHandle ? this.sseHandle.id : null })
+    }
   },
 
   beforeDestroy () {
+    if (DEBUG_TRANSPORTS) {
+      // eslint-disable-next-line no-console
+      console.debug('[Floorplan beforeDestroy]', { sseHandleId: this.sseHandle ? this.sseHandle.id : null })
+    }
     if (this.sseHandle) {
       SseClient.getInstance().unregisterTransport(this.sseHandle)
       this.sseHandle = null

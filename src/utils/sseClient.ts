@@ -2,6 +2,8 @@ import Vue from 'vue'
 import store from '@/store'
 import { singleton as objectUtils } from '@/utils/objectUtils'
 
+const DEBUG_SSE = false
+
 export type AggregateOp = 'sum' | 'avg'
 
 export interface PerApplianceSelection {
@@ -115,6 +117,10 @@ export class SseClient {
     this.destroyConnection()
 
     const url = this.buildSseUrl()
+    if (DEBUG_SSE) {
+      // eslint-disable-next-line no-console
+      console.debug('[SSE] opening EventSource', { url })
+    }
     this.eventSource = new EventSource(url)
 
     this.eventSource.addEventListener('connected', (e: any) => {
@@ -123,7 +129,17 @@ export class SseClient {
     this.eventSource.addEventListener('transport-update', (e: any) => {
       this.onTransportUpdate(e)
     })
+    this.eventSource.onmessage = (e: MessageEvent) => {
+      if (DEBUG_SSE) {
+        // eslint-disable-next-line no-console
+        console.debug('[SSE] generic message', { data: e.data, lastEventId: e.lastEventId })
+      }
+    }
     this.eventSource.onerror = () => {
+      if (DEBUG_SSE) {
+        // eslint-disable-next-line no-console
+        console.debug('[SSE] onerror', { readyState: this.eventSource && this.eventSource.readyState })
+      }
       this._connected = false
       this.connectionId = null
       if (this.eventSource && this.eventSource.readyState === EventSource.CLOSED) {
@@ -156,6 +172,10 @@ export class SseClient {
     const data = JSON.parse(e.data)
     this.connectionId = data.connectionId
     this._connected = true
+    if (DEBUG_SSE) {
+      // eslint-disable-next-line no-console
+      console.debug('[SSE] connected', { connectionId: this.connectionId, reregistering: this.handles.size })
+    }
 
     this.byTransportId.clear()
     this.handles.forEach(record => {
@@ -167,6 +187,17 @@ export class SseClient {
   private onTransportUpdate (e: MessageEvent): void {
     const data = JSON.parse(e.data)
     const transportId: string | undefined = data.transportId
+    if (DEBUG_SSE) {
+      const knownTransportIds = Array.from(this.byTransportId.keys())
+      // eslint-disable-next-line no-console
+      console.debug('[SSE] transport-update arrived', {
+        transportId,
+        matched: transportId ? this.byTransportId.has(transportId) : false,
+        valuesCount: Array.isArray(data.values) ? data.values.length : null,
+        hasAggregate: data.aggregate !== undefined,
+        knownTransportIds
+      })
+    }
     if (!transportId) {
       return
     }
@@ -217,6 +248,10 @@ export class SseClient {
       const transportId: string = response.transportId
       record.transportId = transportId
       this.byTransportId.set(transportId, record)
+      if (DEBUG_SSE) {
+        // eslint-disable-next-line no-console
+        console.debug('[SSE] registered on server', { handleId: record.handle.id, transportId, selection: record.spec.selection })
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('SseClient: registerTransport failed', err)

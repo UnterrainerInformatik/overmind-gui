@@ -238,7 +238,7 @@ class OvermindUtils {
     }
 
     if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 24) {
-      item.onOffState = 'error'
+      Vue.set(item, 'onOffState', 'error')
       return
     }
 
@@ -251,28 +251,28 @@ class OvermindUtils {
           if (item && item.state && item.iconPos1) {
             return item.state[item.iconPos1] > 0
           }
-          item.onOffState = 'error'
+          Vue.set(item, 'onOffState', 'error')
           return
         }
         if (item.state.relays[0].state.toLowerCase() === 'on') {
-          item.onOffState = 'on'
+          Vue.set(item, 'onOffState', 'on')
           return
         }
-        item.onOffState = 'off'
+        Vue.set(item, 'onOffState', 'off')
         return
       case 'MOTION_SENSOR':
         if (!item || !item.state || !item.state.motions || !item.state.motions[0] || item.state.motions[0].motion === undefined) {
-          item.onOffState = 'error'
+          Vue.set(item, 'onOffState', 'error')
           return
         }
         if (item.state.motions[0].motion) {
-          item.onOffState = 'on'
+          Vue.set(item, 'onOffState', 'on')
           return
         }
-        item.onOffState = 'off'
+        Vue.set(item, 'onOffState', 'off')
         return
       case 'HT':
-        item.onOffState = 'on'
+        Vue.set(item, 'onOffState', 'on')
         item.colorPalette = () => {
           if (item && item.state && item.state.temperatures && item.state.temperatures[0] && item.state.temperatures[0].temperature) {
             return this.getTempColorFor(item.state.temperatures[0].temperature)
@@ -282,42 +282,42 @@ class OvermindUtils {
         return
       case 'CONTACT_SENSOR':
         if (!item || !item.state || !item.state.closures || !item.state.closures[0] || item.state.closures[0].open === undefined) {
-          item.onOffState = 'error'
+          Vue.set(item, 'onOffState', 'error')
           return
         }
         if (this.tilted(item)) {
-          item.onOffState = 'middle'
+          Vue.set(item, 'onOffState', 'middle')
           return
         }
         if (this.opened(item)) {
-          item.onOffState = 'on'
+          Vue.set(item, 'onOffState', 'on')
           return
         }
-        item.onOffState = 'off'
+        Vue.set(item, 'onOffState', 'off')
         return
       case 'RELAY_DUAL':
         if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[1] || !item.state.relays[0].state || !item.state.relays[1].state) {
-          item.onOffState = 'error'
+          Vue.set(item, 'onOffState', 'error')
           return
         }
         if (item.state.relays[index].state.toLowerCase() === 'on') {
-          if (item.onOffState === undefined) {
-            item.onOffState = []
+          if (item.onOffState === undefined || !Array.isArray(item.onOffState)) {
+            Vue.set(item, 'onOffState', [])
           }
-          item.onOffState[index] = 'on'
+          Vue.set(item.onOffState, index, 'on')
           return
         }
         if (item.state.relays[index].state.toLowerCase() !== 'on') {
-          if (item.onOffState === undefined) {
-            item.onOffState = []
+          if (item.onOffState === undefined || !Array.isArray(item.onOffState)) {
+            Vue.set(item, 'onOffState', [])
           }
-          item.onOffState[index] = 'off'
+          Vue.set(item.onOffState, index, 'off')
           return
         }
-        item.onOffState = 'error'
+        Vue.set(item, 'onOffState', 'error')
         return
     }
-    item.onOffState = 'none'
+    Vue.set(item, 'onOffState', 'none')
   }
 
   public getTemperature (item) {
