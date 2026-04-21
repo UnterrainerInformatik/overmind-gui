@@ -192,6 +192,7 @@ export default {
     showDetailsOf: null,
     detailApps: [],
     detailHandle: null,
+    detailEpoch: 0,
     nameById: new Map()
   }),
 
@@ -376,17 +377,31 @@ export default {
     },
     async openDetailTransport (rowIndex, appIndex) {
       this.closeDetailTransport()
+      this.detailApps = []
+      const epoch = this.detailEpoch
       const cell = this.appliances[rowIndex][appIndex]
       const perAppliance = buildPerAppliance(cell.d.appliances)
       if (perAppliance.length === 0) {
         return
       }
-      this.detailHandle = await SseClient.getInstance().registerTransport({
+      const sse = SseClient.getInstance()
+      const handle = await sse.registerTransport({
         minInterval: 2000,
         selection: { perAppliance }
-      }, (payload) => this.onDetailUpdate(cell, payload))
+      }, (payload) => {
+        if (epoch !== this.detailEpoch) {
+          return
+        }
+        this.onDetailUpdate(cell, payload)
+      })
+      if (epoch !== this.detailEpoch) {
+        sse.unregisterTransport(handle)
+        return
+      }
+      this.detailHandle = handle
     },
     closeDetailTransport () {
+      this.detailEpoch++
       if (this.detailHandle) {
         SseClient.getInstance().unregisterTransport(this.detailHandle)
         this.detailHandle = null
@@ -481,6 +496,7 @@ export default {
         }
       }
     }
+    this.detailEpoch++
     if (this.detailHandle) {
       sse.unregisterTransport(this.detailHandle)
       this.detailHandle = null
