@@ -73,6 +73,7 @@ export class SseClient {
   private reconnectTimer: any | null = null
   private handles: Map<string, HandleRecord> = new Map()
   private byTransportId: Map<string, HandleRecord> = new Map()
+  private pendingInitialUpdates: Map<string, any> = new Map()
   private pathCache: Map<string, unknown> = new Map()
   private _connected = false
 
@@ -96,6 +97,7 @@ export class SseClient {
   private buildUrl (endpointKey: string): string {
     const config = objectUtils.getDeepProperty('uinf', store.getters['rest/config'].servers)
     const endpoint = objectUtils.getDeepProperty(endpointKey, store.getters['rest/config'].endpoint)
+    console.log(`${config.protocol}://${config.address}:${config.port}${endpoint}`)
     return `${config.protocol}://${config.address}:${config.port}${endpoint}`
   }
 
@@ -184,6 +186,31 @@ export class SseClient {
     })
   }
 
+  private buildPayloadFromData (data: any): TransportUpdate | null {
+    const payload: any = { ts: data.ts }
+    if (data.values !== undefined) {
+      payload.values = data.values
+      for (const triple of data.values as ValueTriple[]) {
+        this.pathCache.set(`${triple.applianceId}:${triple.path}`, triple.value)
+      }
+    } else if (data.aggregate !== undefined) {
+      payload.aggregate = data.aggregate
+    } else {
+      return null
+    }
+    return payload as TransportUpdate
+  }
+
+  private dispatchToRecord (record: HandleRecord, payload: TransportUpdate): void {
+    record.callback(payload)
+    if (record.initialResolve) {
+      const resolve = record.initialResolve
+      record.initialResolve = null
+      record.initialReject = null
+      resolve(record.handle)
+    }
+  }
+
   private onTransportUpdate (e: MessageEvent): void {
     const data = JSON.parse(e.data)
     const transportId: string | undefined = data.transportId
@@ -203,29 +230,15 @@ export class SseClient {
     }
     const record = this.byTransportId.get(transportId)
     if (!record) {
+      this.pendingInitialUpdates.set(transportId, data)
       return
     }
 
-    const payload: any = { ts: data.ts }
-    if (data.values !== undefined) {
-      payload.values = data.values
-      for (const triple of data.values as ValueTriple[]) {
-        this.pathCache.set(`${triple.applianceId}:${triple.path}`, triple.value)
-      }
-    } else if (data.aggregate !== undefined) {
-      payload.aggregate = data.aggregate
-    } else {
+    const payload = this.buildPayloadFromData(data)
+    if (!payload) {
       return
     }
-
-    record.callback(payload as TransportUpdate)
-
-    if (record.initialResolve) {
-      const resolve = record.initialResolve
-      record.initialResolve = null
-      record.initialReject = null
-      resolve(record.handle)
-    }
+    this.dispatchToRecord(record, payload)
   }
 
   private async registerOnServer (record: HandleRecord): Promise<void> {
@@ -251,6 +264,18 @@ export class SseClient {
       if (DEBUG_SSE) {
         // eslint-disable-next-line no-console
         console.debug('[SSE] registered on server', { handleId: record.handle.id, transportId, selection: record.spec.selection })
+      }
+      const pending = this.pendingInitialUpdates.get(transportId)
+      if (pending !== undefined) {
+        this.pendingInitialUpdates.delete(transportId)
+        if (DEBUG_SSE) {
+          // eslint-disable-next-line no-console
+          console.debug('[SSE] replaying buffered initial update', { handleId: record.handle.id, transportId })
+        }
+        const payload = this.buildPayloadFromData(pending)
+        if (payload) {
+          this.dispatchToRecord(record, payload)
+        }
       }
     } catch (err) {
       // eslint-disable-next-line no-console
