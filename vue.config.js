@@ -1,4 +1,6 @@
 module.exports = {
+  // disable lint-on-save to avoid ESLint warnings showing during build
+  lintOnSave: false,
   configureWebpack: {
     devServer: {
       open: true
