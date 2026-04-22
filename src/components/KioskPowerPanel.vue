@@ -193,6 +193,8 @@ export default {
     detailApps: [],
     detailHandle: null,
     detailEpoch: 0,
+    detailPathValues: new Map(),
+    detailPaths: new Map(),
     nameById: new Map()
   }),
 
@@ -352,15 +354,20 @@ export default {
       if (!payload || !payload.values) {
         return
       }
-      const sums = new Map()
       for (const triple of payload.values) {
-        const current = sums.get(triple.applianceId) || 0
         const v = typeof triple.value === 'number' ? triple.value : Number.parseFloat(triple.value)
-        sums.set(triple.applianceId, current + (isNaN(v) ? 0 : v))
+        this.detailPathValues.set(`${triple.applianceId}:${triple.path}`, isNaN(v) ? 0 : v)
       }
       const list = []
       for (const a of cell.d.appliances) {
-        const raw = sums.get(a.id) || 0
+        const paths = this.detailPaths.get(a.id) || []
+        let raw = 0
+        for (const path of paths) {
+          const v = this.detailPathValues.get(`${a.id}:${path}`)
+          if (v !== undefined) {
+            raw += v
+          }
+        }
         list.push({
           id: a.id,
           name: this.nameById.get(a.id) || String(a.id),
@@ -378,9 +385,15 @@ export default {
     async openDetailTransport (rowIndex, appIndex) {
       this.closeDetailTransport()
       this.detailApps = []
+      this.detailPathValues = new Map()
       const epoch = this.detailEpoch
       const cell = this.appliances[rowIndex][appIndex]
       const perAppliance = buildPerAppliance(cell.d.appliances)
+      const paths = new Map()
+      for (const entry of perAppliance) {
+        paths.set(entry.applianceId, entry.paths.slice())
+      }
+      this.detailPaths = paths
       if (perAppliance.length === 0) {
         return
       }
@@ -407,6 +420,8 @@ export default {
         this.detailHandle = null
       }
       this.detailApps = []
+      this.detailPathValues = new Map()
+      this.detailPaths = new Map()
     },
     percentInverse (lb, ub, p) {
       const a = p - lb
@@ -501,6 +516,8 @@ export default {
       sse.unregisterTransport(this.detailHandle)
       this.detailHandle = null
     }
+    this.detailPathValues = new Map()
+    this.detailPaths = new Map()
   }
 }
 </script>
