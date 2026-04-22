@@ -1,353 +1,65 @@
 import Vue from 'vue'
 import store from '@/store'
 import { singleton as objectUtils } from '@/utils/objectUtils'
+import {
+  SseClient as CoreSseClient,
+  createVue2Adapter
+} from '@/lib/sse-client'
+import type { HttpPost } from '@/lib/sse-client'
 
-const DEBUG_SSE = false
-
-export type AggregateOp = 'sum' | 'avg'
-
-export interface PerApplianceSelection {
-  applianceId: number;
-  paths: string[];
+function serverConfig (): { protocol: string; address: string; port: string } {
+  return objectUtils.getDeepProperty('uinf', store.getters['rest/config'].servers)
 }
 
-export type SelectionShape =
-  | { applianceIds: number[]; paths: string[] }
-  | { perAppliance: PerApplianceSelection[] }
-
-export interface TransportSpec {
-  minInterval: number;
-  selection: SelectionShape;
-  aggregate?: { op: AggregateOp };
+function endpoint (key: string): string {
+  return objectUtils.getDeepProperty(key, store.getters['rest/config'].endpoint)
 }
 
-export interface ValueTriple {
-  applianceId: number;
-  path: string;
-  value: unknown;
+function buildUrl (endpointKey: string): string {
+  const c = serverConfig()
+  return `${c.protocol}://${c.address}:${c.port}${endpoint(endpointKey)}`
 }
 
-export interface ValuesPayload {
-  values: ValueTriple[];
-  ts: string;
+const httpPost: HttpPost = async (url, body, headers) => {
+  const response = await Vue.axios.post(url, body, { headers })
+  return { data: response.data }
 }
 
-export interface AggregatePayload {
-  aggregate: {
-    op: AggregateOp;
-    value: number | null;
-    sampleCount: number;
-    totalCount: number;
-  };
-  ts: string;
-}
-
-export type TransportUpdate = ValuesPayload | AggregatePayload
-
-export type TransportCallback = (payload: TransportUpdate) => void
-
-export interface Handle {
-  id: string;
-}
-
-interface HandleRecord {
-  handle: Handle;
-  spec: TransportSpec;
-  callback: TransportCallback;
-  transportId: string | null;
-  initialResolve: ((h: Handle) => void) | null;
-  initialReject: ((err: Error) => void) | null;
-}
-
-let handleCounter = 0
-function nextHandleId (): string {
-  handleCounter++
-  return 'sse-' + handleCounter
-}
-
-export class SseClient {
-  private static instanceField: SseClient
-
-  private connectionId: string | null = null
-  private eventSource: EventSource | null = null
-  private reconnectTimer: any | null = null
-  private handles: Map<string, HandleRecord> = new Map()
-  private byTransportId: Map<string, HandleRecord> = new Map()
-  private pendingInitialUpdates: Map<string, any> = new Map()
-  private pathCache: Map<string, unknown> = new Map()
-  private _connected = false
-
-  public get connected (): boolean {
-    return this._connected
-  }
-
-  public static getInstance (): SseClient {
-    if (!this.instanceField) {
-      this.instanceField = new SseClient()
-    }
-    return this.instanceField
-  }
-
-  private buildSseUrl (): string {
-    const config = objectUtils.getDeepProperty('uinf', store.getters['rest/config'].servers)
-    const endpoint = objectUtils.getDeepProperty('sseAppliances', store.getters['rest/config'].endpoint)
-    return `${config.protocol}://${config.address}:${config.port}${endpoint}`
-  }
-
-  private buildUrl (endpointKey: string): string {
-    const config = objectUtils.getDeepProperty('uinf', store.getters['rest/config'].servers)
-    const endpoint = objectUtils.getDeepProperty(endpointKey, store.getters['rest/config'].endpoint)
-    console.log(`${config.protocol}://${config.address}:${config.port}${endpoint}`)
-    return `${config.protocol}://${config.address}:${config.port}${endpoint}`
-  }
-
-  private authHeader (): Record<string, string> {
+const singletonInstance = new CoreSseClient({
+  buildSseUrl: () => buildUrl('sseAppliances'),
+  buildRegisterUrl: () => buildUrl('sseTransportsRegister'),
+  buildDeregisterUrl: () => buildUrl('sseTransportsDeregister'),
+  authHeader: (): Record<string, string> => {
     const token = store.getters['keycloak/token']
-    if (!token) {
-      return {}
-    }
-    return { Authorization: 'Bearer ' + token }
-  }
+    return token ? { Authorization: 'Bearer ' + token } : {}
+  },
+  httpPost,
+  reactivity: createVue2Adapter(Vue)
+})
 
-  private ensureConnection (): void {
-    if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
-      return
-    }
-    if (this.reconnectTimer) {
-      return
-    }
-    this.destroyConnection()
-
-    const url = this.buildSseUrl()
-    if (DEBUG_SSE) {
-      // eslint-disable-next-line no-console
-      console.debug('[SSE] opening EventSource', { url })
-    }
-    this.eventSource = new EventSource(url)
-
-    this.eventSource.addEventListener('connected', (e: any) => {
-      this.onConnected(e)
-    })
-    this.eventSource.addEventListener('transport-update', (e: any) => {
-      this.onTransportUpdate(e)
-    })
-    this.eventSource.onmessage = (e: MessageEvent) => {
-      if (DEBUG_SSE) {
-        // eslint-disable-next-line no-console
-        console.debug('[SSE] generic message', { data: e.data, lastEventId: e.lastEventId })
-      }
-    }
-    this.eventSource.onerror = () => {
-      if (DEBUG_SSE) {
-        // eslint-disable-next-line no-console
-        console.debug('[SSE] onerror', { readyState: this.eventSource && this.eventSource.readyState })
-      }
-      this._connected = false
-      this.connectionId = null
-      if (this.eventSource && this.eventSource.readyState === EventSource.CLOSED) {
-        this.scheduleReconnect()
-      }
-    }
-  }
-
-  private destroyConnection (): void {
-    if (this.eventSource) {
-      this.eventSource.close()
-      this.eventSource = null
-    }
-  }
-
-  private scheduleReconnect (): void {
-    if (this.reconnectTimer) {
-      return
-    }
-    this.destroyConnection()
-    this.reconnectTimer = setTimeout(() => {
-      this.reconnectTimer = null
-      if (this.handles.size > 0) {
-        this.ensureConnection()
-      }
-    }, 3000)
-  }
-
-  private onConnected (e: MessageEvent): void {
-    const data = JSON.parse(e.data)
-    this.connectionId = data.connectionId
-    this._connected = true
-    if (DEBUG_SSE) {
-      // eslint-disable-next-line no-console
-      console.debug('[SSE] connected', { connectionId: this.connectionId, reregistering: this.handles.size })
-    }
-
-    this.byTransportId.clear()
-    this.handles.forEach(record => {
-      record.transportId = null
-      this.registerOnServer(record)
-    })
-  }
-
-  private buildPayloadFromData (data: any): TransportUpdate | null {
-    const payload: any = { ts: data.ts }
-    if (data.values !== undefined) {
-      payload.values = data.values
-      for (const triple of data.values as ValueTriple[]) {
-        this.pathCache.set(`${triple.applianceId}:${triple.path}`, triple.value)
-      }
-    } else if (data.aggregate !== undefined) {
-      payload.aggregate = data.aggregate
-    } else {
-      return null
-    }
-    return payload as TransportUpdate
-  }
-
-  private dispatchToRecord (record: HandleRecord, payload: TransportUpdate): void {
-    record.callback(payload)
-    if (record.initialResolve) {
-      const resolve = record.initialResolve
-      record.initialResolve = null
-      record.initialReject = null
-      resolve(record.handle)
-    }
-  }
-
-  private onTransportUpdate (e: MessageEvent): void {
-    const data = JSON.parse(e.data)
-    const transportId: string | undefined = data.transportId
-    if (DEBUG_SSE) {
-      const knownTransportIds = Array.from(this.byTransportId.keys())
-      // eslint-disable-next-line no-console
-      console.debug('[SSE] transport-update arrived', {
-        transportId,
-        matched: transportId ? this.byTransportId.has(transportId) : false,
-        valuesCount: Array.isArray(data.values) ? data.values.length : null,
-        hasAggregate: data.aggregate !== undefined,
-        knownTransportIds
-      })
-    }
-    if (!transportId) {
-      return
-    }
-    const record = this.byTransportId.get(transportId)
-    if (!record) {
-      this.pendingInitialUpdates.set(transportId, data)
-      return
-    }
-
-    const payload = this.buildPayloadFromData(data)
-    if (!payload) {
-      return
-    }
-    this.dispatchToRecord(record, payload)
-  }
-
-  private async registerOnServer (record: HandleRecord): Promise<void> {
-    if (!this.connectionId) {
-      return
-    }
-    const body: any = {
-      connectionId: this.connectionId,
-      minInterval: record.spec.minInterval,
-      selection: record.spec.selection
-    }
-    if (record.spec.aggregate) {
-      body.aggregate = record.spec.aggregate
-    }
-    try {
-      const axiosResponse = await Vue.axios.post(this.buildUrl('sseTransportsRegister'), body, {
-        headers: this.authHeader()
-      })
-      const response = axiosResponse.data
-      const transportId: string = response.transportId
-      record.transportId = transportId
-      this.byTransportId.set(transportId, record)
-      if (DEBUG_SSE) {
-        // eslint-disable-next-line no-console
-        console.debug('[SSE] registered on server', { handleId: record.handle.id, transportId, selection: record.spec.selection })
-      }
-      const pending = this.pendingInitialUpdates.get(transportId)
-      if (pending !== undefined) {
-        this.pendingInitialUpdates.delete(transportId)
-        if (DEBUG_SSE) {
-          // eslint-disable-next-line no-console
-          console.debug('[SSE] replaying buffered initial update', { handleId: record.handle.id, transportId })
-        }
-        const payload = this.buildPayloadFromData(pending)
-        if (payload) {
-          this.dispatchToRecord(record, payload)
-        }
-      }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('SseClient: registerTransport failed', err)
-      if (record.initialReject) {
-        const reject = record.initialReject
-        record.initialResolve = null
-        record.initialReject = null
-        reject(err instanceof Error ? err : new Error(String(err)))
-      }
-    }
-  }
-
-  private async deregisterOnServer (record: HandleRecord): Promise<void> {
-    if (!this.connectionId || !record.transportId) {
-      return
-    }
-    const transportId = record.transportId
-    try {
-      await Vue.axios.post(this.buildUrl('sseTransportsDeregister'), {
-        connectionId: this.connectionId,
-        transportId
-      }, {
-        headers: this.authHeader()
-      })
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn('SseClient: deregisterTransport failed', err)
-    }
-  }
-
-  public async registerTransport (spec: TransportSpec, callback: TransportCallback): Promise<Handle> {
-    const handle: Handle = { id: nextHandleId() }
-    const record: HandleRecord = {
-      handle,
-      spec,
-      callback,
-      transportId: null,
-      initialResolve: null,
-      initialReject: null
-    }
-    this.handles.set(handle.id, record)
-    this.ensureConnection()
-
-    return new Promise<Handle>((resolve, reject) => {
-      record.initialResolve = resolve
-      record.initialReject = reject
-      if (this.connectionId) {
-        this.registerOnServer(record)
-      }
-    })
-  }
-
-  public unregisterTransport (handle: Handle | null | undefined): void {
-    if (!handle) {
-      return
-    }
-    const record = this.handles.get(handle.id)
-    if (!record) {
-      return
-    }
-    this.handles.delete(handle.id)
-    if (record.transportId) {
-      this.byTransportId.delete(record.transportId)
-    }
-    this.deregisterOnServer(record)
-  }
-
-  public getLatestPath (applianceId: number, path: string): unknown | null {
-    const key = `${applianceId}:${path}`
-    return this.pathCache.has(key) ? this.pathCache.get(key) : null
+export const SseClient = {
+  getInstance (): CoreSseClient {
+    return singletonInstance
   }
 }
 
-export const singleton = SseClient.getInstance()
+export const singleton = singletonInstance
+
+export type {
+  AggregateOp,
+  PerApplianceSelection,
+  SelectionShape,
+  TransportSpec,
+  ValueTriple,
+  ValuesPayload,
+  AggregatePayload,
+  TransportUpdate,
+  TransportCallback,
+  Handle,
+  SubscriptionSpec,
+  SubscriptionAggregate,
+  Subscription,
+  HttpPost,
+  ReactivityAdapter,
+  SseClientConfig
+} from '@/lib/sse-client'

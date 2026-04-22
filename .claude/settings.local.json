@@ -19,7 +19,10 @@
       "PowerShell(& \"$env:APPDATA\\\\nvm\\\\v22.21.0\\\\node.exe\" --version; & \"$env:APPDATA\\\\nvm\\\\v22.21.0\\\\npm.cmd\" root -g)",
       "PowerShell(Test-Path *)",
       "Bash(grep -v \"node:\\\\|SyntaxError\\\\|at /\\\\|at T\\\\|\\(Use\\\\|\\(node\\\\|DeprecationWarning\\\\|Unhandled\\\\|throw\\\\| at C:\\\\| at Function\\\\| at Object\\\\| at Module\\\\|reason: \\\\|opensslErrorStack\\\\|^$\")",
-      "Bash(grep -v \"node:\\\\|SyntaxError\\\\|at /\\\\|at T\\\\|\\(Use\\\\|\\(node\\\\|DeprecationWarning\\\\|Unhandled\\\\|throw\\\\| at C:\\\\| at Function\\\\| at Object\\\\| at Module\\\\|^$\")"
+      "Bash(grep -v \"node:\\\\|SyntaxError\\\\|at /\\\\|at T\\\\|\\(Use\\\\|\\(node\\\\|DeprecationWarning\\\\|Unhandled\\\\|throw\\\\| at C:\\\\| at Function\\\\| at Object\\\\| at Module\\\\|^$\")",
+      "PowerShell(nvm current *)",
+      "Bash(cmd.exe *)",
+      "Bash(npx eslint *)"
     ]
   }
 }

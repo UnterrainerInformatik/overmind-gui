@@ -25,7 +25,8 @@ export default {
   },
 
   data: () => ({
-    sseHandle: null,
+    sub: null,
+    unwatchSub: null,
     appliances: [],
     onlyActive: false,
     countAll: 0,
@@ -40,19 +41,29 @@ export default {
   },
 
   methods: {
-    onTransportUpdate (payload) {
-      if (!payload || !payload.values) {
+    applySubValuesToAppliances () {
+      if (!this.sub || !this.sub.values) {
         return
       }
-      for (const triple of payload.values) {
-        const app = this.applianceIndex.get(triple.applianceId)
+      for (const key of Object.keys(this.sub.values)) {
+        const v = this.sub.values[key]
+        if (v === undefined) {
+          continue
+        }
+        const sep = key.indexOf(':')
+        if (sep < 0) {
+          continue
+        }
+        const id = Number(key.slice(0, sep))
+        const path = key.slice(sep + 1)
+        const app = this.applianceIndex.get(id)
         if (!app) {
           continue
         }
         if (!app.state) {
           this.$set(app, 'state', {})
         }
-        setPathValue(app.state, triple.path, triple.value)
+        setPathValue(app.state, path, v)
       }
     }
   },
@@ -76,16 +87,21 @@ export default {
     if (perAppliance.length === 0) {
       return
     }
-    this.sseHandle = await SseClient.getInstance().registerTransport({
+    this.sub = SseClient.getInstance().subscribe({
       minInterval: 3000,
       selection: { perAppliance }
-    }, (payload) => this.onTransportUpdate(payload))
+    })
+    this.unwatchSub = this.$watch(() => this.sub && this.sub.ts, () => this.applySubValuesToAppliances())
   },
 
   beforeDestroy () {
-    if (this.sseHandle) {
-      SseClient.getInstance().unregisterTransport(this.sseHandle)
-      this.sseHandle = null
+    if (this.unwatchSub) {
+      this.unwatchSub()
+      this.unwatchSub = null
+    }
+    if (this.sub) {
+      this.sub.close()
+      this.sub = null
     }
   }
 }

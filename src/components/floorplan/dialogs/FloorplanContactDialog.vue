@@ -40,7 +40,8 @@ export default {
   },
 
   data: () => ({
-    sseHandle: null
+    sub: null,
+    unwatchSub: null
   }),
 
   computed: {
@@ -80,36 +81,47 @@ export default {
       }
       return null
     },
-    onTransportUpdate (payload) {
-      if (!payload || !payload.values || !this.app) {
+    applySubValues () {
+      if (!this.sub || !this.sub.values || !this.app) {
         return
       }
       if (!this.app.state) {
         this.$set(this.app, 'state', {})
       }
-      for (const triple of payload.values) {
-        if (triple.applianceId !== this.app.id && !(Array.isArray(triple.representsGroups) && triple.representsGroups.indexOf(this.app.id) !== -1)) {
+      const prefix = `${this.app.id}:`
+      for (const key of Object.keys(this.sub.values)) {
+        if (!key.startsWith(prefix)) {
           continue
         }
-        setPathValue(this.app.state, triple.path, triple.value)
+        const v = this.sub.values[key]
+        if (v === undefined) {
+          continue
+        }
+        const path = key.slice(prefix.length)
+        setPathValue(this.app.state, path, v)
       }
     }
   },
 
-  async mounted () {
+  mounted () {
     if (!this.app || !this.app.id) {
       return
     }
-    this.sseHandle = await SseClient.getInstance().registerTransport({
+    this.sub = SseClient.getInstance().subscribe({
       minInterval: 300,
       selection: { perAppliance: [{ applianceId: this.app.id, paths: ['**'] }] }
-    }, (payload) => this.onTransportUpdate(payload))
+    })
+    this.unwatchSub = this.$watch(() => this.sub && this.sub.ts, () => this.applySubValues())
   },
 
   beforeDestroy () {
-    if (this.sseHandle) {
-      SseClient.getInstance().unregisterTransport(this.sseHandle)
-      this.sseHandle = null
+    if (this.unwatchSub) {
+      this.unwatchSub()
+      this.unwatchSub = null
+    }
+    if (this.sub) {
+      this.sub.close()
+      this.sub = null
     }
   }
 }
