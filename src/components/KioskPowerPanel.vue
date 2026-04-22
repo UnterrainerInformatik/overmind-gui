@@ -190,15 +190,44 @@ export default {
     overmindUtils,
     appliances: [],
     showDetailsOf: null,
-    detailApps: [],
-    detailHandle: null,
-    detailEpoch: 0,
-    detailPathValues: new Map(),
-    detailPaths: new Map(),
+    detailSub: null,
     nameById: new Map()
   }),
 
   computed: {
+    detailApps () {
+      if (!this.detailSub || !this.showDetailsOf) {
+        return []
+      }
+      const cell = this.appliances[this.showDetailsOf.rowIndex][this.showDetailsOf.appIndex]
+      const values = this.detailSub.values || {}
+      const list = []
+      for (const a of cell.d.appliances) {
+        const entry = buildPerAppliance([a])[0]
+        const paths = entry ? entry.paths : []
+        let raw = 0
+        for (const path of paths) {
+          const v = values[`${a.id}:${path}`]
+          if (v === undefined) {
+            continue
+          }
+          const n = typeof v === 'number' ? v : Number.parseFloat(v)
+          if (!isNaN(n)) {
+            raw += n
+          }
+        }
+        list.push({
+          id: a.id,
+          name: this.nameById.get(a.id) || String(a.id),
+          powerRaw: raw,
+          power: overmindUtils.formatPower(raw, true)
+        })
+      }
+      list.sort((x, y) => {
+        return x.powerRaw === y.powerRaw ? 0 : x.powerRaw < y.powerRaw ? 1 : -1
+      })
+      return list.filter(e => e.powerRaw > 1 || e.powerRaw < -1).slice(0, 12)
+    }
   },
 
   watch: {
@@ -264,8 +293,10 @@ export default {
             batteryGradient: d.batteryGradient,
             sampleCount: 0,
             batterySampleCount: 0,
-            powerHandle: null,
-            batteryHandle: null
+            powerSub: null,
+            batterySub: null,
+            unwatchPower: null,
+            unwatchBattery: null
           })
         }
         grid.push(row)
@@ -328,100 +359,53 @@ export default {
       const bp = cell.batteryMax ? (100 / cell.batteryMax * value) : 0
       cell.batteryPercent = bp < 0 ? 0 : bp > 100 ? 100 : bp
     },
-    async registerCellPower (cell) {
+    registerCellPower (cell) {
       const perAppliance = buildPerAppliance(cell.d.appliances)
       if (perAppliance.length === 0) {
         return
       }
-      cell.powerHandle = await SseClient.getInstance().registerTransport({
+      cell.powerSub = SseClient.getInstance().subscribe({
         minInterval: 3000,
         selection: { perAppliance },
         aggregate: { op: 'sum' }
-      }, (payload) => this.onCellPowerUpdate(cell, payload))
+      })
+      cell.unwatchPower = this.$watch(
+        () => cell.powerSub && cell.powerSub.aggregate && `${cell.powerSub.aggregate.sampleCount}:${String(cell.powerSub.aggregate.value)}`,
+        () => this.onCellPowerUpdate(cell, { aggregate: cell.powerSub.aggregate, ts: cell.powerSub.ts })
+      )
     },
-    async registerCellBattery (cell) {
+    registerCellBattery (cell) {
       const perAppliance = buildPerAppliance(cell.d.batteryAppliances)
       if (perAppliance.length === 0) {
         return
       }
-      cell.batteryHandle = await SseClient.getInstance().registerTransport({
+      cell.batterySub = SseClient.getInstance().subscribe({
         minInterval: 3000,
         selection: { perAppliance },
         aggregate: { op: 'sum' }
-      }, (payload) => this.onCellBatteryUpdate(cell, payload))
-    },
-    onDetailUpdate (cell, payload) {
-      if (!payload || !payload.values) {
-        return
-      }
-      for (const triple of payload.values) {
-        const v = typeof triple.value === 'number' ? triple.value : Number.parseFloat(triple.value)
-        this.detailPathValues.set(`${triple.applianceId}:${triple.path}`, isNaN(v) ? 0 : v)
-      }
-      const list = []
-      for (const a of cell.d.appliances) {
-        const paths = this.detailPaths.get(a.id) || []
-        let raw = 0
-        for (const path of paths) {
-          const v = this.detailPathValues.get(`${a.id}:${path}`)
-          if (v !== undefined) {
-            raw += v
-          }
-        }
-        list.push({
-          id: a.id,
-          name: this.nameById.get(a.id) || String(a.id),
-          powerRaw: raw,
-          power: overmindUtils.formatPower(raw, true)
-        })
-      }
-      list.sort((x, y) => {
-        return x.powerRaw === y.powerRaw ? 0 : x.powerRaw < y.powerRaw ? 1 : -1
       })
-      const filtered = list.filter(e => e.powerRaw > 1 || e.powerRaw < -1)
-      filtered.splice(12)
-      this.detailApps = filtered
+      cell.unwatchBattery = this.$watch(
+        () => cell.batterySub && cell.batterySub.aggregate && `${cell.batterySub.aggregate.sampleCount}:${String(cell.batterySub.aggregate.value)}`,
+        () => this.onCellBatteryUpdate(cell, { aggregate: cell.batterySub.aggregate, ts: cell.batterySub.ts })
+      )
     },
-    async openDetailTransport (rowIndex, appIndex) {
+    openDetailTransport (rowIndex, appIndex) {
       this.closeDetailTransport()
-      this.detailApps = []
-      this.detailPathValues = new Map()
-      const epoch = this.detailEpoch
       const cell = this.appliances[rowIndex][appIndex]
       const perAppliance = buildPerAppliance(cell.d.appliances)
-      const paths = new Map()
-      for (const entry of perAppliance) {
-        paths.set(entry.applianceId, entry.paths.slice())
-      }
-      this.detailPaths = paths
       if (perAppliance.length === 0) {
         return
       }
-      const sse = SseClient.getInstance()
-      const handle = await sse.registerTransport({
+      this.detailSub = SseClient.getInstance().subscribe({
         minInterval: 2000,
         selection: { perAppliance }
-      }, (payload) => {
-        if (epoch !== this.detailEpoch) {
-          return
-        }
-        this.onDetailUpdate(cell, payload)
       })
-      if (epoch !== this.detailEpoch) {
-        sse.unregisterTransport(handle)
-        return
-      }
-      this.detailHandle = handle
     },
     closeDetailTransport () {
-      this.detailEpoch++
-      if (this.detailHandle) {
-        SseClient.getInstance().unregisterTransport(this.detailHandle)
-        this.detailHandle = null
+      if (this.detailSub) {
+        this.detailSub.close()
+        this.detailSub = null
       }
-      this.detailApps = []
-      this.detailPathValues = new Map()
-      this.detailPaths = new Map()
     },
     percentInverse (lb, ub, p) {
       const a = p - lb
@@ -498,26 +482,27 @@ export default {
   },
 
   beforeDestroy () {
-    const sse = SseClient.getInstance()
     for (const row of this.appliances) {
       for (const cell of row) {
-        if (cell.powerHandle) {
-          sse.unregisterTransport(cell.powerHandle)
-          cell.powerHandle = null
+        if (cell.unwatchPower) {
+          cell.unwatchPower()
+          cell.unwatchPower = null
         }
-        if (cell.batteryHandle) {
-          sse.unregisterTransport(cell.batteryHandle)
-          cell.batteryHandle = null
+        if (cell.unwatchBattery) {
+          cell.unwatchBattery()
+          cell.unwatchBattery = null
+        }
+        if (cell.powerSub) {
+          cell.powerSub.close()
+          cell.powerSub = null
+        }
+        if (cell.batterySub) {
+          cell.batterySub.close()
+          cell.batterySub = null
         }
       }
     }
-    this.detailEpoch++
-    if (this.detailHandle) {
-      sse.unregisterTransport(this.detailHandle)
-      this.detailHandle = null
-    }
-    this.detailPathValues = new Map()
-    this.detailPaths = new Map()
+    this.closeDetailTransport()
   }
 }
 </script>
