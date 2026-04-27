@@ -60,6 +60,10 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
+			"linkPresence": "Presence",
+			"presence": {
+				"title": "Presence"
+			},
 			"linkVideo": "Video",
 			"power": "Power Consumption",
 			"solarPower": "Solar Power",
@@ -123,6 +127,7 @@
 		"kioskMovement": "",
 		"kioskOverview": "",
 		"kioskPlugs": "",
+		"kioskPresence": "",
 		"logout": "Logout",
 		"plans": "Plans",
 		"preferences": "Preferences",

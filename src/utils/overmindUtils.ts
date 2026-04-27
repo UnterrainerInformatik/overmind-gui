@@ -10,6 +10,7 @@ export type ApplianceType =
   | 'HT'
   | 'MOTION_SENSOR'
   | 'CONTACT_SENSOR'
+  | 'OCCUPANCY_SENSOR'
   | string;
 
 const COMPACT_PATHS: Record<string, string[]> = {
@@ -20,7 +21,8 @@ const COMPACT_PATHS: Record<string, string[]> = {
   BULB_RGB: ['relays[*].power', 'relays[0].state'],
   HT: ['temperatures[0].temperature', 'humidities[0].humidity', 'batteries[0].batteryLevel', 'hasExternalPower'],
   MOTION_SENSOR: ['motions[0].motion', 'batteries[0].batteryLevel'],
-  CONTACT_SENSOR: ['closures[0].open', 'closures[0].tilt', 'batteries[0].batteryLevel']
+  CONTACT_SENSOR: ['closures[0].open', 'closures[0].tilt', 'batteries[0].batteryLevel'],
+  OCCUPANCY_SENSOR: ['presences[0].presence', 'presences[0].objects[*].id', 'presences[0].objects[*].x', 'presences[0].objects[*].y', 'lastTimeOnline']
 }
 
 const DETAIL_PATHS: Record<string, string[]> = {
@@ -31,7 +33,8 @@ const DETAIL_PATHS: Record<string, string[]> = {
   BULB_RGB: ['**'],
   HT: ['**'],
   MOTION_SENSOR: ['**'],
-  CONTACT_SENSOR: ['**']
+  CONTACT_SENSOR: ['**'],
+  OCCUPANCY_SENSOR: ['**']
 }
 
 export function pathsForApplianceType (type: ApplianceType, usage: 'compact' | 'detail'): string[] {
@@ -218,6 +221,8 @@ class OvermindUtils {
         return 'meeting_room'
       case 'MOTION_SENSOR':
         return 'track_changes'
+      case 'OCCUPANCY_SENSOR':
+        return 'sensor_occupied'
       case 'PLUG':
         return 'power'
       case 'RELAY_DUAL':
@@ -237,7 +242,8 @@ class OvermindUtils {
       return
     }
 
-    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline).getTime()) / (60 * 60 * 1000) > 24) {
+    const staleMinutes = item.batteryDriven === 1 ? 24 * 60 : 2
+    if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline + 'Z').getTime()) / 60000 > staleMinutes) {
       Vue.set(item, 'onOffState', 'error')
       return
     }
@@ -266,6 +272,17 @@ class OvermindUtils {
           return
         }
         if (item.state.motions[0].motion) {
+          Vue.set(item, 'onOffState', 'on')
+          return
+        }
+        Vue.set(item, 'onOffState', 'off')
+        return
+      case 'OCCUPANCY_SENSOR':
+        if (!item || !item.state || !item.state.presences || !item.state.presences[0] || item.state.presences[0].presence === undefined) {
+          Vue.set(item, 'onOffState', 'error')
+          return
+        }
+        if (item.state.presences[0].presence) {
           Vue.set(item, 'onOffState', 'on')
           return
         }

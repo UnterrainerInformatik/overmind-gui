@@ -367,6 +367,10 @@
             route="/app/kioskmovement"
           ></KioskLinkPanel>
           <KioskLinkPanel
+            :text="$t('page.kiosk.linkPresence')"
+            route="/app/kioskpresence"
+          ></KioskLinkPanel>
+          <KioskLinkPanel
             :text="$t('page.kiosk.linkCamera')"
             route="/app/kioskcamera"
           ></KioskLinkPanel>

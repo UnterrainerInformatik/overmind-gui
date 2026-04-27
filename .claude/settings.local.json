@@ -22,7 +22,11 @@
       "Bash(grep -v \"node:\\\\|SyntaxError\\\\|at /\\\\|at T\\\\|\\(Use\\\\|\\(node\\\\|DeprecationWarning\\\\|Unhandled\\\\|throw\\\\| at C:\\\\| at Function\\\\| at Object\\\\| at Module\\\\|^$\")",
       "PowerShell(nvm current *)",
       "Bash(cmd.exe *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(npx openspec *)",
+      "Bash(npm ls *)",
+      "Bash(/home/psilo/.local/share/fnm/node-versions/v24.13.0/installation/lib/node_modules/@fission-ai/openspec/bin/openspec.js --version)",
+      "Bash(bash -c \"sed -i 's/^- \\\\[ \\\\] \\\\\\([1-6]\\\\.[0-9]\\\\\\)/- [x] \\\\1/' /mnt/data/source/JAVASCRIPT/overmind-gui/openspec/changes/floorplan-presence-sensors/tasks.md\")"
     ]
   }
 }

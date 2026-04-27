@@ -26,6 +26,12 @@
           >
         </span>
         <span v-for="(area, i) in getAreasWithIcon()" :key="i">
+          <template v-if="isOccupancySensor(area) && coverageEllipseFor(area)">
+            <div
+              class="presence-coverage"
+              :style="`top: ${coverageEllipseFor(area).topPx * scale}px; left: ${coverageEllipseFor(area).leftPx * scale}px; width: ${coverageEllipseFor(area).widthPx * scale}px; height: ${coverageEllipseFor(area).heightPx * scale}px; transform: translate(-50%, -50%) rotate(${coverageEllipseFor(area).yawDeg}deg);`"
+            ></div>
+          </template>
           <FloorplanDialogFactory
             v-if="constructIdFrom(area)"
             :item="area"
@@ -175,6 +181,14 @@
           >
             <v-icon size="20" color="white">bolt</v-icon>
           </v-avatar>
+          <span v-if="isOccupancySensor(area)">
+            <span v-for="pt in presencePointsFor(area)" :key="'pp-' + area.appId + '-' + pt.id">
+              <div
+                class="presence-point"
+                :style="`top: ${pt.topPx * scale}px; left: ${pt.leftPx * scale}px; width: ${14 * scale}px; height: ${14 * scale}px;`"
+              ></div>
+            </span>
+          </span>
         </span>
       </span>
       <img
@@ -200,6 +214,21 @@
           shape="poly"
         />
       </map>
+      <div
+        v-if="calMode"
+        class="presence-cal-overlay"
+        :style="`width: ${imgWidth}px; height: ${imgHeight}px;`"
+        v-on:click="onCalibrationClick"
+      >
+        <div
+          v-if="calClickA"
+          class="presence-cal-marker"
+          :style="`top: ${calClickA.yPx * scale}px; left: ${calClickA.xPx * scale}px;`"
+        ></div>
+        <div class="presence-cal-hint">
+          {{ calClickA ? 'click 2nd point exactly 10m from the first' : 'calibration mode — click first point' }}
+        </div>
+      </div>
       <!--
       img:{{ imgWidth }} / {{ imgHeight }} full:{{ fullImgWidth }} / {{ fullImgHeight }} scale:{{ scale }} scaleX:{{ scaleX }} scaleY:{{ scaleY }}
       -->
@@ -218,8 +247,13 @@ import { DoubleBufferedObservableMap } from '@/utils/doubleBufferedObservableMap
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as overmindUtils, pathsForApplianceType, setPathValue } from '@/utils/overmindUtils'
 import { SseClient } from '@/utils/sseClient'
+import { orientationFor } from '@/lib/presence/sensorOrientation'
+import { specForApp } from '@/lib/presence/sensorSpecs'
+import { pxPerMeter, setPxPerMeter } from '@/lib/presence/floorCalibration'
 
 const DEBUG_TRANSPORTS = false
+const DEBUG_PRESENCE = true
+let lastLoggedPresenceKey = ''
 let lastLoggedAppForSeq = -1
 
 export default {
@@ -269,7 +303,10 @@ export default {
     avatarBaseSize: 46,
     readWidth: undefined,
     readHeight: undefined,
-    colorOverrides: []
+    colorOverrides: [],
+    calMode: false,
+    calClickA: null,
+    calClickB: null
   }),
 
   computed: {
@@ -424,6 +461,136 @@ export default {
     getAreasWithIcon () {
       return this.areas.filter(a => a.iconPos && a.iconPos[0] && a.iconPos[1])
     },
+    isOccupancySensor (area) {
+      const app = this.appFor(area.appId)
+      return !!app && app.type === 'OCCUPANCY_SENSOR'
+    },
+    coverageEllipseFor (area) {
+      const app = this.appFor(area.appId)
+      if (!app || !area.iconPos || area.iconPos[0] === undefined || area.iconPos[1] === undefined) {
+        return null
+      }
+      const spec = specForApp(app)
+      if (!spec) {
+        return null
+      }
+      const ppm = pxPerMeter()
+      const orientation = orientationFor(area.appId)
+      const half = this.avatarBaseSize / 2
+      const wider = Math.max(spec.hFovDeg, spec.vFovDeg)
+      const narrower = Math.min(spec.hFovDeg, spec.vFovDeg)
+      // Asymmetric ellipse: full range along the wider-FOV axis (sensor +y),
+      // proportionally shorter along the narrower-FOV axis (sensor +x).
+      const ryM = spec.rangeM
+      const rxM = spec.rangeM * (narrower / wider)
+      return {
+        leftPx: area.iconPos[0] + half,
+        topPx: area.iconPos[1] + half,
+        widthPx: 2 * rxM * ppm,
+        heightPx: 2 * ryM * ppm,
+        yawDeg: orientation.yawDeg
+      }
+    },
+    onCalibrationClick (event) {
+      if (!this.calMode) {
+        return
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      const target = event.currentTarget
+      const rect = target.getBoundingClientRect()
+      const xScreen = event.clientX - rect.left
+      const yScreen = event.clientY - rect.top
+      const point = { xPx: xScreen / this.scale, yPx: yScreen / this.scale }
+      if (!this.calClickA) {
+        this.calClickA = point
+        this.calClickB = null
+        // eslint-disable-next-line no-console
+        console.info('[calibration] click 1 captured at', point, '— click the second point exactly 10m away')
+        return
+      }
+      this.calClickB = point
+      const dx = point.xPx - this.calClickA.xPx
+      const dy = point.yPx - this.calClickA.yPx
+      const distancePx = Math.sqrt(dx * dx + dy * dy)
+      const result = distancePx / 10
+      setPxPerMeter(result)
+      // eslint-disable-next-line no-console
+      console.info('[calibration] pxPerMeter=' + result.toFixed(2) + ' (saved to localStorage). Promote to floorCalibration.ts when ready.')
+      this.calClickA = null
+      this.calClickB = null
+      this.updateSeq += 1
+      this.redraw(false)
+    },
+    presencePointsFor (area) {
+      const app = this.appFor(area.appId)
+      if (!app || !area.iconPos || area.iconPos[0] === undefined || area.iconPos[1] === undefined) {
+        return []
+      }
+      if (app.onOffState === 'error') {
+        return []
+      }
+      const presence0 = app.state && app.state.presences && app.state.presences[0]
+      if (!presence0 || presence0.presence !== true) {
+        return []
+      }
+      const objects = presence0.objects
+      if (!Array.isArray(objects) || objects.length === 0) {
+        return []
+      }
+      const orientation = orientationFor(area.appId)
+      const yawRad = (orientation.yawDeg * Math.PI) / 180
+      const cosY = Math.cos(yawRad)
+      const sinY = Math.sin(yawRad)
+      const half = this.avatarBaseSize / 2
+      const ix = area.iconPos[0] + half
+      const iy = area.iconPos[1] + half
+      const ppm = pxPerMeter()
+      const points = []
+      for (let i = 0; i < objects.length; i++) {
+        const obj = objects[i]
+        if (!obj || typeof obj.x !== 'number' || typeof obj.y !== 'number') {
+          continue
+        }
+        const dx = (cosY * obj.x - sinY * obj.y) * ppm
+        // Plan-Y is screen-down (matches iconPos convention); sensor +y points away
+        // from the sensor face into the room — we mirror it onto plan-Y so that a
+        // target with positive sensor-y sits "below" the sensor icon on the plan.
+        const dy = (sinY * obj.x + cosY * obj.y) * ppm
+        const leftPx = ix + dx
+        const topPx = iy + dy
+        if (DEBUG_PRESENCE) {
+          const key = area.appId + ':' + i + ':' + obj.x + ':' + obj.y
+          if (key !== lastLoggedPresenceKey) {
+            lastLoggedPresenceKey = key
+            // eslint-disable-next-line no-console
+            console.debug('[presence-pt]', {
+              appId: area.appId,
+              i,
+              obj_x: obj.x,
+              obj_y: obj.y,
+              ppm,
+              yawDeg: orientation.yawDeg,
+              dx_unscaled: dx,
+              dy_unscaled: dy,
+              ix_unscaled: ix,
+              iy_unscaled: iy,
+              leftPx_unscaled: leftPx,
+              topPx_unscaled: topPx,
+              scale: this.scale,
+              left_screen: leftPx * this.scale,
+              top_screen: topPx * this.scale
+            })
+          }
+        }
+        points.push({
+          id: obj.id !== undefined && obj.id !== null ? obj.id : i,
+          leftPx,
+          topPx
+        })
+      }
+      return points
+    },
     getAreasWithCoords () {
       return this.areas.filter(a => this.hasCoords(a))
     },
@@ -542,7 +709,7 @@ export default {
       for (const element of this.appliances) {
         this.appMap.backingMap.set(element.id, element)
       }
-      const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
+      const filtered = this.appliances.filter((a) => a.enabled && ((this.applianceTypeFilter !== undefined && this.applianceTypeFilter.find((e) => e === a.usageType || e === a.type)) || (this.classFqnFilter !== undefined && this.classFqnFilter.find((e) => e === a.classFqn))))
       if (filtered) {
         filtered.forEach(app => {
           const iconPos = this.parseNumberArray(app.iconPos)
@@ -649,6 +816,11 @@ export default {
   },
 
   async mounted () {
+    try {
+      this.calMode = new URLSearchParams(window.location.search).get('cal') === '1'
+    } catch {
+      this.calMode = false
+    }
     this.reCompose()
     await this.getAppliances(true)
 
@@ -695,6 +867,10 @@ export default {
         console.debug('[Floorplan writePath]', { applianceId, path, value, matched: !!targetApp })
       }
       if (!targetApp) {
+        return
+      }
+      if (path === 'lastTimeOnline') {
+        this.$set(targetApp, 'lastTimeOnline', value)
         return
       }
       if (!targetApp.state) {
@@ -794,5 +970,53 @@ export default {
 
 .small {
   font-size: 11px;
+}
+
+.presence-point {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(180, 255, 170, 0.95);
+  border: 1px solid rgba(40, 90, 40, 0.7);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.presence-coverage {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(120, 180, 255, 0.12);
+  border: 1px dashed rgba(120, 180, 255, 0.5);
+  pointer-events: none;
+}
+
+.presence-cal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: crosshair;
+  z-index: 10;
+}
+
+.presence-cal-marker {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 200, 0, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.presence-cal-hint {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  pointer-events: none;
 }
 </style>

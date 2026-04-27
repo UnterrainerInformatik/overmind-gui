@@ -34,6 +34,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/KioskMovement.vue')
   },
   {
+    path: '/app/kioskpresence',
+    name: 'kioskPresence',
+    component: () => import('../views/KioskPresence.vue')
+  },
+  {
     path: '/app/kioskcontact',
     name: 'kioskContact',
     component: () => import('../views/KioskContact.vue')
