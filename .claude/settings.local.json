@@ -26,7 +26,8 @@
       "Bash(npx openspec *)",
       "Bash(npm ls *)",
       "Bash(/home/psilo/.local/share/fnm/node-versions/v24.13.0/installation/lib/node_modules/@fission-ai/openspec/bin/openspec.js --version)",
-      "Bash(bash -c \"sed -i 's/^- \\\\[ \\\\] \\\\\\([1-6]\\\\.[0-9]\\\\\\)/- [x] \\\\1/' /mnt/data/source/JAVASCRIPT/overmind-gui/openspec/changes/floorplan-presence-sensors/tasks.md\")"
+      "Bash(bash -c \"sed -i 's/^- \\\\[ \\\\] \\\\\\([1-6]\\\\.[0-9]\\\\\\)/- [x] \\\\1/' /mnt/data/source/JAVASCRIPT/overmind-gui/openspec/changes/floorplan-presence-sensors/tasks.md\")",
+      "Bash(git *)"
     ]
   }
 }
