@@ -242,7 +242,7 @@ class OvermindUtils {
       return
     }
 
-    const staleMinutes = item.batteryDriven === 1 ? 24 * 60 : 2
+    const staleMinutes = item.batteryDriven ? 24 * 60 : 2
     if (!item.lastTimeOnline || Math.abs(new Date().getTime() - new Date(item.lastTimeOnline + 'Z').getTime()) / 60000 > staleMinutes) {
       Vue.set(item, 'onOffState', 'error')
       return
