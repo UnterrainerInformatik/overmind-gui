@@ -14,6 +14,10 @@
         style="position: absolute; pointer-events: none"
         >Your browser does not support the HTML5 canvas tag.
       </canvas>
+      <div
+        v-if="displayEnhancedDialog"
+        class="sse-activity-indicator"
+      >{{ displayMsgsPerMin }} · {{ displayLagMs }}</div>
       <span v-if="loaded">
         <span v-for="(icon, k) in icons" :key="'A' + k">
           <v-icon
@@ -306,7 +310,15 @@ export default {
     colorOverrides: [],
     calMode: false,
     calClickA: null,
-    calClickB: null
+    calClickB: null,
+    transportTimestamps: [],
+    lagSamples: [],
+    lagSampleIdx: 0,
+    lastLagProbeAt: 0,
+    lagProbeIntervalId: null,
+    displayRefreshIntervalId: null,
+    displayMsgsPerMin: '0 msgs/min',
+    displayLagMs: '0 ms'
   }),
 
   computed: {
@@ -326,6 +338,13 @@ export default {
       if (DEBUG_TRANSPORTS) {
         // eslint-disable-next-line no-console
         console.debug('[Floorplan updateSeq watch]', { newVal })
+      }
+    },
+    displayEnhancedDialog (newVal, oldVal) {
+      if (newVal && !oldVal) {
+        this.startActivityIndicator()
+      } else if (!newVal && oldVal) {
+        this.stopActivityIndicator()
       }
     }
   },
@@ -812,6 +831,51 @@ export default {
         return true
       }
       return false
+    },
+    startActivityIndicator () {
+      this.transportTimestamps = []
+      this.lagSamples = new Array(600).fill(0)
+      this.lagSampleIdx = 0
+      this.lastLagProbeAt = Date.now()
+      this.lagProbeIntervalId = window.setInterval(this.probeLag, 100)
+      this.displayRefreshIntervalId = window.setInterval(this.refreshActivityDisplay, 1000)
+      this.refreshActivityDisplay()
+    },
+    stopActivityIndicator () {
+      if (this.lagProbeIntervalId !== null) {
+        window.clearInterval(this.lagProbeIntervalId)
+        this.lagProbeIntervalId = null
+      }
+      if (this.displayRefreshIntervalId !== null) {
+        window.clearInterval(this.displayRefreshIntervalId)
+        this.displayRefreshIntervalId = null
+      }
+    },
+    probeLag () {
+      const now = Date.now()
+      const delay = Math.max(0, now - this.lastLagProbeAt - 100)
+      this.lagSamples[this.lagSampleIdx] = delay
+      this.lagSampleIdx = (this.lagSampleIdx + 1) % 600
+      this.lastLagProbeAt = now
+    },
+    refreshActivityDisplay () {
+      const cutoff = Date.now() - 60000
+      while (this.transportTimestamps.length > 0 && this.transportTimestamps[0] < cutoff) {
+        this.transportTimestamps.shift()
+      }
+      const msgs = this.transportTimestamps.length
+      let sum = 0
+      let populated = 0
+      for (let i = 0; i < this.lagSamples.length; i += 1) {
+        const v = this.lagSamples[i]
+        if (v !== undefined) {
+          sum += v
+          populated += 1
+        }
+      }
+      const lagAvg = populated > 0 ? Math.round(sum / populated) : 0
+      this.displayMsgsPerMin = `${msgs} msgs/min`
+      this.displayLagMs = `${lagAvg} ms`
     }
   },
 
@@ -885,6 +949,9 @@ export default {
       if (!payload || !payload.values) {
         return
       }
+      if (this.displayEnhancedDialog) {
+        this.transportTimestamps.push(Date.now())
+      }
       if (DEBUG_TRANSPORTS) {
         const firstTwo = payload.values.slice(0, 2).map(t => ({
           applianceId: t.applianceId,
@@ -946,6 +1013,9 @@ export default {
       // eslint-disable-next-line no-console
       console.debug('[Floorplan mounted]', { sseHandleId: this.sseHandle ? this.sseHandle.id : null })
     }
+    if (this.displayEnhancedDialog) {
+      this.startActivityIndicator()
+    }
   },
 
   beforeDestroy () {
@@ -953,6 +1023,7 @@ export default {
       // eslint-disable-next-line no-console
       console.debug('[Floorplan beforeDestroy]', { sseHandleId: this.sseHandle ? this.sseHandle.id : null })
     }
+    this.stopActivityIndicator()
     if (this.sseHandle) {
       SseClient.getInstance().unregisterTransport(this.sseHandle)
       this.sseHandle = null
@@ -1018,5 +1089,18 @@ export default {
   font-size: 12px;
   border-radius: 4px;
   pointer-events: none;
+}
+
+.sse-activity-indicator {
+  position: absolute;
+  top: 4px;
+  right: 16px;
+  font-size: 12px;
+  line-height: 1.2;
+  font-family: monospace;
+  color: rgba(190, 190, 230, 1);
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
 }
 </style>

@@ -171,12 +171,11 @@ export default {
       return null
     },
     show () {
-      if (this.mapFqn()) {
-        this.showAdditionalInfo = false
-        this.showConfig = false
-        this.showState = false
-        this.dialogOpen = true
-      }
+      this.mapFqn()
+      this.showAdditionalInfo = false
+      this.showConfig = false
+      this.showState = false
+      this.dialogOpen = true
     },
     defaultAction () {
       this.toggleInternal(this.app, this.item)

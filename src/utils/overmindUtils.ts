@@ -40,7 +40,10 @@ const DETAIL_PATHS: Record<string, string[]> = {
 export function pathsForApplianceType (type: ApplianceType, usage: 'compact' | 'detail'): string[] {
   const table = usage === 'detail' ? DETAIL_PATHS : COMPACT_PATHS
   const paths = table[type]
-  return paths ? paths.slice() : []
+  if (paths) {
+    return paths.slice()
+  }
+  return usage === 'detail' ? ['**'] : ['lastTimeOnline']
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -253,18 +256,33 @@ class OvermindUtils {
       case 'RELAY':
       case 'DIMMER':
       case 'BULB_RGB':
-        if (!item || !item.state || !item.state.relays || !item.state.relays[0] || !item.state.relays[0].state) {
-          if (item && item.state && item.iconPos1) {
-            return item.state[item.iconPos1] > 0
+        if (item.state && item.state.relays && item.state.relays[0] && item.state.relays[0].state) {
+          if (item.state.relays[0].state.toLowerCase() === 'on') {
+            Vue.set(item, 'onOffState', 'on')
+            return
           }
-          Vue.set(item, 'onOffState', 'error')
+          Vue.set(item, 'onOffState', 'off')
           return
         }
-        if (item.state.relays[0].state.toLowerCase() === 'on') {
-          Vue.set(item, 'onOffState', 'on')
-          return
+        // No relay state field. Power-only RELAY-family devices (e.g. Shelly
+        // 3EM energy meters) have no switch — derive on/off from summed
+        // relay power instead of forcing 'error'.
+        if (item.state && item.state.relays) {
+          let totalPower = 0
+          let sawPower = false
+          for (let i = 0; item.state.relays[i] && item.state.relays[i].power !== undefined; i += 1) {
+            const p = Number.parseFloat(item.state.relays[i].power)
+            if (!Number.isNaN(p)) {
+              totalPower += p
+              sawPower = true
+            }
+          }
+          if (sawPower) {
+            Vue.set(item, 'onOffState', totalPower > 0 ? 'on' : 'off')
+            return
+          }
         }
-        Vue.set(item, 'onOffState', 'off')
+        Vue.set(item, 'onOffState', 'error')
         return
       case 'MOTION_SENSOR':
         if (!item || !item.state || !item.state.motions || !item.state.motions[0] || item.state.motions[0].motion === undefined) {
