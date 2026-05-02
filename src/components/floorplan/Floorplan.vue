@@ -706,20 +706,29 @@ export default {
       })
       // Resolve appliance-groups for initial render: the group inherits the first
       // child's state/type/classFqn so display logic can treat it uniformly.
-      // Live updates arrive via `representsGroups` on transport-update triples.
+      // `lastTimeOnline` is the freshest across all children — a group is online
+      // if any child is. Live updates arrive via `representsGroups` on
+      // transport-update triples and via the anyChildToGroupIds mirror below.
       for (const appliance of appliances) {
         if ((appliance.type === 'GROUP_PARALLEL' || appliance.type === 'GROUP_SERIAL') && appliance.config && appliance.config.applianceIds) {
+          let firstChildResolved = false
+          let freshestLastTimeOnline = null
           for (const id of appliance.config.applianceIds) {
             const subApp = await appliancesService.getById(id)
             overmindUtils.parseState(subApp)
             overmindUtils.parseConfig(subApp)
-            appliance.lastTimeOnline = subApp.lastTimeOnline
-            appliance.lastTimeSetup = subApp.lastTimeSetup
-            appliance.state = subApp.state
-            appliance.type = subApp.type
-            appliance.classFqn = subApp.classFqn
-            break
+            if (!firstChildResolved) {
+              appliance.lastTimeSetup = subApp.lastTimeSetup
+              appliance.state = subApp.state
+              appliance.type = subApp.type
+              appliance.classFqn = subApp.classFqn
+              firstChildResolved = true
+            }
+            if (subApp.lastTimeOnline && (!freshestLastTimeOnline || subApp.lastTimeOnline > freshestLastTimeOnline)) {
+              freshestLastTimeOnline = subApp.lastTimeOnline
+            }
           }
+          appliance.lastTimeOnline = freshestLastTimeOnline
         }
       }
       appliances.sort((a, b) => (a.name > b.name) ? 1 : -1)
@@ -934,7 +943,14 @@ export default {
         return
       }
       if (path === 'lastTimeOnline') {
-        this.$set(targetApp, 'lastTimeOnline', value)
+        // Never regress lastTimeOnline to a falsy value. Groups in particular
+        // have a NULL stored lastTimeOnline that the backend re-emits on the
+        // initial transport-update batch — without this guard it would wipe
+        // the value derived from children at register-time and flip the group
+        // to 'error' until a real child heartbeat arrives.
+        if (value) {
+          this.$set(targetApp, 'lastTimeOnline', value)
+        }
         return
       }
       if (!targetApp.state) {
@@ -995,9 +1011,23 @@ export default {
               writePath(this.appMap.get(gid), triple.path, sum, gid)
             }
           }
+        } else if (triple.path === 'lastTimeOnline') {
+          // lastTimeOnline mirrors from ANY child (a group is online if any
+          // child is), with newer-wins so an out-of-order older heartbeat
+          // from a less-recent child can't regress the group.
+          const groups = anyChildToGroupIds.get(triple.applianceId)
+          if (groups) {
+            for (const gid of groups) {
+              const groupApp = this.appMap.get(gid)
+              if (groupApp && (!groupApp.lastTimeOnline || triple.value > groupApp.lastTimeOnline)) {
+                writePath(groupApp, triple.path, triple.value, gid)
+              }
+            }
+          }
         } else {
-          // Non-aggregate paths mirror from the primary child only, matching
-          // the initial-state copy in getAppliances().
+          // Other non-aggregate paths mirror from the primary child only,
+          // matching the initial-state copy in getAppliances() — preserves
+          // the display-uniformity contract for state.relays[0].state etc.
           const groups = primaryChildToGroupIds.get(triple.applianceId)
           if (groups) {
             for (const gid of groups) {
