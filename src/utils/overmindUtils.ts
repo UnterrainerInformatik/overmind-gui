@@ -14,14 +14,14 @@ export type ApplianceType =
   | string;
 
 const COMPACT_PATHS: Record<string, string[]> = {
-  PLUG: ['relays[*].power', 'relays[0].state'],
-  RELAY: ['relays[*].power', 'relays[0].state'],
-  RELAY_DUAL: ['relays[*].power', 'relays[*].state'],
-  DIMMER: ['relays[*].power', 'relays[0].state'],
-  BULB_RGB: ['relays[*].power', 'relays[0].state'],
-  HT: ['temperatures[0].temperature', 'humidities[0].humidity', 'batteries[0].batteryLevel', 'hasExternalPower'],
-  MOTION_SENSOR: ['motions[0].motion', 'batteries[0].batteryLevel'],
-  CONTACT_SENSOR: ['closures[0].open', 'closures[0].tilt', 'batteries[0].batteryLevel'],
+  PLUG: ['relays[*].power', 'relays[0].state', 'lastTimeOnline'],
+  RELAY: ['relays[*].power', 'relays[0].state', 'lastTimeOnline'],
+  RELAY_DUAL: ['relays[*].power', 'relays[*].state', 'lastTimeOnline'],
+  DIMMER: ['relays[*].power', 'relays[0].state', 'lastTimeOnline'],
+  BULB_RGB: ['relays[*].power', 'relays[0].state', 'lastTimeOnline'],
+  HT: ['temperatures[0].temperature', 'humidities[0].humidity', 'batteries[0].batteryLevel', 'hasExternalPower', 'lastTimeOnline'],
+  MOTION_SENSOR: ['motions[0].motion', 'batteries[0].batteryLevel', 'lastTimeOnline'],
+  CONTACT_SENSOR: ['closures[0].open', 'closures[0].tilt', 'batteries[0].batteryLevel', 'lastTimeOnline'],
   OCCUPANCY_SENSOR: ['presences[0].presence', 'presences[0].objects[*].id', 'presences[0].objects[*].x', 'presences[0].objects[*].y', 'lastTimeOnline']
 }
 

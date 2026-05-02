@@ -60,6 +60,10 @@ export default {
         if (!app) {
           continue
         }
+        if (path === 'lastTimeOnline') {
+          this.$set(app, 'lastTimeOnline', v)
+          continue
+        }
         if (!app.state) {
           this.$set(app, 'state', {})
         }
