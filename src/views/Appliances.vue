@@ -93,6 +93,7 @@ export default {
     }
     this.sub = SseClient.getInstance().subscribe({
       minInterval: 3000,
+      minValueDelta: 1.0,
       selection: { perAppliance }
     })
     this.unwatchSub = this.$watch(() => this.sub && this.sub.ts, () => this.applySubValuesToAppliances())

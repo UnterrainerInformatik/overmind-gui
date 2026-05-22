@@ -268,6 +268,9 @@ export class SseClient {
     if (record.spec.aggregate) {
       body.aggregate = record.spec.aggregate
     }
+    if (record.spec.minValueDelta !== undefined) {
+      body.minValueDelta = record.spec.minValueDelta
+    }
     try {
       const response = await this.config.httpPost(
         this.config.buildRegisterUrl(),

@@ -366,6 +366,7 @@ export default {
       }
       cell.powerSub = SseClient.getInstance().subscribe({
         minInterval: 3000,
+        minValueDelta: 1.0,
         selection: { perAppliance },
         aggregate: { op: 'sum' }
       })
@@ -381,6 +382,7 @@ export default {
       }
       cell.batterySub = SseClient.getInstance().subscribe({
         minInterval: 3000,
+        minValueDelta: 1.0,
         selection: { perAppliance },
         aggregate: { op: 'sum' }
       })
@@ -398,6 +400,7 @@ export default {
       }
       this.detailSub = SseClient.getInstance().subscribe({
         minInterval: 2000,
+        minValueDelta: 1.0,
         selection: { perAppliance }
       })
     },

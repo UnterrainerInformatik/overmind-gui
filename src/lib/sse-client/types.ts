@@ -13,6 +13,7 @@ export interface TransportSpec {
   minInterval: number;
   selection: SelectionShape;
   aggregate?: { op: AggregateOp };
+  minValueDelta?: number;
 }
 
 export interface ValueTriple {

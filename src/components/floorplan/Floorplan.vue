@@ -960,6 +960,7 @@ export default {
     }
     this.sseHandle = await SseClient.getInstance().registerTransport({
       minInterval: 1000,
+      minValueDelta: 1.0,
       selection: { perAppliance }
     }, (payload) => {
       if (!payload || !payload.values) {
