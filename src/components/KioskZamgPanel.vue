@@ -267,23 +267,27 @@ export default {
       return dateUtils.dateToShortTime(d, this.$i18n.locale)
     },
     async update () {
-      const app = await appliancesService.getById(178)
-      const state = JSON.parse(app.state)
-      this.tempOutside = parseFloat(state.tempOutside).toFixed(1).replace(/\.0$/, '')
-      this.tempInside = parseFloat(state.tempInsideCurrent).toFixed(1).replace(/\.0$/, '')
-      await localizedDataService.getByIdentifier('zamg').then((response) => {
-        if (response == null) {
-          return
+      // Each read is independent: a failure in one (e.g. appliance 178) must not
+      // block the others. The zamg fetch in particular gates the whole panel via
+      // v-if="weather", so it must never depend on the appliance/sun reads.
+      try {
+        const app = await appliancesService.getById(178)
+        const state = JSON.parse(app.state)
+        this.tempOutside = parseFloat(state.tempOutside).toFixed(1).replace(/\.0$/, '')
+        this.tempInside = parseFloat(state.tempInsideCurrent).toFixed(1).replace(/\.0$/, '')
+      } catch (e) {
+        console.error('KioskZamgPanel: failed to read appliance 178 temps', e)
+      }
+      try {
+        const response = await localizedDataService.getByIdentifier('zamg')
+        if (response != null) {
+          this.weather = JSON.parse(this.$i18n.locale === 'de' ? response.de : response.en)
         }
-
-        if (this.$i18n.locale === 'de') {
-          this.weather = JSON.parse(response.de)
-        } else {
-          this.weather = JSON.parse(response.en)
-        }
-        // console.log(this.weather)
-      })
-      await sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc()).then((response) => {
+      } catch (e) {
+        console.error('KioskZamgPanel: failed to read zamg weather data', e)
+      }
+      try {
+        const response = await sunRiseSetService.getRiseSet(48.21392297830925, 14.458790098939307, dateUtils.getUtc())
         if (response == null) {
           this.sunRise = null
           this.sunSet = null
@@ -293,7 +297,9 @@ export default {
           this.noon = dateUtils.dateToShortTime(new Date(response.noon), this.$i18n.locale)
           this.sunSet = dateUtils.dateToShortTime(new Date(response.sunSet), this.$i18n.locale)
         }
-      })
+      } catch (e) {
+        console.error('KioskZamgPanel: failed to read sun rise/set', e)
+      }
     },
     calculateFeltTemperature (temperature, wind, hum) {
       if (typeof wind !== 'number') {
