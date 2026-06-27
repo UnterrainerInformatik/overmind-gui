@@ -102,7 +102,10 @@ class OvermindUtils {
         return i
       }
     }
-    return this.tempBoundaries.length + 1
+    // Above the last boundary → last bucket. This must stay within the bounds
+    // of tempRawColorsLerpable / the tempDesc<n> i18n keys (both have length+1
+    // entries, indices 0..length); returning length+1 overruns both.
+    return this.tempBoundaries.length
   }
 
   public getTempDescriptionFor (temp) {
@@ -116,18 +119,20 @@ class OvermindUtils {
 
   public getTempColorFor (temperature) {
     const temp = Number.parseFloat(temperature)
-    console.log(temp)
-    // console.log({ temp })
     const n = this.calculateTemperatureIndex(temp)
     let i = n - 1
     if (i < 0) {
       i = 0
     }
-    // console.log({ i }, { n })
     const prevTemp = this.tempBoundaries[i]
     const nextTemp = this.tempBoundaries[n]
-    const p = (temp - prevTemp) / (nextTemp - prevTemp)
-    // console.log({ prevTemp }, { nextTemp }, { p })
+    let p = (temp - prevTemp) / (nextTemp - prevTemp)
+    if (!Number.isFinite(p)) {
+      // Outside the boundary range (below the first / above the last boundary,
+      // where there is no next boundary to interpolate towards) → snap to the
+      // edge color instead of producing NaN channels.
+      p = temp < prevTemp ? 0 : 1
+    }
     const col1 = this.tempRawColorsLerpable[i]
     const col2 = this.tempRawColorsLerpable[n]
     return this.lerpColorArrayToRgba(col1, col2, p)
