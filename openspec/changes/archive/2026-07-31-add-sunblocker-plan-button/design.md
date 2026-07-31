@@ -70,7 +70,7 @@ Beide Zustände (`KioskPanel.enabled` und `KioskPlanPanel.active`) werden im sel
 - Innere `v-card` bekommt `:style="bgColorRaw ? { backgroundColor: bgColorRaw + ' !important' } : {}"`.
 - `getBgColor()` bleibt unverändert; der Inline-Style gewinnt gegen die Klasse. Ohne gesetzte Prop verhält sich `KioskPanel` exakt wie bisher — die Änderung ist für alle bestehenden Aufrufer ein No-op.
 
-Konkrete Werte für den Sunblocker: `#00bfa5` für Rahmen und Avatar, `rgba(0, 191, 165, 0.35)` als Hintergrund. Die halbtransparente Füllung liegt über dem Karten-Hintergrund und funktioniert dadurch in Hell- *und* Dunkelmodus, ohne zwei Farbsätze pflegen zu müssen — dasselbe Vorgehen wie bei `colorDialog: 'rgba(255, 0, 0, 0.15)'` in der bestehenden `allStateMulti`-Konfiguration.
+Konkrete Werte für den Sunblocker: `#004d40` für Rahmen und Avatar, `rgba(0, 18, 15, 0.9)` als Hintergrund. Die halbtransparente Füllung liegt über dem Karten-Hintergrund und funktioniert dadurch in Hell- *und* Dunkelmodus, ohne zwei Farbsätze pflegen zu müssen — dasselbe Vorgehen wie bei `colorDialog: 'rgba(255, 0, 0, 0.15)'` in der bestehenden `allStateMulti`-Konfiguration.
 
 *Alternative verworfen:* Eine Theme-Farbe `sunblocker` in `src/plugins/vuetify.ts`. Vuetify-2-Klassenmodifikatoren wie `darken-4`/`lighten-1`, die `getBgColor()` anhängt, müssten dann für die neue Farbe zuverlässig generiert werden — mehr globale Angriffsfläche für genau einen Knopf.
 
@@ -88,7 +88,7 @@ Der Sunblocker wird als letztes Element der zweiten `v-row` in `KioskOverview.vu
 
 ## Risks / Trade-offs
 
-- **Türkis-Hintergrund ist im Dunkelmodus zu blass oder im Hellmodus zu kräftig** → Der Wert `rgba(0, 191, 165, 0.35)` ist ein einzelnes, an einer Stelle in `KioskOverview.vue` liegendes Literal und kann nach dem ersten Blick aufs Gerät ohne Codeänderung an anderer Stelle nachjustiert werden.
+- **Türkis-Hintergrund ist im Dunkelmodus zu blass oder im Hellmodus zu kräftig** → Der Wert `rgba(0, 18, 15, 0.9)` ist ein einzelnes, an einer Stelle in `KioskOverview.vue` liegendes Literal und kann nach dem ersten Blick aufs Gerät ohne Codeänderung an anderer Stelle nachjustiert werden.
 - **Inline-Style mit `!important` überschreibt künftige Panel-Styles** → Der Style wird nur gesetzt, wenn `bgColorRaw` gefüllt ist; alle bestehenden Panels sind nicht betroffen. Dieselbe Technik ist mit `borderColorRaw` bereits im Einsatz.
 - **Ein Tap schaltet ohne Rückfrage einen realen Plan** → Bewusst so, konsistent mit allen anderen Kiosk-Knöpfen. Der Doppel-Tap-Schutz verhindert das häufigste Fehlbedienungsmuster.
 - **Bis zu 500 ms ohne sichtbares Feedback nach dem Tap** → Akzeptiert, gleiches Verhalten wie bei `KioskMultiStatePanel`. Ein Ladeindikator würde die Panel-Optik gegenüber den Nachbarknöpfen brechen; falls sich das im Betrieb als störend erweist, ist es eine eigene, breiter angelegte Change über alle Kiosk-Panels.

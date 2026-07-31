@@ -427,8 +427,8 @@ export default {
       planId: 116,
       description: '<b>Sunblocker</b>',
       icon: 'wb_sunny',
-      colorActive: '#00bfa5',
-      colorActiveBg: 'rgba(0, 191, 165, 0.35)'
+      colorActive: '#004d40',
+      colorActiveBg: 'rgba(0, 18, 15, 0.9)'
     },
     allStateMulti: {
       id: 'allStateMulti',

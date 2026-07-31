@@ -126,7 +126,7 @@ Das Panel SHALL ein Touch-Ziel von mindestens 44×44 CSS-Pixeln bieten. Der Zust
 
 ### Requirement: Sunblocker reference configuration
 
-Die Change SHALL eine Sunblocker-Instanz in der Kiosk-Übersicht ausliefern: `planId: 116`, Beschriftung "Sunblocker", türkise Aktiv-Farben (`#00bfa5` für Rahmen und Avatar, `rgba(0, 191, 165, 0.35)` als Füllung). Das Panel MUST als letztes Element der Schalter-Reihe stehen, unmittelbar hinter dem Panel "Rollos Elternschlafzimmer".
+Die Change SHALL eine Sunblocker-Instanz in der Kiosk-Übersicht ausliefern: `planId: 116`, Beschriftung "Sunblocker", türkise Aktiv-Farben (`#004d40` für Rahmen und Avatar, `rgba(0, 18, 15, 0.9)` als Füllung). Das Panel MUST als letztes Element der Schalter-Reihe stehen, unmittelbar hinter dem Panel "Rollos Elternschlafzimmer".
 
 #### Scenario: Sunblocker inaktiv
 - **WHEN** Plan 116 nicht eingeschaltet ist
