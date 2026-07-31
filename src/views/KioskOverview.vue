@@ -425,10 +425,12 @@ export default {
     vacation: {},
     sunblocker: {
       planId: 116,
-      description: '<b>Sunblocker</b>',
+      description: '<b>SUNBLOCKER</b>',
+      descriptionActive: "Nicht vergessen 'Terrassentüre auf' einzuschalten, falls Du auf die Terrasse gehst...",
       icon: 'wb_sunny',
       colorActive: '#004d40',
-      colorActiveBg: 'rgba(0, 18, 15, 0.9)'
+      colorActiveBg: 'rgba(0, 18, 15, 0.9)',
+      maxWidth: '280px'
     },
     allStateMulti: {
       id: 'allStateMulti',
@@ -598,6 +600,8 @@ export default {
         sensorPath: 'switch2',
         eventPath: 'on.click',
         description: 'URLAUB',
+        colorActive: '#004d40',
+        colorActiveBg: 'rgba(0, 18, 15, 0.9)',
         isEnabled: () => {
           return plansService.isPlanEnabled(102)
         }

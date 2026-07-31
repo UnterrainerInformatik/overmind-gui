@@ -1,15 +1,18 @@
 <template>
   <KioskPanel
-    :isEnabled="item.isEnabled"
+    :isEnabled="calculateEnabled"
     pa="1"
     @click="triggerEvent(item.applianceId, item.sensorPath, item.eventPath)"
     class="noFocus"
+    :borderColorRaw="active && item.colorActive ? item.colorActive : null"
+    :bgColorRaw="active && item.colorActiveBg ? item.colorActiveBg : null"
   >
     <template v-slot:title="state">
       <v-avatar
         :color="
-          (state.enabled ? 'on ' : 'off ') +
-          ' darken-1'
+          state.enabled && item.colorActive
+            ? item.colorActive
+            : (state.enabled ? 'on ' : 'off ') + ' darken-1'
         "
         size="38"
       >
@@ -42,6 +45,7 @@ export default {
   },
 
   data: () => ({
+    active: false
   }),
 
   computed: {
@@ -51,6 +55,20 @@ export default {
   },
 
   methods: {
+    async calculateEnabled () {
+      if (typeof this.item.isEnabled !== 'function') {
+        this.active = false
+        return false
+      }
+      try {
+        this.active = !!(await this.item.isEnabled())
+      } catch (e) {
+        console.error('KioskSwitchPanel: enabled check failed', this.item.applianceId, e)
+        this.active = false
+      }
+      return this.active
+    },
+
     async triggerEvent (id, sensorPath, eventPath) {
       console.log('triggerEvent')
       return eventsService.trigger(() => {

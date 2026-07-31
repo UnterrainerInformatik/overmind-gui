@@ -6,6 +6,8 @@
     class="noFocus"
     :borderColorRaw="active && item.colorActive ? item.colorActive : null"
     :bgColorRaw="active && item.colorActiveBg ? item.colorActiveBg : null"
+    :maxWidth="item.maxWidth"
+    :minWidth="item.minWidth"
   >
     <template v-slot:title>
       <v-avatar
@@ -21,7 +23,16 @@
       </v-avatar>
     </template>
     <template>
-      <span v-html="item.description"></span>
+      <div class="plan-panel-content">
+        <div class="plan-panel-label"><span v-html="item.description"></span></div>
+        <div
+          v-if="item.descriptionActive"
+          class="plan-panel-hint text-caption"
+          :class="{ 'plan-panel-hint-idle': !active }"
+        >
+          <span v-html="item.descriptionActive"></span>
+        </div>
+      </div>
     </template>
   </KioskPanel>
 </template>
@@ -97,5 +108,24 @@ export default {
 
 .noFocus:focus::before {
   opacity: 0 !important;
+}
+
+.plan-panel-content {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.plan-panel-hint {
+  margin-top: 2px;
+  opacity: 0.65;
+  font-size: 12px !important;
+  line-height: 1.1 !important;
+}
+
+/* Platz der Hinweiszeile bleibt reserviert, damit die Panel-Hoehe
+   und damit die Hoehe der gesamten Schalter-Reihe beim Schalten nicht springt. */
+.plan-panel-hint-idle {
+  visibility: hidden;
 }
 </style>
