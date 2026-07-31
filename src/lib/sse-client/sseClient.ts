@@ -89,6 +89,7 @@ export class SseClient {
   private pathCache: Map<string, unknown> = new Map()
   private subscriptions: Set<SubscriptionRecord> = new Set()
   private _connected = false
+  private lastActivityTs = 0
 
   constructor (config: SseClientConfig) {
     this.config = {
@@ -101,6 +102,43 @@ export class SseClient {
 
   public get connected (): boolean {
     return this._connected
+  }
+
+  /**
+   * Force an immediate reconnect attempt, skipping the reconnect backoff timer.
+   *
+   * Intended to be called when a tab/display is re-activated after being
+   * backgrounded: the browser may keep a dead EventSource stuck in CONNECTING
+   * (so ensureConnection's guard would refuse a fresh attempt), or it may still
+   * report the socket as OPEN even though it silently died while hidden. In
+   * both cases waiting for the native/app backoff can take several seconds.
+   *
+   * A connection that is confirmed open and has shown recent activity is left
+   * untouched; anything else is torn down and reopened right away.
+   */
+  public reconnectNow (): void {
+    if (this.handles.size === 0) {
+      return
+    }
+    const open = !!this.eventSource && this.eventSource.readyState === EventSource.OPEN
+    const recentlyActive = Date.now() - this.lastActivityTs < 15000
+    if (this._connected && open && recentlyActive) {
+      return
+    }
+    if (this.config.debug) {
+      // eslint-disable-next-line no-console
+      console.debug('[SSE] reconnectNow forcing reconnect', {
+        connected: this._connected,
+        readyState: this.eventSource && this.eventSource.readyState,
+        msSinceActivity: this.lastActivityTs ? Date.now() - this.lastActivityTs : null
+      })
+    }
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+    this.destroyConnection()
+    this.ensureConnection()
   }
 
   private authHeader (): Record<string, string> {
@@ -189,6 +227,7 @@ export class SseClient {
     const data = JSON.parse(e.data)
     this.connectionId = data.connectionId
     this._connected = true
+    this.lastActivityTs = Date.now()
     if (this.config.debug) {
       // eslint-disable-next-line no-console
       console.debug('[SSE] connected', { connectionId: this.connectionId, reregistering: this.handles.size })
@@ -227,6 +266,7 @@ export class SseClient {
   }
 
   private onTransportUpdate (e: MessageEvent): void {
+    this.lastActivityTs = Date.now()
     const data = JSON.parse(e.data)
     const transportId: string | undefined = data.transportId
     if (this.config.debug) {

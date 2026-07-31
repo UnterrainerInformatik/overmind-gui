@@ -12,6 +12,7 @@
   >
     <v-card
       :class="'fill-height elevation-0 ma-0 noFocus ' + getBgColor(enabled)"
+      :style="bgColorRaw ? { backgroundColor: bgColorRaw + ' !important' } : {}"
     >
       <v-card-text
         :class="`text-body-1 ${

@@ -346,6 +346,7 @@
           <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
           <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
           <KioskMultiStatePanel :config="shuttersParentsBedroomMulti"></KioskMultiStatePanel>
+          <KioskPlanPanel :item="sunblocker"></KioskPlanPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
@@ -390,6 +391,7 @@ import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import KioskSwitchPanel from '@/components/KioskSwitchPanel.vue'
 import KioskMultiStatePanel from '@/components/KioskMultiStatePanel.vue'
+import KioskPlanPanel from '@/components/KioskPlanPanel.vue'
 import KioskClockPanel from '@/components/KioskClockPanel.vue'
 import KioskWasteDisposalPanel from '@/components/KioskWasteDisposalPanel.vue'
 import KioskZamgPanel from '@/components/KioskZamgPanel.vue'
@@ -408,7 +410,8 @@ export default {
     KioskWatermeterPanel,
     KioskWasteDisposalPanel,
     KioskSwitchPanel,
-    KioskMultiStatePanel
+    KioskMultiStatePanel,
+    KioskPlanPanel
   },
 
   data: () => ({
@@ -420,6 +423,13 @@ export default {
     bioTrash: {},
     patioOpened: {},
     vacation: {},
+    sunblocker: {
+      planId: 116,
+      description: '<b>Sunblocker</b>',
+      icon: 'wb_sunny',
+      colorActive: '#00bfa5',
+      colorActiveBg: 'rgba(0, 191, 165, 0.35)'
+    },
     allStateMulti: {
       id: 'allStateMulti',
       label: 'Alle',

@@ -98,7 +98,8 @@ export default {
     languageKey: 'de',
     floorplan: new Image(),
     sseConnected: true,
-    sseInterval: null
+    sseInterval: null,
+    onWake: null
   }),
 
   computed: {
@@ -187,11 +188,28 @@ export default {
     this.sseInterval = setInterval(() => {
       this.sseConnected = SseClient.getInstance().connected
     }, 2000)
+
+    // When the tab/display is re-activated after being backgrounded the SSE
+    // socket is often dead but only recovers via the ~3s backoff (stacking up
+    // to ~10s of red screen). Force an immediate reconnect on wake instead.
+    this.onWake = () => {
+      if (document.hidden) {
+        return
+      }
+      SseClient.getInstance().reconnectNow()
+      this.sseConnected = SseClient.getInstance().connected
+    }
+    document.addEventListener('visibilitychange', this.onWake)
+    window.addEventListener('focus', this.onWake)
   },
 
   beforeDestroy () {
     if (this.sseInterval) {
       clearInterval(this.sseInterval)
+    }
+    if (this.onWake) {
+      document.removeEventListener('visibilitychange', this.onWake)
+      window.removeEventListener('focus', this.onWake)
     }
   }
 }
