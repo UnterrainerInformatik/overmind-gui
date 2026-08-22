@@ -61,6 +61,14 @@
 			"linkMovement": "Bewegungsmelder",
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
+			"migrations": {
+				"done": "Fertig",
+				"empty": "Keine aktiven Migrationen",
+				"error": "Fehler",
+				"fetchError": "Status konnte nicht geladen werden",
+				"pending": "Ausstehend",
+				"title": "Migrationen"
+			},
 			"presence": {
 				"title": "Präsenz"
 			},
@@ -125,6 +133,7 @@
 		"appliances": "Geräte",
 		"kioskContact": "",
 		"kioskLights": "",
+		"kioskMigrations": "",
 		"kioskMovement": "",
 		"kioskOverview": "",
 		"kioskPlugs": "",
@@ -158,6 +167,7 @@
 			"kiosk": "Kiosk Modus öffnen",
 			"logout": "Abmelden oder Benutzer wechseln",
 			"menu": "Seite wählen",
+			"migrations": "Migrationsübersicht öffnen",
 			"preferences": "Verschiedene Einstellungen"
 		},
 		"pageTitle": {

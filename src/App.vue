@@ -65,6 +65,22 @@
           <router-view>Loading...</router-view>
         </v-container>
       </v-main>
+
+      <v-tooltip top :open-delay="openDelay" :disabled="!tooltips" v-if="kioskMode">
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            small
+            v-bind="attrs"
+            v-on="on"
+            to="/app/kioskmigrations"
+            class="kiosk-migrations-btn"
+          >
+            <v-icon>settings</v-icon>
+          </v-btn>
+        </template>
+        <div v-html="$t('tooltip.mnu.migrations')"></div>
+      </v-tooltip>
     </v-app>
     <input type="hidden" id="hiddenCopyField" />
   </div>
@@ -236,5 +252,14 @@ export default {
 
 .nav-drawer-white {
   color: white;
+}
+
+.kiosk-migrations-btn {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 20;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 </style>

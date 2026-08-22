@@ -15,6 +15,7 @@ views/
 ├── KioskCamera.vue      # /app/kioskcamera
 ├── KioskContact.vue     # /app/kioskcontact
 ├── KioskLights.vue      # /app/kiosklights
+├── KioskMigrations.vue  # /app/kioskmigrations — backend field-reconciliation status
 ├── KioskMovement.vue    # /app/kioskmovement
 ├── KioskOverview.vue    # /app/kioskoverview  — the main kiosk dashboard
 ├── KioskPlugs.vue       # /app/kioskplugs

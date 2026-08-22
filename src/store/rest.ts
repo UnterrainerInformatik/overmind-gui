@@ -39,6 +39,13 @@ const store = {
         reboot: '/restartappliance',
         reloadAppliances: '/setup/reload',
         sunRiseSet: '/sunriseset',
+        // Path + shape confirmed against java-overmind-server's in-progress
+        // reconciliation-status-endpoint change (top-level, not /setup/... —
+        // matches the /usedswitches precedent for computed/status endpoints).
+        // Not deployed yet as of 2026-08-22 — confirmed via that repo's
+        // openspec/changes/reconciliation-status-endpoint/design.md and the
+        // already-implemented FieldReconciliationCoordinator.getStatus(...).
+        migrations: '/reconciliation',
         sseAppliances: '/sse/appliances',
         sseTransportsRegister: '/sse/transports/register',
         sseTransportsDeregister: '/sse/transports/deregister'

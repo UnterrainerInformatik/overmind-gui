@@ -53,6 +53,18 @@ components with different layouts.
 **Don't try to merge them** unless you understand both dashboards — the
 designs serve different purposes.
 
+## Global kiosk chrome
+
+`App.vue` renders a small, frameless, icon-only gear button
+(`settings` icon) fixed to the bottom-right corner whenever
+`kioskMode` is true — the one exception to "no chrome around
+`<router-view>`" in kiosk mode. It navigates to
+`/app/kioskmigrations` (`KioskMigrations.vue`), a read-only page
+listing backend field-reconciliation ("migration") progress. Unlike
+the primary kiosk dashboards, `KioskMigrations.vue` does **not** call
+`kioskMode(true)` on mount — it's only reachable *from* kiosk mode,
+so the state is already sticky.
+
 ## Kiosk data sources
 
 - `KioskOverview.vue` has **hardcoded appliance IDs inline** (ids 12, 22,

@@ -61,6 +61,14 @@
 			"linkMovement": "Motion Sensors",
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
+			"migrations": {
+				"done": "Done",
+				"empty": "No active migrations",
+				"error": "Error",
+				"fetchError": "Could not load migration status",
+				"pending": "Pending",
+				"title": "Migrations"
+			},
 			"presence": {
 				"title": "Presence"
 			},
@@ -125,6 +133,7 @@
 		"appliances": "Devices",
 		"kioskContact": "",
 		"kioskLights": "",
+		"kioskMigrations": "",
 		"kioskMovement": "",
 		"kioskOverview": "",
 		"kioskPlugs": "",
@@ -158,6 +167,7 @@
 			"kiosk": "Open kiosk-mode",
 			"logout": "",
 			"menu": "Choose your page",
+			"migrations": "Migrations overview",
 			"preferences": ""
 		},
 		"pageTitle": {
