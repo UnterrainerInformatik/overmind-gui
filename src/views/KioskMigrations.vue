@@ -37,7 +37,7 @@
             </thead>
             <tbody>
               <tr>
-                <td>
+                <td class="migrations-cell">
                   <div v-if="entry.pendingNodes && entry.pendingNodes.length">
                     <div
                       v-for="node in entry.pendingNodes"
@@ -51,8 +51,8 @@
                   </div>
                   <div v-else class="text-center text-h5">{{ entry.pendingCount }}</div>
                 </td>
-                <td class="text-center text-h5">{{ entry.doneCount }}</td>
-                <td>
+                <td class="migrations-cell text-center text-h5">{{ entry.doneCount }}</td>
+                <td class="migrations-cell">
                   <div v-if="entry.errorNodes && entry.errorNodes.length">
                     <div
                       v-for="node in entry.errorNodes"
@@ -200,6 +200,10 @@ export default {
 
 .clickable-node {
   cursor: pointer;
+}
+
+.migrations-cell {
+  vertical-align: top !important;
 }
 
 .noFocus:focus::before {
