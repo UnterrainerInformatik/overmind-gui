@@ -62,11 +62,15 @@
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
 			"migrations": {
+				"attempts": "Attempts",
+				"close": "Close",
 				"done": "Done",
 				"empty": "No active migrations",
 				"error": "Error",
 				"fetchError": "Could not load migration status",
+				"noErrorMessages": "No error messages available",
 				"pending": "Pending",
+				"retry": "Retry",
 				"title": "Migrations"
 			},
 			"presence": {

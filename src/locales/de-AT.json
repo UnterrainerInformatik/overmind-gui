@@ -62,11 +62,15 @@
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
 			"migrations": {
+				"attempts": "Versuche",
+				"close": "Schließen",
 				"done": "Fertig",
 				"empty": "Keine aktiven Migrationen",
 				"error": "Fehler",
 				"fetchError": "Status konnte nicht geladen werden",
+				"noErrorMessages": "Keine Fehlermeldungen verfügbar",
 				"pending": "Ausstehend",
+				"retry": "Wiederholen",
 				"title": "Migrationen"
 			},
 			"presence": {

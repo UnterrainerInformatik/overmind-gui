@@ -1,11 +1,6 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap align-start">
-      <KioskLinkPanel
-        :text="$t('page.kiosk.linkBack')"
-        route="/app/kioskoverview"
-      ></KioskLinkPanel>
-
       <v-container fluid class="migrations-list">
         <div class="text-h5 mb-2">{{ $t('page.kiosk.migrations.title') }}</div>
 
@@ -18,40 +13,91 @@
           {{ $t('page.kiosk.migrations.empty') }}
         </v-card>
 
-        <v-expansion-panels v-else multiple>
-          <v-expansion-panel v-for="entry in entries" :key="entry.fieldAccessorKey" :disabled="!entry.errorNodes || entry.errorNodes.length === 0">
-            <v-expansion-panel-header>
-              <div>
-                <div class="text-h6">{{ entry.fieldAccessorKey }} &rarr; {{ entry.targetValue }}</div>
-                <div class="mt-1">
-                  <v-chip small color="success" class="mr-1">
-                    {{ $t('page.kiosk.migrations.done') }}: {{ entry.doneCount }}
-                  </v-chip>
-                  <v-chip small color="info" class="mr-1">
-                    {{ $t('page.kiosk.migrations.pending') }}: {{ entry.pendingCount }}
-                  </v-chip>
-                  <v-chip small :color="entry.errorCount > 0 ? 'error' : 'disabled'">
-                    {{ $t('page.kiosk.migrations.error') }}: {{ entry.errorCount }}
-                  </v-chip>
-                </div>
-              </div>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content v-if="entry.errorNodes && entry.errorNodes.length">
-              <v-list dense>
-                <v-list-item v-for="node in entry.errorNodes" :key="node.applianceId">
-                  <v-list-item-icon>
-                    <v-icon color="error">error</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>{{ node.name }}</v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
+        <v-card v-for="entry in entries" :key="entry.fieldAccessorKey" outlined class="mb-4 pa-2">
+          <div class="text-h6 mb-2">{{ entry.fieldAccessorKey }} &rarr; {{ entry.targetValue }}</div>
+
+          <v-simple-table dense>
+            <thead>
+              <tr>
+                <th class="text-left">
+                  <span>{{ $t('page.kiosk.migrations.pending') }}</span>
+                </th>
+                <th class="text-left">
+                  <span>{{ $t('page.kiosk.migrations.done') }}</span>
+                </th>
+                <th class="text-left">
+                  <div class="d-flex align-center justify-space-between">
+                    <span>{{ $t('page.kiosk.migrations.error') }}</span>
+                    <v-btn icon x-small :disabled="entry.errorCount === 0" @click="retryAllErrors(entry)">
+                      <v-icon small>refresh</v-icon>
+                    </v-btn>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div v-if="entry.pendingNodes && entry.pendingNodes.length">
+                    <div
+                      v-for="node in entry.pendingNodes"
+                      :key="node.applianceId"
+                      class="d-flex align-center my-1 clickable-node"
+                      @click="openNodeDialog(entry, node)"
+                    >
+                      <v-icon color="info" small left>schedule</v-icon>
+                      {{ node.name }}
+                    </div>
+                  </div>
+                  <div v-else class="text-center text-h5">{{ entry.pendingCount }}</div>
+                </td>
+                <td class="text-center text-h5">{{ entry.doneCount }}</td>
+                <td>
+                  <div v-if="entry.errorNodes && entry.errorNodes.length">
+                    <div
+                      v-for="node in entry.errorNodes"
+                      :key="node.applianceId"
+                      class="d-flex align-center my-1 clickable-node"
+                      @click="openNodeDialog(entry, node)"
+                    >
+                      <v-icon color="error" small left>error</v-icon>
+                      {{ node.name }}
+                    </div>
+                  </div>
+                  <div v-else class="text-center text-h5">{{ entry.errorCount }}</div>
+                </td>
+              </tr>
+            </tbody>
+          </v-simple-table>
+        </v-card>
       </v-container>
     </v-container>
+
+    <KioskLinkPanel
+      class="migrations-back-btn"
+      :text="$t('page.kiosk.linkBack')"
+      route="/app/kioskoverview"
+    ></KioskLinkPanel>
+
+    <v-dialog v-model="nodeDialog" max-width="500">
+      <v-card v-if="selectedNode" outlined>
+        <v-card-title>{{ selectedNode.node.name }}</v-card-title>
+        <v-card-text>
+          <div v-if="selectedNode.node.attemptCount !== null && selectedNode.node.attemptCount !== undefined" class="mb-2">
+            {{ $t('page.kiosk.migrations.attempts') }}: {{ selectedNode.node.attemptCount }}
+          </div>
+          <div v-if="selectedNode.node.errorMessages && selectedNode.node.errorMessages.length">
+            <div v-for="(msg, i) in selectedNode.node.errorMessages" :key="i">{{ msg }}</div>
+          </div>
+          <div v-else>{{ $t('page.kiosk.migrations.noErrorMessages') }}</div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="closeNodeDialog">{{ $t('page.kiosk.migrations.close') }}</v-btn>
+          <v-btn text @click="retrySelectedNode">{{ $t('page.kiosk.migrations.retry') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -73,7 +119,9 @@ export default {
     entries: [],
     loading: true,
     fetchError: false,
-    debouncer: new Debouncer()
+    debouncer: new Debouncer(),
+    nodeDialog: false,
+    selectedNode: null
   }),
 
   watch: {
@@ -93,6 +141,29 @@ export default {
         this.fetchError = true
       }
       this.loading = false
+    },
+    async retryAllErrors (entry) {
+      try {
+        await migrationsService.retryAllErrors(entry.fieldAccessorKey)
+      } catch (err) {
+        // outcome shows up on the next status poll, nothing else to surface here
+      }
+    },
+    openNodeDialog (entry, node) {
+      this.selectedNode = { entry, node }
+      this.nodeDialog = true
+    },
+    closeNodeDialog () {
+      this.nodeDialog = false
+    },
+    async retrySelectedNode () {
+      const { entry, node } = this.selectedNode
+      this.nodeDialog = false
+      try {
+        await migrationsService.retryAppliance(entry.fieldAccessorKey, node.applianceId)
+      } catch (err) {
+        // outcome shows up on the next status poll, nothing else to surface here
+      }
     }
   },
 
@@ -117,6 +188,18 @@ export default {
 
 .migrations-list {
   max-width: 900px;
+  padding-bottom: 96px;
+}
+
+.migrations-back-btn {
+  position: fixed;
+  left: 8px;
+  bottom: 8px;
+  z-index: 20;
+}
+
+.clickable-node {
+  cursor: pointer;
 }
 
 .noFocus:focus::before {
