@@ -51,7 +51,15 @@
                   </div>
                   <div v-else class="text-center text-h5">{{ entry.pendingCount }}</div>
                 </td>
-                <td class="migrations-cell text-center text-h5">{{ entry.doneCount }}</td>
+                <td class="migrations-cell">
+                  <div v-if="entry.doneNodes && entry.doneNodes.length">
+                    <div v-for="node in entry.doneNodes" :key="node.applianceId" class="d-flex align-center my-1">
+                      <v-icon color="success" small left>check_circle</v-icon>
+                      {{ node.name }}
+                    </div>
+                  </div>
+                  <div v-else class="text-center text-h5">{{ entry.doneCount }}</div>
+                </td>
                 <td class="migrations-cell">
                   <div v-if="entry.errorNodes && entry.errorNodes.length">
                     <div
