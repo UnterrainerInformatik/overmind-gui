@@ -38,39 +38,64 @@
             <tbody>
               <tr>
                 <td class="migrations-cell">
-                  <div v-if="entry.pendingNodes && entry.pendingNodes.length">
-                    <div
+                  <div v-if="entry.pendingNodes && entry.pendingNodes.length" class="migrations-node-list">
+                    <v-chip
                       v-for="node in entry.pendingNodes"
                       :key="node.applianceId"
-                      class="d-flex align-center my-1 clickable-node"
+                      outlined
+                      color="transparent"
+                      class="migrations-chip clickable-node"
                       @click="openNodeDialog(entry, node)"
                     >
-                      <v-icon color="info" small left>schedule</v-icon>
-                      {{ node.name }}
-                    </div>
+                      <div class="d-flex justify-space-between align-center migrations-chip-content">
+                        <div class="d-flex align-center">
+                          <v-icon color="info" small left>schedule</v-icon>
+                          {{ node.name }}
+                        </div>
+                        <span v-if="node.attemptCount !== null && node.attemptCount !== undefined">{{ node.attemptCount }}</span>
+                      </div>
+                    </v-chip>
                   </div>
                   <div v-else class="text-center text-h5">{{ entry.pendingCount }}</div>
                 </td>
                 <td class="migrations-cell">
-                  <div v-if="entry.doneNodes && entry.doneNodes.length">
-                    <div v-for="node in entry.doneNodes" :key="node.applianceId" class="d-flex align-center my-1">
-                      <v-icon color="success" small left>check_circle</v-icon>
-                      {{ node.name }}
-                    </div>
+                  <div v-if="entry.doneNodes && entry.doneNodes.length" class="migrations-node-list">
+                    <v-chip
+                      v-for="node in entry.doneNodes"
+                      :key="node.applianceId"
+                      outlined
+                      color="transparent"
+                      class="migrations-chip"
+                    >
+                      <div class="d-flex justify-space-between align-center migrations-chip-content">
+                        <div class="d-flex align-center">
+                          <v-icon color="success" small left>check_circle</v-icon>
+                          {{ node.name }}
+                        </div>
+                        <span v-if="node.attemptCount !== null && node.attemptCount !== undefined">{{ node.attemptCount }}</span>
+                      </div>
+                    </v-chip>
                   </div>
                   <div v-else class="text-center text-h5">{{ entry.doneCount }}</div>
                 </td>
                 <td class="migrations-cell">
-                  <div v-if="entry.errorNodes && entry.errorNodes.length">
-                    <div
+                  <div v-if="entry.errorNodes && entry.errorNodes.length" class="migrations-node-list">
+                    <v-chip
                       v-for="node in entry.errorNodes"
                       :key="node.applianceId"
-                      class="d-flex align-center my-1 clickable-node"
+                      outlined
+                      color="transparent"
+                      class="migrations-chip clickable-node"
                       @click="openNodeDialog(entry, node)"
                     >
-                      <v-icon color="error" small left>error</v-icon>
-                      {{ node.name }}
-                    </div>
+                      <div class="d-flex justify-space-between align-center migrations-chip-content">
+                        <div class="d-flex align-center">
+                          <v-icon color="error" small left>error</v-icon>
+                          {{ node.name }}
+                        </div>
+                        <span v-if="node.attemptCount !== null && node.attemptCount !== undefined">{{ node.attemptCount }}</span>
+                      </div>
+                    </v-chip>
                   </div>
                   <div v-else class="text-center text-h5">{{ entry.errorCount }}</div>
                 </td>
@@ -212,6 +237,36 @@ export default {
 
 .migrations-cell {
   vertical-align: top !important;
+}
+
+.migrations-node-list {
+  max-height: 40vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.migrations-node-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.migrations-node-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.migrations-node-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.migrations-chip {
+  width: 100%;
+  margin-bottom: 4px;
+  background-color: transparent !important;
+}
+
+.migrations-chip-content {
+  width: 100%;
 }
 
 .noFocus:focus::before {
