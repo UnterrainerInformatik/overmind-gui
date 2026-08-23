@@ -19,16 +19,16 @@
           <v-simple-table dense>
             <thead>
               <tr>
-                <th class="text-left">
+                <th class="text-left migrations-col">
                   <span>{{ $t('page.kiosk.migrations.pending') }}</span>
                 </th>
-                <th class="text-left">
+                <th class="text-left migrations-col">
                   <span>{{ $t('page.kiosk.migrations.done') }}</span>
                 </th>
-                <th class="text-left">
-                  <div class="d-flex align-center justify-space-between">
+                <th class="text-left migrations-col">
+                  <div class="d-flex align-center">
                     <span>{{ $t('page.kiosk.migrations.error') }}</span>
-                    <v-btn icon x-small :disabled="entry.errorCount === 0" @click="retryAllErrors(entry)">
+                    <v-btn icon x-small class="ml-2" :disabled="entry.errorCount === 0" @click="retryAllErrors(entry)">
                       <v-icon small>refresh</v-icon>
                     </v-btn>
                   </div>
@@ -43,7 +43,6 @@
                       v-for="node in entry.pendingNodes"
                       :key="node.applianceId"
                       outlined
-                      color="transparent"
                       class="migrations-chip clickable-node"
                       @click="openNodeDialog(entry, node)"
                     >
@@ -64,7 +63,6 @@
                       v-for="node in entry.doneNodes"
                       :key="node.applianceId"
                       outlined
-                      color="transparent"
                       class="migrations-chip"
                     >
                       <div class="d-flex justify-space-between align-center migrations-chip-content">
@@ -84,7 +82,6 @@
                       v-for="node in entry.errorNodes"
                       :key="node.applianceId"
                       outlined
-                      color="transparent"
                       class="migrations-chip clickable-node"
                       @click="openNodeDialog(entry, node)"
                     >
@@ -220,8 +217,12 @@ export default {
 @import 'index.scss';
 
 .migrations-list {
-  max-width: 900px;
-  padding-bottom: 96px;
+  max-width: none;
+  padding: 8px 8px 0 8px;
+}
+
+.migrations-col {
+  width: 33.33%;
 }
 
 .migrations-back-btn {
@@ -240,10 +241,19 @@ export default {
 }
 
 .migrations-node-list {
-  max-height: 40vh;
+  /* fills the remaining height below the page title, card title and table
+     head; the fixed back button only overlaps the first column, which keeps
+     its own bottom padding for it */
+  max-height: calc(100vh - 170px);
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  /* keep the scrollbar inside its own column instead of letting an overlay
+     bar float next to the table, and reserve its width so the chips do not
+     jump when a column starts scrolling */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
 
 .migrations-node-list::-webkit-scrollbar {
@@ -255,14 +265,25 @@ export default {
 }
 
 .migrations-node-list::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.3);
+  /* light thumb: the kiosk runs the dark theme, a dark thumb was invisible */
+  background-color: rgba(255, 255, 255, 0.35);
   border-radius: 4px;
+}
+
+/* the back button is fixed over the bottom left corner: give the first
+   column room to scroll its last entries clear of it */
+.migrations-cell:first-child .migrations-node-list {
+  padding-bottom: 90px;
 }
 
 .migrations-chip {
   width: 100%;
   margin-bottom: 4px;
   background-color: transparent !important;
+}
+
+.migrations-chip .v-chip__content {
+  width: 100%;
 }
 
 .migrations-chip-content {
