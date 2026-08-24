@@ -62,16 +62,25 @@
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
 			"migrations": {
+				"applianceId": "ID",
+				"applianceIp": "IP",
+				"applianceLastTimeOnline": "Last time online",
+				"applianceLoadError": "Could not load appliance information",
+				"applianceLoading": "Loading appliance information …",
+				"applianceMac": "MAC",
+				"applianceOnline": "Online",
 				"attempts": "Attempts",
 				"close": "Close",
 				"done": "Done",
 				"empty": "No active migrations",
 				"error": "Error",
 				"fetchError": "Could not load migration status",
+				"no": "No",
 				"noErrorMessages": "No error messages available",
 				"pending": "Pending",
 				"retry": "Retry",
-				"title": "Migrations"
+				"title": "Migrations",
+				"yes": "Yes"
 			},
 			"presence": {
 				"title": "Presence"

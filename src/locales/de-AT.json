@@ -62,16 +62,25 @@
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
 			"migrations": {
+				"applianceId": "ID",
+				"applianceIp": "IP",
+				"applianceLastTimeOnline": "Letztes Mal online",
+				"applianceLoadError": "Geräteinformationen konnten nicht geladen werden",
+				"applianceLoading": "Geräteinformationen werden geladen …",
+				"applianceMac": "MAC",
+				"applianceOnline": "Online",
 				"attempts": "Versuche",
 				"close": "Schließen",
 				"done": "Fertig",
 				"empty": "Keine aktiven Migrationen",
 				"error": "Fehler",
 				"fetchError": "Status konnte nicht geladen werden",
+				"no": "Nein",
 				"noErrorMessages": "Keine Fehlermeldungen verfügbar",
 				"pending": "Ausstehend",
 				"retry": "Wiederholen",
-				"title": "Migrationen"
+				"title": "Migrationen",
+				"yes": "Ja"
 			},
 			"presence": {
 				"title": "Präsenz"
