@@ -16,7 +16,7 @@
         <v-card v-for="entry in entries" :key="entry.fieldAccessorKey" outlined class="mb-4 pa-2">
           <div class="text-h6 mb-2">{{ entry.fieldAccessorKey }} &rarr; {{ entry.targetValue }}</div>
 
-          <v-simple-table dense>
+          <v-simple-table dense class="migrations-table">
             <thead>
               <tr>
                 <th class="text-left migrations-col">
@@ -240,6 +240,13 @@ export default {
   vertical-align: top !important;
 }
 
+/* an entry's three columns share a single table row, so Vuetify's row-hover
+   background repaints the whole table whenever the pointer is anywhere over
+   it; the chips carry the hover feedback instead */
+.migrations-table > .v-data-table__wrapper > table > tbody > tr:hover {
+  background: transparent !important;
+}
+
 .migrations-node-list {
   /* fills the remaining height below the page title, card title and table
      head; the fixed back button only overlaps the first column, which keeps
@@ -288,6 +295,30 @@ export default {
 
 .migrations-chip-content {
   width: 100%;
+}
+
+/* Hover feedback rides on the chip's ::before state overlay, the hook Vuetify
+   itself uses: an outlined chip's background is pinned transparent by
+   `.v-chip.v-chip--outlined.v-chip.v-chip { ... !important }`, so a plain
+   background rule on the chip loses. currentColor makes the overlay white on
+   the kiosk's dark theme.
+
+   Vuetify lights that overlay for every chip alike
+   (`.theme--dark.v-chip:hover::before { opacity: .08 }`), which advertises the
+   done chips as interactive even though only pending and error chips open a
+   dialog. So the overlay is switched off for all node chips first, then turned
+   back up for the clickable ones - and only for a real pointer, because after
+   a tap the tablet can leave :hover latched, which would read as "selected"
+   once the dialog is closed. `.v-chip` is repeated in the second selector to
+   out-specify the first regardless of the order the two end up in. */
+.migrations-chip.v-chip:hover::before {
+  opacity: 0;
+}
+
+@media (hover: hover) {
+  .migrations-chip.clickable-node.v-chip:hover::before {
+    opacity: 0.12;
+  }
 }
 
 .noFocus:focus::before {
