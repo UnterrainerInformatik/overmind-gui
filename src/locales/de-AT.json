@@ -62,6 +62,7 @@
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
 			"migrations": {
+				"applianceBattery": "Batterie",
 				"applianceId": "ID",
 				"applianceIp": "IP",
 				"applianceLastTimeOnline": "Letztes Mal online",
@@ -75,6 +76,7 @@
 				"empty": "Keine aktiven Migrationen",
 				"error": "Fehler",
 				"fetchError": "Status konnte nicht geladen werden",
+				"migratedAt": "Migriert am",
 				"no": "Nein",
 				"noErrorMessages": "Keine Fehlermeldungen verfügbar",
 				"pending": "Ausstehend",

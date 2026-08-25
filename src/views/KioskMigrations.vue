@@ -145,31 +145,52 @@
               {{ $t('page.kiosk.migrations.applianceLoadError') }}
             </div>
             <template v-else-if="selectedAppliance">
-              <div v-if="selectedAppliance.id !== null">
+              <div v-if="selectedAppliance.id !== null" class="migrations-appliance-field">
                 {{ $t('page.kiosk.migrations.applianceId') }}: {{ selectedAppliance.id }}
               </div>
-              <div v-if="selectedAppliance.ip !== null">
+              <div v-if="selectedAppliance.ip !== null" class="migrations-appliance-field">
                 {{ $t('page.kiosk.migrations.applianceIp') }}: {{ selectedAppliance.ip }}
               </div>
-              <div v-if="selectedAppliance.mac !== null">
+              <div v-if="selectedAppliance.mac !== null" class="migrations-appliance-field">
                 {{ $t('page.kiosk.migrations.applianceMac') }}: {{ selectedAppliance.mac }}
               </div>
-              <div v-if="selectedAppliance.lastTimeOnline !== null">
+              <div v-if="selectedAppliance.lastTimeOnline !== null" class="migrations-appliance-field">
                 {{ $t('page.kiosk.migrations.applianceLastTimeOnline') }}:
                 {{ dateUtils.isoToShortDateTime(selectedAppliance.lastTimeOnline, $i18n.locale) }}
               </div>
-              <div v-if="selectedAppliance.online !== null">
+              <div v-if="selectedAppliance.online !== null" class="migrations-appliance-field">
                 {{ $t('page.kiosk.migrations.applianceOnline') }}:
                 {{ selectedAppliance.online ? $t('page.kiosk.migrations.yes') : $t('page.kiosk.migrations.no') }}
               </div>
+              <!-- no time of its own: the last-time-online line above is the
+                   time through which this level is valid, and printing that
+                   same value twice in six lines helps nobody
+                   (see design.md, Decision 1) -->
+              <div
+                v-if="selectedAppliance.batteryDriven && selectedAppliance.batteryPercent !== null"
+                class="migrations-appliance-field"
+              >
+                {{ $t('page.kiosk.migrations.applianceBattery') }}:
+                <span :class="batteryTextClass(selectedAppliance.batteryPercent)">{{ selectedAppliance.batteryPercent }}%</span>
+              </div>
             </template>
-          </div>
-          <template v-if="selectedNode.column !== 'done'">
-            <div v-if="selectedNode.node.attemptCount !== null && selectedNode.node.attemptCount !== undefined" class="mb-2">
-              {{ $t('page.kiosk.migrations.attempts') }}: {{ selectedNode.node.attemptCount }}
+            <!-- the node's own facts, outside the branches above: they come
+                 from the migrations poll, so they still render when the
+                 appliance fetch is loading or has failed -->
+            <div v-if="migrationTime !== null" class="migrations-node-fact">
+              {{ $t('page.kiosk.migrations.migratedAt') }}:
+              {{ dateUtils.isoToShortDateTime(migrationTime, $i18n.locale) }}
             </div>
-            <div v-if="selectedNode.node.errorMessages && selectedNode.node.errorMessages.length">
-              <div v-for="(msg, i) in selectedNode.node.errorMessages" :key="i">{{ msg }}</div>
+            <div v-if="attemptCount !== null" class="migrations-node-fact">
+              {{ $t('page.kiosk.migrations.attempts') }}: {{ attemptCount }}
+            </div>
+          </div>
+          <!-- facts above the rule, failures below it - and no rule at all for
+               a done node, which has nothing to put under it -->
+          <template v-if="selectedNode.column !== 'done'">
+            <v-divider class="mb-2"></v-divider>
+            <div v-if="errorEntries.length">
+              <div v-for="(entry, i) in errorEntries" :key="i">{{ errorMessageLine(entry, $i18n.locale) }}</div>
             </div>
             <div v-else>{{ $t('page.kiosk.migrations.noErrorMessages') }}</div>
           </template>
@@ -190,6 +211,7 @@ import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import { singleton as migrationsService } from '@/utils/webservices/migrationsService'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
+import { singleton as overmindUtils } from '@/utils/overmindUtils'
 import { Debouncer } from '@/utils/debouncer'
 
 export default {
@@ -249,6 +271,39 @@ export default {
     // whole budget - the page scrolls then, which beats an unreadable list.
     nodeListStyle () {
       return { maxHeight: `max(120px, calc(100vh - ${204 + this.entries.length * 48}px))` }
+    },
+    // The time a done node was migrated. It does not exist in today's
+    // backend - it arrives with the companion change
+    // `reconciliation-node-times`, whose field name is not settled yet, so
+    // the candidates live here in one place and the line simply stays away
+    // until one of them shows up (see design.md, Risks).
+    migrationTime () {
+      if (!this.selectedNode || this.selectedNode.column !== 'done') {
+        return null
+      }
+      const node = this.selectedNode.node
+      return this.firstNonEmpty(node.doneAt, node.reconciledAt, node.migratedAt)
+    },
+    // A done node's cycle is over, so its attempt count says nothing; the
+    // other two columns show it as one of the node's facts.
+    attemptCount () {
+      if (!this.selectedNode || this.selectedNode.column === 'done') {
+        return null
+      }
+      return this.firstDefined(this.selectedNode.node.attemptCount)
+    },
+    errorEntries () {
+      if (!this.selectedNode) {
+        return []
+      }
+      const node = this.selectedNode.node
+      const messages = Array.isArray(node.errorMessages) ? node.errorMessages : []
+      // the backend that collapses repeated reasons keeps their counts in a
+      // list parallel to the reasons rather than inside each entry
+      const counts = Array.isArray(node.occurrenceCounts) ? node.occurrenceCounts : []
+      return messages
+        .map((entry, i) => this.normalizeErrorMessage(entry, counts[i]))
+        .filter(entry => entry !== null)
     }
   },
 
@@ -341,14 +396,91 @@ export default {
     normalizeAppliance (applianceId, appliance) {
       const record = appliance || {}
       const config = this.parseJsonField(record.config) || {}
+      const state = this.parseJsonField(record.state) || {}
       const id = this.nonEmpty(record.id)
       return {
         id: id !== null ? id : this.nonEmpty(applianceId),
         ip: this.stripScheme(this.nonEmpty(config.address)),
         mac: this.nonEmpty(config.mac),
         lastTimeOnline: this.nonEmpty(record.lastTimeOnline),
-        online: typeof record.pingable === 'boolean' ? record.pingable : null
+        online: typeof record.pingable === 'boolean' ? record.pingable : null,
+        // whether a battery line belongs here at all is the backend's own
+        // answer, not something inferred from a stray battery reading: a
+        // mains-powered device that once reported one would otherwise sprout
+        // a meaningless line (see design.md, Decision 2)
+        batteryDriven: typeof record.batteryDriven === 'boolean' ? record.batteryDriven : null,
+        batteryPercent: this.batteryPercentOf(state)
       }
+    },
+    // 0..1 in the stored state, whole percent in the GUI - same conversion
+    // AppliancePanel and Floorplan already do. Null whenever the state holds
+    // no usable reading, so the line is omitted rather than shown as 0%.
+    batteryPercentOf (state) {
+      const batteries = Array.isArray(state.batteries) ? state.batteries : []
+      const level = batteries.length && batteries[0] ? batteries[0].batteryLevel : null
+      if (typeof level !== 'number' || !isFinite(level)) {
+        return null
+      }
+      return Math.round(level * 100)
+    },
+    // getBatteryColor answers with a Vuetify background pair ('green
+    // darken-2'); as a text colour that same pair spells
+    // 'green--text text--darken-2'.
+    batteryTextClass (percent) {
+      const [base, variant] = overmindUtils.getBatteryColor(percent).split(' ')
+      return variant ? `${base}--text text--${variant}` : `${base}--text`
+    },
+    // A failure reason arrives as a plain string today, as a timestamped
+    // object from the companion backend change, and as a collapsed entry with
+    // an occurrence count from `fix-reconciler-gen2-and-transport-errors`.
+    // One normalizer absorbs all three, so the view never has to know which
+    // backend version it is talking to (see design.md, Decision 5).
+    // `fallbackCount` carries the count for the shape that keeps it in a list
+    // parallel to the reasons instead of inside the entry.
+    normalizeErrorMessage (entry, fallbackCount) {
+      if (entry === null || entry === undefined) {
+        return null
+      }
+      if (typeof entry !== 'object') {
+        const plain = this.nonEmpty(String(entry))
+        return plain === null ? null : { text: plain, at: null, count: this.occurrenceCount(fallbackCount) }
+      }
+      const text = this.firstNonEmpty(entry.text, entry.message, entry.reason)
+      if (text === null) {
+        return null
+      }
+      // a collapsed entry spans first-to-last occurrence; the last one is what
+      // says whether the node is still failing, so that is the time it carries
+      const at = this.firstNonEmpty(entry.at, entry.recordedAt, entry.lastOccurredAt, entry.firstOccurredAt)
+      const count = this.occurrenceCount(this.firstDefined(entry.count, entry.occurrenceCount, entry.occurrences, fallbackCount))
+      return { text, at, count }
+    },
+    // One line per reason: its time (localized, with seconds - a retry burst
+    // records several inside one minute), the reason, and how often it
+    // repeated. Anything the backend did not supply is left out rather than
+    // rendered as a placeholder.
+    errorMessageLine (entry, locale) {
+      const parts = []
+      if (entry.at !== null) {
+        parts.push(dateUtils.isoToShortDateLongTime(entry.at, locale) + ':')
+      }
+      parts.push(entry.text)
+      if (entry.count !== null && entry.count > 1) {
+        parts.push(`(${entry.count}\u00d7)`)
+      }
+      return parts.join(' ')
+    },
+    occurrenceCount (value) {
+      const count = Number(value)
+      return Number.isFinite(count) && count >= 1 ? Math.round(count) : null
+    },
+    firstDefined (...values) {
+      const found = values.find(value => value !== null && value !== undefined)
+      return found === undefined ? null : found
+    },
+    firstNonEmpty (...values) {
+      const found = values.map(value => this.nonEmpty(value)).find(value => value !== null)
+      return found === undefined ? null : found
     },
     nonEmpty (value) {
       if (value === null || value === undefined) {

@@ -62,6 +62,7 @@
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
 			"migrations": {
+				"applianceBattery": "Battery",
 				"applianceId": "ID",
 				"applianceIp": "IP",
 				"applianceLastTimeOnline": "Last time online",
@@ -75,6 +76,7 @@
 				"empty": "No active migrations",
 				"error": "Error",
 				"fetchError": "Could not load migration status",
+				"migratedAt": "Migrated at",
 				"no": "No",
 				"noErrorMessages": "No error messages available",
 				"pending": "Pending",
