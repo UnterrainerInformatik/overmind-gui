@@ -284,10 +284,14 @@ export default {
       const node = this.selectedNode.node
       return this.firstNonEmpty(node.doneAt, node.reconciledAt, node.migratedAt)
     },
-    // A done node's cycle is over, so its attempt count says nothing; the
-    // other two columns show it as one of the node's facts.
+    // How many attempts the cycle consumed - a fact about the node in every
+    // column, the done one included: the backend counts the attempt that
+    // succeeded, so a first-try convergence reports 1 and a node that fought
+    // through four failures reports 5 (see design.md, Decision 4). A node the
+    // backend reports no count for - never attempted, or converged before
+    // counts were recorded - yields null and the line is left out.
     attemptCount () {
-      if (!this.selectedNode || this.selectedNode.column === 'done') {
+      if (!this.selectedNode) {
         return null
       }
       return this.firstDefined(this.selectedNode.node.attemptCount)
@@ -299,10 +303,14 @@ export default {
       const node = this.selectedNode.node
       const messages = Array.isArray(node.errorMessages) ? node.errorMessages : []
       // the backend that collapses repeated reasons keeps their counts in a
-      // list parallel to the reasons rather than inside each entry
+      // list parallel to the reasons rather than inside each entry - and it
+      // keeps the reasons' times the same way, in two more parallel lists
+      // (see design.md, Decision 1)
       const counts = Array.isArray(node.occurrenceCounts) ? node.occurrenceCounts : []
+      const firstAts = Array.isArray(node.firstOccurredAts) ? node.firstOccurredAts : []
+      const lastAts = Array.isArray(node.lastOccurredAts) ? node.lastOccurredAts : []
       return messages
-        .map((entry, i) => this.normalizeErrorMessage(entry, counts[i]))
+        .map((entry, i) => this.normalizeErrorMessage(entry, counts[i], lastAts[i], firstAts[i]))
         .filter(entry => entry !== null)
     }
   },
@@ -435,23 +443,30 @@ export default {
     // an occurrence count from `fix-reconciler-gen2-and-transport-errors`.
     // One normalizer absorbs all three, so the view never has to know which
     // backend version it is talking to (see design.md, Decision 5).
-    // `fallbackCount` carries the count for the shape that keeps it in a list
-    // parallel to the reasons instead of inside the entry.
-    normalizeErrorMessage (entry, fallbackCount) {
+    // `fallbackCount`, `fallbackLastAt` and `fallbackFirstAt` carry the values
+    // for the shape the backend actually ships: plain reason strings with the
+    // count and the two times in lists parallel to them, rather than inside
+    // the entry. An unknown time arrives as a null element there - the arrays
+    // stay index-parallel - and falls through to no time at all.
+    normalizeErrorMessage (entry, fallbackCount, fallbackLastAt, fallbackFirstAt) {
       if (entry === null || entry === undefined) {
         return null
       }
+      // the last occurrence is what says whether the node is still failing, so
+      // it wins over the first wherever both are supplied
+      const fallbackAt = this.firstNonEmpty(fallbackLastAt, fallbackFirstAt)
       if (typeof entry !== 'object') {
         const plain = this.nonEmpty(String(entry))
-        return plain === null ? null : { text: plain, at: null, count: this.occurrenceCount(fallbackCount) }
+        return plain === null ? null : { text: plain, at: fallbackAt, count: this.occurrenceCount(fallbackCount) }
       }
       const text = this.firstNonEmpty(entry.text, entry.message, entry.reason)
       if (text === null) {
         return null
       }
-      // a collapsed entry spans first-to-last occurrence; the last one is what
-      // says whether the node is still failing, so that is the time it carries
-      const at = this.firstNonEmpty(entry.at, entry.recordedAt, entry.lastOccurredAt, entry.firstOccurredAt)
+      // a collapsed entry spans first-to-last occurrence; a time carried inside
+      // the entry wins over the parallel lists, the two being the same value
+      // whenever both shapes are present
+      const at = this.firstNonEmpty(entry.at, entry.recordedAt, entry.lastOccurredAt, entry.firstOccurredAt, fallbackAt)
       const count = this.occurrenceCount(this.firstDefined(entry.count, entry.occurrenceCount, entry.occurrences, fallbackCount))
       return { text, at, count }
     },
