@@ -60,6 +60,7 @@
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPersonen": "Personen",
+			"linkPersonenEvents": "Events",
 			"linkPersonenVerwaltung": "Personen",
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
@@ -112,6 +113,19 @@
 				"upload": "Hochladen",
 				"uploadError": "Bild(er) konnten nicht hochgeladen werden",
 				"uploadFiles": "Weitere Bilder"
+			},
+			"personenEvents": {
+				"clipError": "Clip konnte nicht geladen werden",
+				"close": "Schließen",
+				"empty": "Keine Ereignisse vorhanden",
+				"fetchError": "Ereignisse konnten nicht geladen werden",
+				"filterFrom": "Von",
+				"filterName": "Person",
+				"filterTo": "Bis",
+				"loadMore": "Weitere laden",
+				"loadMoreError": "Weitere Ereignisse konnten nicht geladen werden",
+				"title": "Ereignisse",
+				"unknown": "Unbekannt"
 			},
 			"presence": {
 				"title": "Präsenz"
@@ -179,6 +193,7 @@
 		"kioskMigrations": "",
 		"kioskMovement": "",
 		"kioskOverview": "",
+		"kioskPersonenEvents": "",
 		"kioskPersonenVerwaltung": "",
 		"kioskPlugs": "",
 		"kioskPresence": "",

@@ -60,6 +60,7 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPersonen": "Persons",
+			"linkPersonenEvents": "Events",
 			"linkPersonenVerwaltung": "Persons",
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
@@ -112,6 +113,19 @@
 				"upload": "Upload",
 				"uploadError": "Could not upload image(s)",
 				"uploadFiles": "Additional images"
+			},
+			"personenEvents": {
+				"clipError": "Could not load clip",
+				"close": "Close",
+				"empty": "No events yet",
+				"fetchError": "Could not load events",
+				"filterFrom": "From",
+				"filterName": "Person",
+				"filterTo": "To",
+				"loadMore": "Load more",
+				"loadMoreError": "Could not load more events",
+				"title": "Events",
+				"unknown": "Unknown"
 			},
 			"presence": {
 				"title": "Presence"
@@ -179,6 +193,7 @@
 		"kioskMigrations": "",
 		"kioskMovement": "",
 		"kioskOverview": "",
+		"kioskPersonenEvents": "",
 		"kioskPersonenVerwaltung": "",
 		"kioskPlugs": "",
 		"kioskPresence": "",

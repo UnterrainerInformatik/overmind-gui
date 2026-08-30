@@ -12,6 +12,11 @@
           :text="$t('page.kiosk.linkPersonenVerwaltung')"
           route="/app/kioskpersonenverwaltung"
         ></KioskLinkPanel>
+
+        <KioskLinkPanel
+          :text="$t('page.kiosk.linkPersonenEvents')"
+          route="/app/kioskpersonenevents"
+        ></KioskLinkPanel>
       </div>
 
       <KioskVideoStreamPanel :width="videoWidth" :height="videoHeight"
