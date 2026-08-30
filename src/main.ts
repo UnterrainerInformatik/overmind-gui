@@ -16,6 +16,7 @@ import VueAxios from 'vue-axios'
 import VueGoogleCharts from 'vue-google-charts'
 
 Vue.config.productionTip = false
+Vue.config.ignoredElements = [/^go2rtc-/]
 
 Vue.use(VueGoogleCharts)
 Vue.use(VueI18n)

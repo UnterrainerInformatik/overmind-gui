@@ -1,7 +1,8 @@
 <template>
-  <KioskPanel borderColor="secondary" bgColor="black" :min-width="width" :pa="1" :renderTitle="false">
+  <KioskPanel borderColor="secondary" bgColor="black" :min-width="width" :max-width="width" :pa="1" :renderTitle="false">
     <template>
-      <VideoStream :width="width-8" :height="height-4" :url="url" :photoEnabled="photoEnabled"></VideoStream>
+      <VideoStreamRtc v-if="rtc" :width="width-8" :height="height-4" :wsUrl="url" :photoEnabled="photoEnabled" :overlayObjects="overlayObjects"></VideoStreamRtc>
+      <VideoStream v-else :width="width-8" :height="height-4" :url="url" :photoEnabled="photoEnabled" :overlayObjects="overlayObjects"></VideoStream>
     </template>
   </KioskPanel>
 </template>
@@ -13,6 +14,7 @@
 <script lang="js">
 import KioskPanel from '@/components/KioskPanel.vue'
 import VideoStream from '@/components/VideoStream.vue'
+import VideoStreamRtc from '@/components/VideoStreamRtc.vue'
 
 export default {
   name: 'KioskVideoStreamPanel',
@@ -31,12 +33,21 @@ export default {
     },
     height: {
       type: Number
+    },
+    overlayObjects: {
+      type: Array,
+      default: () => []
+    },
+    rtc: {
+      type: Boolean,
+      default: false
     }
   },
 
   components: {
     KioskPanel,
-    VideoStream
+    VideoStream,
+    VideoStreamRtc
   },
 
   data: () => ({

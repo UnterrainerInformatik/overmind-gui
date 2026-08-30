@@ -376,8 +376,8 @@
             route="/app/kioskcamera"
           ></KioskLinkPanel>
           <KioskLinkPanel
-            :text="$t('page.kiosk.linkVideo')"
-            route="/app/kioskvideo"
+            :text="$t('page.kiosk.linkPersonen')"
+            route="/app/kioskpersonen"
           ></KioskLinkPanel>
         </v-col>
       </v-row>

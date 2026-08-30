@@ -59,6 +59,7 @@
 			"linkContact": "Windows / Air",
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
+			"linkPersonen": "Persons",
 			"linkPlugs": "Plugs",
 			"linkPresence": "Presence",
 			"migrations": {
@@ -87,7 +88,6 @@
 			"presence": {
 				"title": "Presence"
 			},
-			"linkVideo": "Video",
 			"power": "Power Consumption",
 			"solarPower": "Solar Power",
 			"toggleDetails": "Details anzeigen",

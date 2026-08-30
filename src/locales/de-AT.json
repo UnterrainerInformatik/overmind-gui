@@ -59,6 +59,7 @@
 			"linkContact": "Fenster / Klima",
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
+			"linkPersonen": "Personen",
 			"linkPlugs": "Steckdosen",
 			"linkPresence": "Präsenz",
 			"migrations": {
@@ -87,7 +88,6 @@
 			"presence": {
 				"title": "Präsenz"
 			},
-			"linkVideo": "Video",
 			"power": "Stromverbrauch",
 			"solarPower": "Photovoltaik",
 			"toggleDetails": "Show details",

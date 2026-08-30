@@ -7,18 +7,11 @@
         indeterminate
         color="grey"
       ></v-progress-circular>
-      <video
-        v-bind="$attrs"
-        v-on="$listeners"
+      <go2rtc-video
+        ref="rtc"
         v-show="!isLoading"
-        :width="width"
-        :height="height"
-        ref="video"
-        :src="url"
-        type="video/mp4"
-        crossorigin="anonymous"
-        autoplay
-      ></video>
+        :style="`width: ${width}px; height: ${height}px; display: block;`"
+      ></go2rtc-video>
       <canvas
         @click="takePhoto"
         v-if="!isLoading"
@@ -53,12 +46,17 @@
 </style>
 
 <script lang="js">
+import { VideoRTC } from '@/utils/video-rtc.js'
+
+if (!customElements.get('go2rtc-video')) {
+  customElements.define('go2rtc-video', VideoRTC)
+}
 
 export default {
-  name: 'VideoStream',
+  name: 'VideoStreamRtc',
 
   props: {
-    url: {
+    wsUrl: {
       type: String,
       default: ''
     },
@@ -84,30 +82,19 @@ export default {
   data: () => ({
     interval: null,
     isLoading: true,
+    videoEl: null,
     overlayRect: { top: 0, left: 0, width: 0, height: 0 }
   }),
-
-  computed: {
-    size () {
-      if (this.width === undefined || this.width === null || this.height === undefined || this.height === null) {
-        return undefined
-      }
-      const width = parseInt(this.width.replace(/\D/g, ''), 10)
-      const height = parseInt(this.height.replace(/\D/g, ''), 10)
-      return Math.min(width, height) + 'px'
-    }
-  },
 
   watch: {
   },
 
   methods: {
     update () {
-      const video = this.$refs.video
+      const video = this.videoEl
       if (!video) {
         return
       }
-      // console.log(video.readyState)
       if (video.readyState > 2) {
         this.$emit('ready')
         this.isLoading = false
@@ -124,7 +111,7 @@ export default {
     },
     drawOverlay () {
       const canvas = this.$refs.overlay
-      const video = this.$refs.video
+      const video = this.videoEl
       if (!canvas || !video || !video.videoWidth || !video.videoHeight) {
         return
       }
@@ -179,12 +166,12 @@ export default {
       }
       const canvas = this.$refs.canvas
       const ctx = canvas.getContext('2d')
-      const video = this.$refs.video
+      const video = this.videoEl
       const download = this.$refs.downloadPhoto
 
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
-      ctx.drawImage(this.$refs.video, 0, 0, canvas.width, canvas.height)
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
       download.href = canvas.toDataURL(
         'image/jpeg'
@@ -197,7 +184,12 @@ export default {
   },
 
   mounted () {
-    // console.log('VideoStream mounted')
+    this.$nextTick(() => {
+      const rtc = this.$refs.rtc
+      this.videoEl = rtc.video
+      rtc.video.controls = false
+      rtc.src = this.wsUrl
+    })
     this.interval = setInterval(() => this.update(), 100)
   },
 
