@@ -1,11 +1,18 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex">
-      <KioskLinkPanel
-        ref="backButton"
-        :text="$t('page.kiosk.linkBack')"
-        route="/app/kioskoverview"
-      ></KioskLinkPanel>
+      <div class="d-flex flex-column">
+        <KioskLinkPanel
+          ref="backButton"
+          :text="$t('page.kiosk.linkBack')"
+          route="/app/kioskoverview"
+        ></KioskLinkPanel>
+
+        <KioskLinkPanel
+          :text="$t('page.kiosk.linkPersonenVerwaltung')"
+          route="/app/kioskpersonenverwaltung"
+        ></KioskLinkPanel>
+      </div>
 
       <KioskVideoStreamPanel :width="videoWidth" :height="videoHeight"
         :url="'https://frig.unterrainer.info/live/webrtc/api/ws?src=keller'"

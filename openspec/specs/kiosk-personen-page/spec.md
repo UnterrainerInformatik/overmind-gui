@@ -46,6 +46,22 @@ NOT wrap onto its own row above the video at any size.
 - **THEN** the video shrinks to make room, but the back link still
   renders as a full-height left column rather than wrapping above it
 
+### Requirement: Personen management button below the back button
+
+The `KioskPersonen` page SHALL show a second navigation button, labeled
+"Personen", positioned directly below the existing back button and
+matching the back button's width. Tapping it SHALL open the person/face
+management page.
+
+#### Scenario: Button shown below the back button
+- **WHEN** the user views the `KioskPersonen` page
+- **THEN** a "Personen" button is shown directly below the back button,
+  the same width as the back button
+
+#### Scenario: Opening the management page
+- **WHEN** the user taps the "Personen" button
+- **THEN** the person/face management page opens
+
 ### Requirement: Live Keller camera feed
 
 The Personen page SHALL stream the Keller camera live, using the same
