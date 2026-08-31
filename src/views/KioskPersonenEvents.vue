@@ -86,17 +86,38 @@
       route="/app/kioskpersonen"
     ></KioskLinkPanel>
 
-    <v-dialog v-model="detailDialog" max-width="720">
-      <v-card v-if="selectedEvent" outlined>
+    <v-dialog
+      v-model="detailDialog"
+      max-width="720"
+      content-class="events-detail-dialog"
+      :fullscreen="$vuetify.breakpoint.xsOnly"
+    >
+      <v-card v-if="selectedEvent" outlined class="events-detail-card">
         <v-card-title>
-          {{ selectedEvent.subLabel || $t('page.kiosk.personenEvents.unknown') }}
+          <span class="text-truncate">{{ selectedEvent.subLabel || $t('page.kiosk.personenEvents.unknown') }}</span>
+          <v-spacer></v-spacer>
+          <v-btn
+            icon
+            class="events-detail-close"
+            :title="$t('page.kiosk.personenEvents.close')"
+            :aria-label="$t('page.kiosk.personenEvents.close')"
+            @click="closeEvent"
+          >
+            <v-icon>close</v-icon>
+          </v-btn>
         </v-card-title>
         <v-card-text>
           <div class="events-detail-time mb-2">
             {{ dateUtils.dateToShortDateTime(dateOf(selectedEvent), $i18n.locale) }}
             <span v-if="selectedEvent.zones.length">&mdash; {{ selectedEvent.zones.join(', ') }}</span>
           </div>
-          <v-img :src="snapshotUrl(selectedEvent)" class="events-detail-media mb-2"></v-img>
+          <v-img
+            v-if="showSnapshot"
+            contain
+            :src="snapshotUrl(selectedEvent)"
+            class="events-detail-media mb-2"
+            :class="{ 'events-detail-media--solo': mediaSolo }"
+          ></v-img>
           <div v-if="selectedEvent.hasClip">
             <div v-if="clipLoading" class="d-flex justify-center pa-4">
               <v-progress-circular indeterminate color="grey"></v-progress-circular>
@@ -109,6 +130,7 @@
               ref="clipVideo"
               controls
               class="events-detail-media"
+              :class="{ 'events-detail-media--solo': mediaSolo }"
               :src="clipBlobUrl"
             ></video>
           </div>
@@ -173,6 +195,31 @@ export default {
     },
     toLocal () {
       this.loadEvents(true)
+    }
+  },
+
+  computed: {
+    /**
+     * A short viewport cannot hold the snapshot and the clip at a usable size, so
+     * the still is what gives way - the clip's first frame is essentially the same
+     * picture. `$vuetify.breakpoint` is reactive in both dimensions, so rotating or
+     * resizing re-evaluates this while the dialog is open, and `v-if` (rather than
+     * a CSS media query) also keeps v-img from fetching a snapshot nobody sees.
+     * A clip that failed to load keeps the snapshot: dropping it there would leave
+     * the dialog with no media at all.
+     */
+    showSnapshot () {
+      if (!this.selectedEvent) {
+        return false
+      }
+      const tight = this.$vuetify.breakpoint.xsOnly || this.$vuetify.breakpoint.height < 640
+      return !(this.selectedEvent.hasClip && !this.clipError && tight)
+    },
+
+    // Only one media element on screen, so it may claim the whole body height
+    // instead of the half-height budget the stacked case has to share.
+    mediaSolo () {
+      return !(this.showSnapshot && this.selectedEvent && this.selectedEvent.hasClip)
     }
   },
 
@@ -396,9 +443,68 @@ export default {
   z-index: 20;
 }
 
+/* Vuetify's own .v-dialog scrolls its whole content at max-height: 90%, which
+   takes the actions row - and with it the close button - out of view. The
+   dialog is pinned instead and the card owns the scrolling, so only the body
+   between the title and the actions moves. Every override is qualified with
+   the Vuetify class it is fighting: those rules carry inflated specificity and
+   an unqualified selector would silently lose the cascade. */
+.v-dialog.events-detail-dialog {
+  overflow: hidden;
+}
+
+.v-card.events-detail-card {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+
+  > .v-card__title,
+  > .v-card__actions {
+    flex: 0 0 auto;
+  }
+
+  > .v-card__text {
+    flex: 1 1 auto;
+    overflow-y: auto;
+  }
+}
+
+/* fullscreen has no overlay margin to spare, so the card takes the lot */
+.v-dialog--fullscreen .v-card.events-detail-card {
+  height: 100%;
+  max-height: 100%;
+}
+
+/* Height caps in vh rather than an aspect ratio: an aspect ratio derives the
+   height from the width, which is exactly what lets a wide, short viewport
+   blow the card open vertically.
+   The subtracted constant is the card's own chrome - title, actions, card
+   paddings and the timestamp line. That cost is in fixed pixels, so on a short
+   viewport it eats a much larger share of the height than on a tall one; a
+   plain `vh` cap ignores it and lands the body back in a scroll (measured at
+   174px on a 1280x600 viewport, rounded up here for slack). The paired cap
+   also gives up the 8px margin between the two media elements. */
+$events-detail-chrome: 180px;
+
 .events-detail-media {
   width: 100%;
   display: block;
+  max-height: calc((90vh - #{$events-detail-chrome} - 8px) / 2);
+  object-fit: contain;
+}
+
+.events-detail-media--solo {
+  max-height: calc(90vh - #{$events-detail-chrome});
+}
+
+/* fullscreen spends no height on the overlay margin, so the budget is the
+   whole viewport rather than the 90vh the floating card is capped at */
+.v-dialog--fullscreen .events-detail-media {
+  max-height: calc((100vh - #{$events-detail-chrome} - 8px) / 2);
+}
+
+.v-dialog--fullscreen .events-detail-media--solo {
+  max-height: calc(100vh - #{$events-detail-chrome});
 }
 
 .noFocus:focus::before {
