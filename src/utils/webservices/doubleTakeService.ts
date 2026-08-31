@@ -123,7 +123,7 @@ export class DoubleTakeService {
   private async getWithRetry (url: string, config: any = {}, attempt = 1): Promise<any> {
     try {
       return await axios.get(url, config)
-    } catch (err: any) {
+    } catch (err) {
       const status = err && err.response && err.response.status
       if (attempt >= 3 || !status || status < 500) {
         throw err
