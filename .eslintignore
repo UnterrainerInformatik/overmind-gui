@@ -1,0 +1,4 @@
+# Vendored verbatim from go2rtc - keep it diffable against upstream.
+# Without this, `vue-cli-service lint` (which fixes by default) reformats the
+# whole file to project style on every run.
+src/utils/video-rtc.js
