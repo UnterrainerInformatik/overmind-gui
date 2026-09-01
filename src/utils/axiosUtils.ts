@@ -108,7 +108,15 @@ export class AxiosUtils {
         msg = err.response.data.message
       }
       log.error(msg, 'communication', status)
-      throw new Error('Internal Error.')
+      // The message the server sent is what a form has to put on screen when a
+      // write is refused - a Frigate key already used on that node, a node that
+      // still holds cameras - so it travels on the error instead of being
+      // dropped with it. The thrown error's own message stays 'Internal Error.',
+      // so callers that only read that are unaffected.
+      const error: any = new Error('Internal Error.')
+      error.serverMessage = msg
+      error.status = status
+      throw error
     })
   }
 
@@ -180,6 +188,22 @@ export class AxiosUtils {
    */
   public async post (server: string, endpointPath: string, dataProvider: () => object): Promise<any> {
     return this.internalRestCall(this.internalPost(server, `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`, dataProvider))
+  }
+
+  /**
+   * Sends a POST to an endpoint whose path carries an entry's ID *inside* it,
+   * substituting the `{id}` placeholder in the endpoint definition. The CRUD
+   * helpers above only ever address a collection or one entry by a trailing ID;
+   * the camera and node connection tests ('/setup/cameras/{id}/test') are the
+   * first endpoints that hang an action off a single entry.
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param id the ID of the object the action applies to
+   * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
+   */
+  public async postToPath (server: string, endpointPath: string, id: string | number, dataProvider: () => object): Promise<any> {
+    const path = `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`.replace('{id}', encodeURIComponent(`${id}`))
+    return this.internalRestCall(this.internalPost(server, path, dataProvider))
   }
 }
 

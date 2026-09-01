@@ -39,6 +39,14 @@ const store = {
         reboot: '/restartappliance',
         reloadAppliances: '/setup/reload',
         sunRiseSet: '/sunriseset',
+        // Camera registry (java-overmind-server change camera-registry-and-node-routing).
+        // Plain /setup/* CRUD collections like the entries above; the two test
+        // endpoints hang an action off a single entry, so their path carries
+        // the id as a {id} placeholder that axiosUtils.postToPath() fills in.
+        cameras: '/setup/cameras',
+        cameraTest: '/setup/cameras/{id}/test',
+        nodes: '/setup/nodes',
+        nodeTest: '/setup/nodes/{id}/test',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

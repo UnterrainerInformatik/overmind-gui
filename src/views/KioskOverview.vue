@@ -379,6 +379,10 @@
             :text="$t('page.kiosk.linkPersonen')"
             route="/app/kioskpersonen"
           ></KioskLinkPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkCameras')"
+            route="/app/kioskcameras"
+          ></KioskLinkPanel>
         </v-col>
       </v-row>
     </v-container>
