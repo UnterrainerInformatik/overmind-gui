@@ -480,7 +480,10 @@ export default {
         await video.play()
       } catch (err) {
         video.muted = true
-        video.play().catch(() => {})
+        video.play().catch(() => {
+          // Muted playback was refused as well, so there is nothing left to
+          // try: the clip stays on its first frame until the user taps it.
+        })
       }
     },
 
