@@ -28,7 +28,8 @@ Constraints that shape the approach:
 
 - Configuring anything inside Frigate beyond the camera's connection (zones, masks,
   retention) — that stays on the node.
-- A live preview per camera on the management page; testing is an explicit action.
+- A live preview per camera on the management page; testing is an explicit action,
+  and a many-camera overview would use still images rather than one stream per row.
 - Reordering by drag and drop; ordering is a numeric field for now.
 
 ## Decisions
@@ -64,6 +65,23 @@ the consumer pages change as little as possible.
 
 *Alternative considered:* keep `frigateService` as a thin adapter over the new
 service. Rejected — two layers for one call, and the name would then be misleading.
+
+### The live view keeps go2rtc's component but in the relayable mode
+
+`VideoStreamRtc.vue` embeds go2rtc's own `<go2rtc-video>` element against
+`/live/webrtc/api/ws?src=<camera>`. Overmind can only relay that socket in go2rtc's
+MSE mode, where the media itself travels over the WebSocket; in WebRTC mode the
+socket carries only signalling and the media goes node-to-browser directly, past
+overmind, using ICE candidates that expose node addresses. The component therefore
+keeps its shape and only its URL changes — to overmind's stream handle — with the
+mode pinned to what the server relays.
+
+Nothing is re-encoded on the GUI's account: the person overlay is drawn client-side
+onto a canvas above the video, not composited into the stream.
+
+*Consequence for this page:* a live preview per row on the Kameras page would open one
+relayed stream per camera. That is why testing is an explicit per-row action and any
+many-cameras-at-a-glance view uses still images rather than streams.
 
 ### Fetch once per page, do not poll the registry
 
