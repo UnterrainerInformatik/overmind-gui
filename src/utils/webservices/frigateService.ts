@@ -63,11 +63,14 @@ export class FrigateService {
         id: event.id,
         camera: event.camera,
         label: event.label,
+        // Frigate's response fields are snake_case and are kept verbatim.
+        // eslint-disable-next-line @typescript-eslint/camelcase
         sub_label: event.sub_label,
         zones: event.zones || [],
         data: {
           box: event.data.box,
           score: event.data.score,
+          // eslint-disable-next-line @typescript-eslint/camelcase
           sub_label_score: event.data.sub_label_score
         }
       }))
@@ -91,6 +94,8 @@ export class FrigateService {
   ): Promise<FrigatePastEvent[]> {
     const params: any = { cameras: camera, label: 'person', limit }
     if (filters.name) {
+      // Frigate's query parameter is snake_case.
+      // eslint-disable-next-line @typescript-eslint/camelcase
       params.sub_labels = filters.name
     }
     if (filters.after !== null && filters.after !== undefined) {

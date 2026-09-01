@@ -586,19 +586,19 @@ export default {
             console.debug('[presence-pt]', {
               appId: area.appId,
               i,
-              obj_x: obj.x,
-              obj_y: obj.y,
+              objX: obj.x,
+              objY: obj.y,
               ppm,
               yawDeg: orientation.yawDeg,
-              dx_unscaled: dx,
-              dy_unscaled: dy,
-              ix_unscaled: ix,
-              iy_unscaled: iy,
-              leftPx_unscaled: leftPx,
-              topPx_unscaled: topPx,
+              dxUnscaled: dx,
+              dyUnscaled: dy,
+              ixUnscaled: ix,
+              iyUnscaled: iy,
+              leftPxUnscaled: leftPx,
+              topPxUnscaled: topPx,
               scale: this.scale,
-              left_screen: leftPx * this.scale,
-              top_screen: topPx * this.scale
+              leftScreen: leftPx * this.scale,
+              topScreen: topPx * this.scale
             })
           }
         }
