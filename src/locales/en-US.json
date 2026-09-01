@@ -124,6 +124,10 @@
 				"filterTo": "To",
 				"loadMore": "Load more",
 				"loadMoreError": "Could not load more events",
+				"quickRangeDays": "{count} days",
+				"quickRangeHours": "{count} hours",
+				"quickRangeLabel": "Range",
+				"timelineLabel": "Event timeline",
 				"title": "Events",
 				"unknown": "Unknown"
 			},

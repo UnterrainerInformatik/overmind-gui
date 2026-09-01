@@ -1,7 +1,11 @@
 <template>
   <div class="home">
     <v-container fluid class="ma-0 pa-0 d-flex flex-wrap align-start">
-      <v-container fluid class="events-content">
+      <v-container
+        fluid
+        class="events-content"
+        :class="{ 'events-content--with-timeline': showTimeline }"
+      >
         <div class="text-h5 mb-2">{{ $t('page.kiosk.personenEvents.title') }}</div>
 
         <div class="events-filters d-flex flex-wrap align-center mb-4">
@@ -43,6 +47,20 @@
               <v-icon small>clear</v-icon>
             </v-btn>
           </div>
+
+          <div class="events-filter-quick d-flex align-center flex-wrap mb-2">
+            <span class="events-date-label mr-2">{{ $t('page.kiosk.personenEvents.quickRangeLabel') }}</span>
+            <v-btn
+              v-for="range in quickRanges"
+              :key="range.hours"
+              small
+              outlined
+              class="events-quick-btn mr-1"
+              @click="applyQuickRange(range)"
+            >
+              {{ quickRangeText(range) }}
+            </v-btn>
+          </div>
         </div>
 
         <v-card v-if="fetchError" outlined color="error" class="pa-4 mb-4">
@@ -55,7 +73,12 @@
 
         <v-row v-else dense>
           <v-col v-for="event in events" :key="event.id" cols="6" sm="4" md="3" lg="2">
-            <v-card outlined class="events-card noFocus" @click="openEvent(event)">
+            <v-card
+              outlined
+              class="events-card noFocus"
+              :class="{ 'events-card--highlighted': event.id === highlightedId }"
+              @click="openEvent(event)"
+            >
               <v-img :src="thumbnailUrl(event)" aspect-ratio="1.7777" class="grey darken-4"></v-img>
               <v-card-text class="pa-2">
                 <div class="events-card-name text-truncate">
@@ -79,6 +102,16 @@
         </div>
       </v-container>
     </v-container>
+
+    <EventsTimeline
+      v-if="showTimeline"
+      :events="events"
+      :axis-start="axisStart()"
+      :axis-end="axisEnd()"
+      :highlighted-id="highlightedId"
+      :label="$t('page.kiosk.personenEvents.timelineLabel')"
+      @activate="revealEvent"
+    ></EventsTimeline>
 
     <KioskLinkPanel
       class="events-back-btn"
@@ -146,6 +179,7 @@
 
 <script type="js">
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
+import EventsTimeline from '@/components/EventsTimeline.vue'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
@@ -154,11 +188,62 @@ import { Debouncer } from '@/utils/debouncer'
 const PAGE_SIZE = 30
 const CAMERA = 'keller'
 
+const HOUR = 60 * 60 * 1000
+
+// Each range only ever writes into the existing "from" field, so there is no
+// "selected range" to keep in sync - the controls show what is active because
+// they *are* what is active, and a hand-edit afterwards is just another write
+// to the same field. `days` picks the plural form; `hours` is what counts.
+const QUICK_RANGES = [
+  { hours: 2 },
+  { hours: 12 },
+  { hours: 24 },
+  { hours: 24 * 7, days: 7 }
+]
+const DEFAULT_RANGE = QUICK_RANGES[0]
+
+/**
+ * The exact inverse of the view's `epochFromLocal()`: builds the
+ * `YYYY-MM-DDTHH:mm` local wall-clock string a `datetime-local` input takes.
+ * `Date.toISOString()` is UTC and would seed a range shifted by the timezone
+ * offset - in this project's timezone, silently the wrong two hours - and
+ * `dateUtils` has no such formatter, only locale display strings. It is a
+ * module-level function rather than a method because `data()` needs it before
+ * an instance exists.
+ */
+const localFromDate = date =>
+  `${date.getFullYear()}-${dateUtils.pad(date.getMonth() + 1)}-${dateUtils.pad(date.getDate())}` +
+  `T${dateUtils.pad(date.getHours())}:${dateUtils.pad(date.getMinutes())}`
+
+/**
+ * The viewport below which the timeline gives way to the grid.
+ *
+ * Measured in the running app rather than reasoned from the stylesheet (task
+ * 4.3), by applying the reserved padding by hand at every width and reading the
+ * tile boxes back. The reference the measurement is judged against is the grid's
+ * own floor: unaided, at a 360px viewport, it already renders 156px tiles. The
+ * 56px the timeline costs takes the tiles to
+ *   600px -> 165px (3/row)   480px -> 192px   420px -> 162px
+ *   400px -> 152px           380px -> 142px   360px -> 132px
+ * so 420px is where the tiles stop clearing that floor, and it is the threshold.
+ *
+ * Vuetify's own xs/sm boundary (600px) was the obvious candidate and the
+ * measurement rejected it: the tightest tile in the entire range - 165px - sits
+ * *at* 600px, where the grid still runs three columns, while 580px down to 420px
+ * is roomier (242px .. 162px) because the grid has dropped to two. The boundary
+ * therefore does not describe the constraint; the tile floor does.
+ */
+const TIMELINE_MIN_WIDTH = 420
+
+// how far below the viewport top a tile reached from the timeline is parked
+const REVEAL_MARGIN = 16
+
 export default {
   name: 'kioskPersonenEvents',
 
   components: {
-    KioskLinkPanel
+    KioskLinkPanel,
+    EventsTimeline
   },
 
   data: () => ({
@@ -175,8 +260,18 @@ export default {
     people: [],
 
     nameFilter: null,
-    fromLocal: '',
+    // Seeded here, not in mounted(): Vue fires no watcher for a property's
+    // initial value, so mounted()'s single loadEvents(true) stays the only
+    // load. Writing it in mounted() would fire the fromLocal watcher into a
+    // second loadEvents(true) racing the first, resolved only by requestId.
+    // `toLocal` stays empty on purpose - see applyQuickRange().
+    fromLocal: localFromDate(new Date(Date.now() - DEFAULT_RANGE.hours * HOUR)),
     toLocal: '',
+
+    quickRanges: QUICK_RANGES,
+    // the event whose mark was last activated on the timeline; an id rather
+    // than an element reference, so it survives mergeEvents()
+    highlightedId: null,
 
     detailDialog: false,
     selectedEvent: null,
@@ -234,6 +329,13 @@ export default {
     // instead of the half-height budget the stacked case has to share.
     mediaSolo () {
       return !(this.showSnapshot && this.selectedEvent && this.selectedEvent.hasClip)
+    },
+
+    // `$vuetify.breakpoint.width` is reactive, so rotating or resizing brings
+    // the timeline back or takes it away together with the grid padding that
+    // reserves its column.
+    showTimeline () {
+      return this.$vuetify.breakpoint.width >= TIMELINE_MIN_WIDTH
     }
   },
 
@@ -248,12 +350,95 @@ export default {
 
     // datetime-local's value has no timezone suffix, so `new Date(...)` parses
     // it as local wall-clock time - the same moment the picker showed.
+    // Its inverse is the module-level localFromDate(), which is what every
+    // write *into* these inputs goes through.
     epochFromLocal (value) {
       if (!value) {
         return null
       }
       const ms = new Date(value).getTime()
       return Number.isFinite(ms) ? Math.floor(ms / 1000) : null
+    },
+
+    quickRangeText (range) {
+      return range.days
+        ? this.$t('page.kiosk.personenEvents.quickRangeDays', { count: range.days })
+        : this.$t('page.kiosk.personenEvents.quickRangeHours', { count: range.hours })
+    },
+
+    /**
+     * A range ending "at the present" is an *open* upper bound, not
+     * `toLocal = now`: buildFilters() feeds `toLocal` into `filters.before`
+     * and refreshEvents() reuses those filters every 5s, so an upper bound
+     * pinned at the moment the button was pressed would filter out precisely
+     * the events the live refresh exists to deliver. Left open, the range also
+     * keeps meaning "the last two hours" as time passes.
+     * `toLocal` is only written when it actually holds something, so the usual
+     * case costs one watcher and one request rather than two.
+     */
+    applyQuickRange (range) {
+      if (this.toLocal) {
+        this.toLocal = ''
+      }
+      this.fromLocal = localFromDate(new Date(Date.now() - range.hours * HOUR))
+    },
+
+    /**
+     * The bottom of the timeline axis: the active "from", or - when the range
+     * is open at that end - the oldest event actually listed, `events` being
+     * most-recent-first. With neither, the axis is given an hour so it still
+     * stands (without marks) instead of collapsing.
+     */
+    axisStart () {
+      const from = this.epochFromLocal(this.fromLocal)
+      if (from !== null) {
+        return from
+      }
+      return this.events.length ? this.events[this.events.length - 1].startTime : this.axisEnd() - 3600
+    },
+
+    /**
+     * The top of the axis: the active "to", or *now* when that bound is open.
+     * Deliberately a method rather than state - `now` is read as the view
+     * renders, so the axis follows the clock without a timer rewriting a data
+     * property under the user.
+     */
+    axisEnd () {
+      const to = this.epochFromLocal(this.toLocal)
+      return to !== null ? to : Math.floor(Date.now() / 1000)
+    },
+
+    /**
+     * Activating a mark on the timeline: highlight the event's tile and bring
+     * it into view. It deliberately does not open the event - that stays a
+     * click on the tile itself.
+     *
+     * The scroll goes through `document.scrollingElement` and a
+     * `getBoundingClientRect()` measurement, the same element and the same
+     * measurement refreshEvents()'s anchor compensation uses, so the two agree
+     * about what "scroll position" means. `Element.scrollIntoView()` on a
+     * smooth setting would still be animating when the next 5s refresh
+     * corrects `scrollTop` underneath it, which is how the two would visibly
+     * fight.
+     * A tile that is already fully in view is left where it is: the highlight
+     * alone answers "which one is it", and scrolling to it anyway would move
+     * the grid out from under the user for no reason.
+     */
+    async revealEvent (id) {
+      this.highlightedId = id
+      await this.$nextTick()
+      const index = this.events.findIndex(event => event.id === id)
+      const tiles = this.$el ? this.$el.querySelectorAll('.events-card') : []
+      const tile = index === -1 ? null : tiles[index]
+      const scroller = document.scrollingElement
+      if (!tile || !scroller) {
+        return
+      }
+      const rect = tile.getBoundingClientRect()
+      if (rect.top >= REVEAL_MARGIN && rect.bottom <= window.innerHeight) {
+        return
+      }
+      scroller.scrollTop += rect.top - REVEAL_MARGIN
     },
 
     dateOf (event) {
@@ -281,6 +466,10 @@ export default {
       if (reset) {
         this.loading = true
         this.fetchError = false
+        // The list is about to be replaced wholesale, so a highlight pointing
+        // into the old one is dropped rather than left dangling on an event a
+        // filter change may well have removed.
+        this.highlightedId = null
       } else {
         this.loadingMore = true
         this.loadMoreError = false
@@ -553,11 +742,45 @@ export default {
 <style lang="scss">
 @import 'index.scss';
 
+/* The timeline is fixed against the viewport rather than sticky inside the
+   grid column: the page scrolls <html> (refreshEvents() records the read-back),
+   so a sticky element here has no scrolling ancestor to stick within and would
+   simply scroll away. Same shape .events-back-btn already uses for the bottom
+   left corner.
+   The width is a two-place contract - the strip itself and the padding that
+   keeps the rightmost tile column out from under it - so both come off this
+   one variable, as $events-detail-chrome already does for the dialog. */
+$events-timeline-width: 56px;
+
 .events-content {
   max-width: none;
   /* the back button is fixed over the bottom left corner: keep the grid
      clear of it, same padding convention as personen-verwaltung-content */
   padding: 8px 8px 100px 8px;
+}
+
+/* Qualified with Vuetify's own .container, which owns the padding this is
+   correcting; an unqualified selector ties on specificity and wins or loses
+   on source order alone. The modifier only exists while the timeline does, so
+   the reserved column disappears with it on a narrow viewport. */
+.container.events-content--with-timeline {
+  padding-right: $events-timeline-width;
+}
+
+.events-timeline {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: $events-timeline-width;
+  height: 100vh;
+  z-index: 20;
+}
+
+/* .v-card--outlined's border is what this replaces, so the rule is qualified
+   with .v-card to clear that specificity. */
+.v-card.events-card--highlighted {
+  border-color: var(--v-primary-base, #1976d2);
+  box-shadow: 0 0 0 2px var(--v-primary-base, #1976d2);
 }
 
 .events-filter-name {

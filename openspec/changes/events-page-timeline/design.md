@@ -112,6 +112,14 @@ timezone offset — in this project's timezone, silently seeding the wrong two
 hours. Keeping the inverse beside the original is what makes the round-trip
 auditable.
 
+*As built:* `localFromDate()` is a module-level function in the SFC rather
+than a method, because `data()` — which is where the seed is written, per the
+decision above — is an arrow-returning object literal with no `this` to reach
+`methods` through. `epochFromLocal()` stays a method and carries a comment
+pointing at its inverse. The round-trip is verified in the running app against
+the real local offset (`local=…T09:38` vs `utc=…T07:38`, offset −120), so the
+trap the decision exists to avoid is checked rather than asserted.
+
 ### Quick ranges write into the existing fields
 
 The quick-range buttons set `fromLocal` (and clear `toLocal`); they hold no
@@ -193,7 +201,23 @@ resets it — rather than a dangling element reference.
   which one is the default, is a constant swap and a spec wording change; it
   does not affect the approach or the task breakdown. Worth confirming with
   the user before or during implementation.
+
+  *Still open.* Built as specified — `QUICK_RANGES` in
+  `KioskPersonenEvents.vue` is a four-entry list and the opening range is its
+  first entry, so changing either is a one-line edit plus the spec wording.
+  The four buttons are labelled from two parameterised i18n keys
+  (`quickRangeHours` / `quickRangeDays`) rather than one key per button, so a
+  changed set costs no new translations unless a new unit is needed.
 - Whether the timeline should also be suppressed in the same breakpoint the
   detail dialog uses for `xsOnly`, or at a width threshold of its own. The
   spec requires only that it give way on viewports too narrow for both; the
   exact threshold is a read-back in the running app.
+
+  *Answered: a threshold of its own, 420px.* Measured by applying the
+  reserved padding by hand at every width and reading the tile boxes back
+  (see task 4.3). The `xsOnly` boundary turned out not to describe the
+  constraint at all: the grid's tightest tile in the whole supported range —
+  165px — sits at 600px, inside the region `xsOnly` would have kept, while
+  580px down to 420px is roomier because the grid has dropped to two columns
+  there. The threshold is the width at which the timeline's 56px takes the
+  tiles below the 156px the grid already renders unaided at 360px.

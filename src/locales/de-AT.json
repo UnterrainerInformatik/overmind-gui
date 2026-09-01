@@ -124,6 +124,10 @@
 				"filterTo": "Bis",
 				"loadMore": "Weitere laden",
 				"loadMoreError": "Weitere Ereignisse konnten nicht geladen werden",
+				"quickRangeDays": "{count} Tage",
+				"quickRangeHours": "{count} Stunden",
+				"quickRangeLabel": "Zeitraum",
+				"timelineLabel": "Zeitachse der Ereignisse",
 				"title": "Ereignisse",
 				"unknown": "Unbekannt"
 			},
