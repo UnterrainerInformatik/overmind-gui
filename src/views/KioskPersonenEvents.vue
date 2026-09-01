@@ -191,6 +191,16 @@ export default {
   }),
 
   watch: {
+    // The two close buttons are not the only way out of the dialog: Escape and
+    // a click on the backdrop are handled by v-dialog itself and only write
+    // `false` through the v-model. The flag is therefore the one thing every
+    // closing path has in common, which is why the clip teardown hangs off it
+    // rather than off the click handlers.
+    detailDialog (open) {
+      if (!open) {
+        this.stopClip()
+      }
+    },
     nameFilter () {
       this.loadEvents(true)
     },
@@ -422,6 +432,24 @@ export default {
 
     closeEvent () {
       this.detailDialog = false
+    },
+
+    /**
+     * The <video> is kept mounted across opens and the dialog's card stays
+     * rendered once shown, so a closed dialog is a hidden element that is still
+     * playing - revoking the blob URL does nothing to media that is already
+     * loaded, which is why closing used to leave the clip audible.
+     * Detaching the source (rather than assigning '', which resolves to the
+     * page URL and fires a real failed request) is what makes the element let
+     * go of the buffered clip; the URL can only be revoked afterwards.
+     */
+    stopClip () {
+      const video = this.$refs.clipVideo
+      if (video) {
+        video.pause()
+        video.removeAttribute('src')
+        video.load()
+      }
       this.releaseClipBlob()
     },
 
@@ -514,7 +542,10 @@ export default {
     if (this.interval) {
       clearInterval(this.interval)
     }
-    this.releaseClipBlob()
+    // Leaving the page unmounts the component without ever flipping
+    // `detailDialog`, so the watcher does not run here - a clip playing at
+    // that moment has to be stopped through the same teardown.
+    this.stopClip()
   }
 }
 </script>
