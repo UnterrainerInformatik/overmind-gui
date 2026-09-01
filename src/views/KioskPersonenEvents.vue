@@ -149,6 +149,7 @@ import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
+import { Debouncer } from '@/utils/debouncer'
 
 const PAGE_SIZE = 30
 const CAMERA = 'keller'
@@ -161,6 +162,9 @@ export default {
   },
 
   data: () => ({
+    interval: null,
+    debouncer: new Debouncer(),
+
     events: [],
     loading: true,
     loadingMore: false,
@@ -298,6 +302,115 @@ export default {
       }
     },
 
+    /**
+     * Folds a freshly read first page into `events` additively. An id already
+     * present keeps its existing object: nothing is reassigned, so the
+     * `:key`-ed DOM node survives, `v-img` does not re-fetch its thumbnail and
+     * `selectedEvent` - which holds a reference into this array - keeps
+     * pointing at a live entry while its dialog is open.
+     * `hasMore` describes the tail of the list and this first-page query says
+     * nothing about it, so it is deliberately left alone.
+     * @param page events as getPastEvents() returns them, most-recent-first
+     * @return how many entries were actually added
+     */
+    mergeEvents (page) {
+      const known = new Set(this.events.map(event => event.id))
+      let added = 0
+      page.forEach(event => {
+        if (known.has(event.id)) {
+          return
+        }
+        known.add(event.id)
+        // An event becomes listable when it *completes*, and completion order
+        // is not start order - so an arrival goes in front of the first entry
+        // that started before it rather than straight to the top.
+        const at = this.events.findIndex(existing => existing.startTime < event.startTime)
+        this.events.splice(at === -1 ? this.events.length : at, 0, event)
+        added++
+      })
+      return added
+    },
+
+    // The first tile whose top edge is at or below the viewport top, i.e. the
+    // topmost one the user can actually see whole. Rows share a top, so this
+    // lands on a row's leading tile - the position a prepend is least likely
+    // to reflow, which makes it the steadiest thing to hold still.
+    topmostVisibleTile () {
+      const tiles = this.$el ? this.$el.querySelectorAll('.events-card') : []
+      return Array.prototype.find.call(tiles, tile => tile.getBoundingClientRect().top >= 0) || null
+    },
+
+    /**
+     * One background tick: re-reads the first page under the current filters
+     * and merges whatever is new. It deliberately touches none of `loading`,
+     * `loadingMore` or `loadMoreError`, so nothing on screen flickers and a
+     * "load more" in progress keeps its own state.
+     *
+     * `requestId` is captured but never incremented, which gives exactly the
+     * wanted asymmetry: a filter change or a "load more" (both of which do
+     * increment) invalidates a refresh in flight, while a refresh can never
+     * invalidate a user-initiated load. Two overlapping refreshes are harmless
+     * because the merge is idempotent.
+     *
+     * Re-reading the first page rather than asking only for events after the
+     * newest shown `startTime` is what makes this self-healing: an event that
+     * started earlier but completed later would never be returned by such a
+     * query and would be lost for the life of the page.
+     */
+    async refreshEvents () {
+      const requestId = this.requestId
+      let page
+      try {
+        page = await frigateService.getPastEvents(CAMERA, this.buildFilters(), null, PAGE_SIZE)
+      } catch (err) {
+        // a hiccup at the detection source leaves `events`, `fetchError` and
+        // `hasMore` exactly as they are - the list keeps standing and the next
+        // tick supplies whatever completed meanwhile
+        return
+      }
+      if (requestId !== this.requestId) {
+        // a filter change or a "load more" already took over
+        return
+      }
+      // After a failed *initial* load the page sits on the error card with an
+      // empty list; the first refresh that succeeds is what lets the kiosk
+      // recover by itself instead of staying stranded until someone touches it.
+      this.fetchError = false
+
+      // Read back in the running app (task 2.1): the events page has no inner
+      // scroll container - #app, .v-main, .home and .events-content are all
+      // `overflow-y: visible` and ignore a scrollTop, while <html> carries
+      // `overflow-y: scroll` and is what window.scrollTo() moves. So
+      // document.scrollingElement is the element to compensate on.
+      //
+      // What gets compensated is how far one anchor tile actually moved, not
+      // how much the document grew. The two are not the same in a wrapping
+      // grid: prepending a single tile mostly reflows the rows sideways - the
+      // tile after it slides one column along and keeps its vertical position -
+      // while the document still gains a whole row at the bottom. Measured at
+      // 1024px (4 tiles per row) the height grew 226px for one arrival while
+      // the tile the user was looking at had not moved at all, so adding that
+      // delta back is what would drag the view off it. Only an arrival that
+      // fills a row actually pushes the rows below down, and then the anchor
+      // reports exactly that.
+      //
+      // The anchor is the topmost tile still in view; it survives the merge
+      // because mergeEvents() never rebuilds an existing entry's node.
+      const scroller = document.scrollingElement
+      const anchor = scroller && scroller.scrollTop > 0 ? this.topmostVisibleTile() : null
+      const anchorTop = anchor ? anchor.getBoundingClientRect().top : 0
+
+      if (!this.mergeEvents(page)) {
+        return
+      }
+      // At offset 0 there is no anchor and nothing is adjusted - there the
+      // whole point is that the new tile becomes visible.
+      if (anchor) {
+        await this.$nextTick()
+        scroller.scrollTop += anchor.getBoundingClientRect().top - anchorTop
+      }
+    },
+
     openEvent (event) {
       this.selectedEvent = event
       this.detailDialog = true
@@ -386,9 +499,18 @@ export default {
     // rationale as KioskPersonenVerwaltung.vue / KioskMigrations.vue).
     this.loadPeople()
     this.loadEvents(true)
+    // Frigate has no push channel this app can reach (see design.md), so the
+    // list keeps itself current by polling - same Debouncer + interval shape as
+    // KioskMigrations.vue, and at the same 5s: a grid of completed events does
+    // not need KioskPersonen's 2s, which is calibrated for bounding boxes
+    // tracking a moving person.
+    this.interval = setInterval(() => this.debouncer.debounce(async () => this.refreshEvents()), 5000)
   },
 
   beforeDestroy () {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
     this.releaseClipBlob()
   }
 }
