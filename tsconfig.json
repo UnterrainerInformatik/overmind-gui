@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "resolveJsonModule": true,
+    // Vuetify 2.5 ships typings that do not type-check against Vue 2.6 (see
+    // src/shims-vuetify.d.ts); skip declaration files so the app itself is checked.
+    "skipLibCheck": true,
     "typeRoots": [
       "./node_modules/@types",
       "./node_modules/vuetify/types"
