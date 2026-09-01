@@ -43,7 +43,17 @@
                 >{{ $t('page.kiosk.cameras.usageNone') }}</v-chip>
               </v-list-item-title>
 
-              <v-list-item-subtitle class="cameras-line">{{ camera.sourceUrl }}</v-list-item-subtitle>
+              <v-list-item-subtitle class="cameras-line">
+                {{ $t('page.kiosk.cameras.rowSource') }}: {{ camera.sourceUrl }}
+              </v-list-item-subtitle>
+
+              <v-list-item-subtitle v-if="camera.liveSourceUrl" class="cameras-line">
+                {{ $t('page.kiosk.cameras.rowLiveSource') }}: {{ camera.liveSourceUrl }}
+              </v-list-item-subtitle>
+
+              <v-list-item-subtitle v-if="camera.detectSourceUrl" class="cameras-line">
+                {{ $t('page.kiosk.cameras.rowDetectSource') }}: {{ camera.detectSourceUrl }}
+              </v-list-item-subtitle>
 
               <v-list-item-subtitle class="cameras-line" :class="statusClass(camera)">
                 {{ statusText(camera) }}
@@ -223,6 +233,24 @@
             class="mb-2"
           ></v-text-field>
           <v-text-field
+            v-model="cameraForm.liveSourceUrl"
+            :label="$t('page.kiosk.cameras.fieldLiveSourceUrl')"
+            :hint="$t('page.kiosk.cameras.fieldLiveSourceUrlHint')"
+            persistent-hint
+            dense
+            outlined
+            class="mb-2"
+          ></v-text-field>
+          <v-text-field
+            v-model="cameraForm.detectSourceUrl"
+            :label="$t('page.kiosk.cameras.fieldDetectSourceUrl')"
+            :hint="$t('page.kiosk.cameras.fieldDetectSourceUrlHint')"
+            persistent-hint
+            dense
+            outlined
+            class="mb-2"
+          ></v-text-field>
+          <v-text-field
             v-model="cameraForm.username"
             :label="$t('page.kiosk.cameras.fieldUsername')"
             dense
@@ -374,6 +402,11 @@ const emptyCameraForm = () => ({
   displayName: '',
   frigateKey: '',
   sourceUrl: '',
+  // Optional overrides of `sourceUrl`: the node resolves live from
+  // `liveSourceUrl` and detect from `detectSourceUrl`, each falling back to the
+  // next one that is filled. Only `sourceUrl` is required.
+  liveSourceUrl: '',
+  detectSourceUrl: '',
   username: '',
   // Always empty when the form opens - a stored password is never fetched and
   // never rendered; `hasPassword` is all the server tells us about it.
@@ -568,6 +601,8 @@ export default {
         displayName: camera.displayName,
         frigateKey: camera.frigateKey,
         sourceUrl: camera.sourceUrl,
+        liveSourceUrl: camera.liveSourceUrl || '',
+        detectSourceUrl: camera.detectSourceUrl || '',
         username: camera.username || '',
         hasPassword: !!camera.hasPassword,
         usedOnLivePage: camera.usedOnLivePage,
@@ -609,6 +644,8 @@ export default {
         displayName: form.displayName,
         frigateKey: form.frigateKey,
         sourceUrl: form.sourceUrl,
+        liveSourceUrl: form.liveSourceUrl || null,
+        detectSourceUrl: form.detectSourceUrl || null,
         username: form.username || null,
         usedOnLivePage: form.usedOnLivePage,
         usedOnEventsPage: form.usedOnEventsPage,

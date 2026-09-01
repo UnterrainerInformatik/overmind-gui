@@ -47,12 +47,25 @@ provisioning state.
 ### Requirement: Add a camera
 
 The page SHALL let the user create a camera connection by entering its display
-name, its Frigate key, the node it belongs to, its source stream URL, optional
+name, its Frigate key, the node it belongs to, its source stream URL, optionally
+a separate live stream URL and a separate detection stream URL, optional
 credentials, the pages it is used on, and its position in the order.
 
 #### Scenario: Creating a camera
 - **WHEN** the user fills in the required fields and confirms
 - **THEN** the camera is created on the server and appears in the list
+
+#### Scenario: Live or detection pulled from a separate stream
+- **WHEN** the user enters a live stream URL, a detection stream URL, or both,
+  alongside the source stream URL
+- **THEN** each is stored with the camera, so the node can pull a different
+  stream — or a different device — for watching and for detection
+
+#### Scenario: Only the source stream is entered
+- **WHEN** the live and detection stream URLs are left empty
+- **THEN** the camera is created with the source stream alone, and the page
+  states that the other purposes fall back to it, rather than requiring the
+  fields
 
 #### Scenario: Required fields missing
 - **WHEN** display name, Frigate key, node or source URL is empty
