@@ -191,19 +191,56 @@ export class AxiosUtils {
   }
 
   /**
-   * Sends a POST to an endpoint whose path carries an entry's ID *inside* it,
-   * substituting the `{id}` placeholder in the endpoint definition. The CRUD
-   * helpers above only ever address a collection or one entry by a trailing ID;
-   * the camera and node connection tests ('/setup/cameras/{id}/test') are the
-   * first endpoints that hang an action off a single entry.
+   * Fills the `{...}` placeholders of an endpoint definition. The CRUD helpers
+   * above only ever address a collection or one entry by a trailing ID; the
+   * camera endpoints hang actions and media off a single entry
+   * ('/setup/cameras/{id}/test', '/cameras/{id}/events/{eventId}/clip.mp4').
+   */
+  private resolveEndpoint (endpointPath: string, params: object): string {
+    let path = `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`
+    Object.keys(params).forEach(key => {
+      path = path.replace(`{${key}}`, encodeURIComponent(`${params[key]}`))
+    })
+    return path
+  }
+
+  /**
+   * Sends a POST to an endpoint whose path carries an entry's ID *inside* it.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
    * @param id the ID of the object the action applies to
    * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
    */
   public async postToPath (server: string, endpointPath: string, id: string | number, dataProvider: () => object): Promise<any> {
-    const path = `${objectUtils.getDeepProperty(endpointPath, store.getters['rest/config'].endpoint)}`.replace('{id}', encodeURIComponent(`${id}`))
-    return this.internalRestCall(this.internalPost(server, path, dataProvider))
+    return this.internalRestCall(this.internalPost(server, this.resolveEndpoint(endpointPath, { id }), dataProvider))
+  }
+
+  /**
+   * Sends a GET to an endpoint whose path carries IDs inside it.
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param params values for the path's `{...}` placeholders
+   * @param additionalQueryParams a string containing additional query parameters (like 'limit=30&label=person')
+   */
+  public async getFromPath (server: string, endpointPath: string, params: object, additionalQueryParams?: string): Promise<any> {
+    const path = `${this.resolveEndpoint(endpointPath, params)}${additionalQueryParams ? '?' + additionalQueryParams : ''}`
+    return this.internalRestCall(this.internalGet(server, path, false))
+  }
+
+  /**
+   * The absolute URL of such an endpoint, for the places that need a URL rather
+   * than a call - an `<img src>` or a `<video src>` the browser fetches itself.
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param params values for the path's `{...}` placeholders
+   */
+  public urlFor (server: string, endpointPath: string, params: object): string {
+    return this.buildBaseUrl(server) + this.resolveEndpoint(endpointPath, params)
+  }
+
+  /** The absolute base URL of a server, without any endpoint path. */
+  public baseUrlOf (server: string): string {
+    return this.buildBaseUrl(server)
   }
 }
 

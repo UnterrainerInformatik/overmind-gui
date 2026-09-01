@@ -180,6 +180,12 @@
 				"uploadError": "Bild(er) konnten nicht hochgeladen werden",
 				"uploadFiles": "Weitere Bilder"
 			},
+			"personen": {
+				"camera": "Kamera",
+				"noCamera": "Für die Live-Seite ist keine Kamera konfiguriert.",
+				"registryError": "Kamerakonfiguration konnte nicht geladen werden",
+				"streamError": "Der Live-Stream für {name} konnte nicht geöffnet werden"
+			},
 			"personenEvents": {
 				"clipError": "Clip konnte nicht geladen werden",
 				"close": "Schließen",
@@ -190,9 +196,12 @@
 				"filterTo": "Bis",
 				"loadMore": "Weitere laden",
 				"loadMoreError": "Weitere Ereignisse konnten nicht geladen werden",
+				"noCamera": "Für die Ereignis-Seite ist keine Kamera konfiguriert.",
+				"partialFailure": "Für {cameras} konnten keine Ereignisse geladen werden",
 				"quickRangeDays": "{count} Tage",
 				"quickRangeHours": "{count} Stunden",
 				"quickRangeLabel": "Zeitraum",
+				"registryError": "Kamerakonfiguration konnte nicht geladen werden",
 				"timelineLabel": "Zeitachse der Ereignisse",
 				"title": "Ereignisse",
 				"unknown": "Unbekannt"

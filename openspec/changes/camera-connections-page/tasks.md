@@ -38,16 +38,16 @@
 
 ## 6. Switching the consumer pages over
 
-- [ ] 6.1 Rewrite `frigateService.ts` to call the overmind camera routes instead of `https://frig.unterrainer.info`, keeping the `FrigatePastEvent` and `FrigateTrackedPerson` result shapes; verify the existing events page still lists events unchanged against the seeded camera
-- [ ] 6.2 Change `KioskPersonenEvents.vue` to resolve its cameras from the registry by the events-page flag instead of `const CAMERA = 'keller'`, showing the source camera per entry and merging several cameras in time order; verify with one camera, then with two
-- [ ] 6.3 Handle partial failure on the events page — list what loaded and name the cameras that could not be reached; verify by disabling one camera's node
-- [ ] 6.4 Change `KioskPersonen.vue` to resolve its camera and stream handle from the registry by the live-page flag instead of the hard-coded go2rtc URL and `getTrackedPersons('keller')`, passing the mode the server relays through to `VideoStreamRtc.vue`; verify the live picture and the overlay boxes are unchanged against the seeded camera, and that the stream really goes through overmind rather than connecting to the node directly
-- [ ] 6.5 Add the camera switch on the Personen page when several cameras are flagged for it, clearing the previous camera's boxes on switch; verify with two cameras that no stale box remains
-- [ ] 6.6 Add the "no camera configured" state to both pages, pointing at the Kameras page; verify by clearing the flags
-- [ ] 6.7 Remove the leftover camera constants and Frigate host from the sources and the now-obsolete `BaseService` exception comment in `frigateService.ts`; verify no occurrence of `frig.unterrainer.info` or `'keller'` remains under `src`
+- [x] 6.1 Rewrite `frigateService.ts` to call the overmind camera routes instead of `https://frig.unterrainer.info`, keeping the `FrigatePastEvent` and `FrigateTrackedPerson` result shapes; verify the existing events page still lists events unchanged against the seeded camera
+- [x] 6.2 Change `KioskPersonenEvents.vue` to resolve its cameras from the registry by the events-page flag instead of `const CAMERA = 'keller'`, showing the source camera per entry and merging several cameras in time order; verify with one camera, then with two
+- [x] 6.3 Handle partial failure on the events page — list what loaded and name the cameras that could not be reached; verify by disabling one camera's node
+- [x] 6.4 Change `KioskPersonen.vue` to resolve its camera and stream handle from the registry by the live-page flag instead of the hard-coded go2rtc URL and `getTrackedPersons('keller')`, passing the mode the server relays through to `VideoStreamRtc.vue`; verify the live picture and the overlay boxes are unchanged against the seeded camera, and that the stream really goes through overmind rather than connecting to the node directly
+- [x] 6.5 Add the camera switch on the Personen page when several cameras are flagged for it, clearing the previous camera's boxes on switch; verify with two cameras that no stale box remains
+- [x] 6.6 Add the "no camera configured" state to both pages, pointing at the Kameras page; verify by clearing the flags
+- [x] 6.7 Remove the leftover camera constants and Frigate host from the sources and the now-obsolete `BaseService` exception comment in `frigateService.ts`; verify no occurrence of `frig.unterrainer.info` or `'keller'` remains under `src`
 
 ## 7. Verification
 
-- [ ] 7.1 Run `npm run lint` and `npm run build`; verify both pass
-- [ ] 7.2 Walk the page in the browser in both languages — add a node, add a camera, test it, edit it, delete it — and confirm the Personen and events pages still work throughout; verify with the project's browser verification harness
-- [ ] 7.3 Run `openspec validate camera-connections-page --strict`; verify it passes
+- [x] 7.1 Run `npm run lint` and `npm run build`; verify both pass
+- [x] 7.2 Walk the page in the browser in both languages — add a node, add a camera, test it, edit it, delete it — and confirm the Personen and events pages still work throughout; verify with the project's browser verification harness
+- [x] 7.3 Run `openspec validate camera-connections-page --strict`; verify it passes

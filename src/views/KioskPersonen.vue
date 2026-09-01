@@ -17,10 +17,43 @@
           :text="$t('page.kiosk.linkPersonenEvents')"
           route="/app/kioskpersonenevents"
         ></KioskLinkPanel>
+
+        <v-card v-if="cameras.length > 1" outlined class="ma-1 pa-2 personen-camera-switch">
+          <v-select
+            v-model="selectedCameraId"
+            :items="cameraItems"
+            :label="$t('page.kiosk.personen.camera')"
+            dense
+            outlined
+            hide-details="auto"
+          ></v-select>
+        </v-card>
       </div>
 
-      <KioskVideoStreamPanel :width="videoWidth" :height="videoHeight"
-        :url="'https://frig.unterrainer.info/live/webrtc/api/ws?src=keller'"
+      <v-card v-if="camerasError" outlined color="error" class="ma-1 pa-4 personen-state">
+        <v-icon left color="white">warning</v-icon>
+        {{ $t('page.kiosk.personen.registryError') }}
+      </v-card>
+
+      <v-card v-else-if="streamError" outlined color="error" class="ma-1 pa-4 personen-state">
+        <v-icon left color="white">warning</v-icon>
+        {{ $t('page.kiosk.personen.streamError', { name: selectedCameraName }) }}
+      </v-card>
+
+      <v-card v-else-if="!camerasLoading && cameras.length === 0" outlined class="ma-1 pa-4 personen-state">
+        <div class="mb-2">{{ $t('page.kiosk.personen.noCamera') }}</div>
+        <KioskLinkPanel
+          :text="$t('page.kiosk.linkCameras')"
+          route="/app/kioskcameras"
+        ></KioskLinkPanel>
+      </v-card>
+
+      <KioskVideoStreamPanel
+        v-else-if="streamHandle"
+        :width="videoWidth"
+        :height="videoHeight"
+        :url="streamHandle.url"
+        :mode="streamHandle.mode"
         :overlayObjects="trackedPersons"
         :rtc="true"
       ></KioskVideoStreamPanel>
@@ -34,6 +67,7 @@ import { mapActions } from 'vuex'
 import KioskVideoStreamPanel from '@/components/KioskVideoStreamPanel.vue'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
+import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { Debouncer } from '@/utils/debouncer'
 
 export default {
@@ -49,13 +83,41 @@ export default {
     trackedPersons: [],
     debouncer: new Debouncer(),
     videoWidth: 640,
-    videoHeight: 480
+    videoHeight: 480,
+
+    cameras: [],
+    camerasLoading: true,
+    camerasError: false,
+    selectedCameraId: null,
+
+    streamHandle: null,
+    streamError: false
   }),
 
   watch: {
+    /**
+     * Switching camera drops the boxes of the previous one before the new
+     * stream is even resolved: they belong to another picture, and leaving them
+     * on screen would draw them over the new one until the next poll.
+     */
+    selectedCameraId () {
+      this.trackedPersons = []
+      this.streamHandle = null
+      this.streamError = false
+      this.loadStreamHandle()
+      this.debouncer.debounce(async () => this.getTrackedPersons())
+    }
   },
 
   computed: {
+    cameraItems () {
+      return this.cameras.map(camera => ({ value: camera.id, text: camera.displayName }))
+    },
+
+    selectedCameraName () {
+      const camera = this.cameras.find(candidate => candidate.id === this.selectedCameraId)
+      return camera ? camera.displayName : ''
+    }
   },
 
   methods: {
@@ -84,11 +146,60 @@ export default {
       this.videoHeight = Math.round(height)
     },
 
-    async getTrackedPersons () {
+    /**
+     * Which camera is shown here is a setting in the registry, not a constant:
+     * the page takes the cameras flagged for the live page, in the configured
+     * order, and shows the first one.
+     */
+    async loadCameras () {
+      this.camerasLoading = true
+      this.camerasError = false
       try {
-        this.trackedPersons = await frigateService.getTrackedPersons('keller')
+        this.cameras = await camerasService.getCamerasForLivePage()
       } catch (err) {
-        // Frigate unreachable: keep the video playing without boxes rather than erroring.
+        this.camerasError = true
+        this.cameras = []
+      }
+      this.camerasLoading = false
+      if (this.cameras.length) {
+        this.selectedCameraId = this.cameras[0].id
+      }
+    },
+
+    async loadStreamHandle () {
+      if (this.selectedCameraId === null) {
+        return
+      }
+      const cameraId = this.selectedCameraId
+      this.streamError = false
+      try {
+        const handle = await frigateService.getStreamHandle(cameraId)
+        // a switch while this was in flight must not attach the old stream
+        if (cameraId !== this.selectedCameraId) {
+          return
+        }
+        this.streamHandle = handle
+      } catch (err) {
+        if (cameraId === this.selectedCameraId) {
+          this.streamError = true
+        }
+      }
+    },
+
+    async getTrackedPersons () {
+      if (this.selectedCameraId === null) {
+        return
+      }
+      const cameraId = this.selectedCameraId
+      try {
+        const persons = await frigateService.getTrackedPersons(cameraId)
+        if (cameraId !== this.selectedCameraId) {
+          return
+        }
+        this.trackedPersons = persons
+      } catch (err) {
+        // Detection source unreachable: keep the video playing without boxes
+        // rather than erroring.
       }
     },
 
@@ -97,11 +208,13 @@ export default {
     })
   },
 
-  mounted () {
+  async mounted () {
     this.kioskMode(true)
     this.$nextTick(() => this.updateVideoSize())
     window.addEventListener('resize', this.updateVideoSize)
-    this.debouncer.debounce(async () => this.getTrackedPersons())
+    await this.loadCameras()
+    // Selecting the first camera fires the watcher, which resolves the stream
+    // and reads the boxes once; only the repeat is set up here.
     this.interval = setInterval(() => this.debouncer.debounce(async () => this.getTrackedPersons()), 2000)
   },
 
@@ -119,5 +232,14 @@ export default {
 
 .noFocus:focus::before {
   opacity: 0 !important;
+}
+
+.personen-camera-switch {
+  max-width: 220px;
+}
+
+.personen-state {
+  align-self: flex-start;
+  max-width: 520px;
 }
 </style>

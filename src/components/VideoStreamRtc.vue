@@ -60,6 +60,16 @@ export default {
       type: String,
       default: ''
     },
+    /**
+     * The go2rtc transport to use. Overmind relays MSE - where the media itself
+     * travels over the WebSocket - and cannot relay WebRTC, whose socket only
+     * carries signalling while the media goes node-to-browser directly. The
+     * default therefore pins MSE rather than leaving go2rtc to negotiate.
+     */
+    mode: {
+      type: String,
+      default: 'mse'
+    },
     photoEnabled: {
       type: Boolean,
       default: true
@@ -87,9 +97,29 @@ export default {
   }),
 
   watch: {
+    // Switching to another camera hands the same element a new handle.
+    // `set src` calls onconnect(), which bails out while a socket is still
+    // open, so the old one has to be torn down first.
+    wsUrl () {
+      this.attach()
+    },
+    mode () {
+      this.attach()
+    }
   },
 
   methods: {
+    attach () {
+      const rtc = this.$refs.rtc
+      if (!rtc || !this.wsUrl) {
+        return
+      }
+      rtc.ondisconnect()
+      this.isLoading = true
+      rtc.mode = this.mode
+      rtc.src = this.wsUrl
+    },
+
     update () {
       const video = this.videoEl
       if (!video) {
@@ -188,6 +218,7 @@ export default {
       const rtc = this.$refs.rtc
       this.videoEl = rtc.video
       rtc.video.controls = false
+      rtc.mode = this.mode
       rtc.src = this.wsUrl
     })
     this.interval = setInterval(() => this.update(), 100)

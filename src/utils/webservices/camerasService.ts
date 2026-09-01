@@ -36,6 +36,21 @@ export class CamerasService {
     return this.sorted(response.entries || [])
   }
 
+  /**
+   * The cameras the live (Personen) page shows, in the configured order. The
+   * flag is what makes "which camera appears where" an operational setting
+   * rather than a constant in the sources, so the consumer pages ask for it
+   * instead of naming a camera.
+   */
+  public async getCamerasForLivePage (): Promise<Camera[]> {
+    return (await this.getCameras()).filter(camera => camera.enabled && camera.usedOnLivePage)
+  }
+
+  /** The cameras the events page covers, in the configured order. */
+  public async getCamerasForEventsPage (): Promise<Camera[]> {
+    return (await this.getCameras()).filter(camera => camera.enabled && camera.usedOnEventsPage)
+  }
+
   public async getCamerasOfNode (nodeId: number): Promise<Camera[]> {
     const response = await this.cameras.getList({ additionalQueryParams: `nodeId=${nodeId}` })
     return this.sorted(response.entries || [])

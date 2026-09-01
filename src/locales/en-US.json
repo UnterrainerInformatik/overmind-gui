@@ -180,6 +180,12 @@
 				"uploadError": "Could not upload image(s)",
 				"uploadFiles": "Additional images"
 			},
+			"personen": {
+				"camera": "Camera",
+				"noCamera": "No camera is configured for the live page.",
+				"registryError": "The camera configuration could not be loaded",
+				"streamError": "The live stream for {name} could not be opened"
+			},
 			"personenEvents": {
 				"clipError": "Could not load clip",
 				"close": "Close",
@@ -190,9 +196,12 @@
 				"filterTo": "To",
 				"loadMore": "Load more",
 				"loadMoreError": "Could not load more events",
+				"noCamera": "No camera is configured for the events page.",
+				"partialFailure": "No events could be loaded for {cameras}",
 				"quickRangeDays": "{count} days",
 				"quickRangeHours": "{count} hours",
 				"quickRangeLabel": "Range",
+				"registryError": "The camera configuration could not be loaded",
 				"timelineLabel": "Event timeline",
 				"title": "Events",
 				"unknown": "Unknown"

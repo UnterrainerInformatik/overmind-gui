@@ -47,6 +47,16 @@ const store = {
         cameraTest: '/setup/cameras/{id}/test',
         nodes: '/setup/nodes',
         nodeTest: '/setup/nodes/{id}/test',
+        // Camera media, resolved by overmind to the node that holds the camera
+        // (top-level, not /setup/... - computed/streamed rather than stored,
+        // same precedent as /usedswitches and /reconciliation). The GUI never
+        // addresses a node or a Frigate key; see frigateService.ts for the
+        // shapes these answer with.
+        cameraStream: '/cameras/{id}/stream',
+        cameraEvents: '/cameras/{id}/events',
+        cameraEventThumbnail: '/cameras/{id}/events/{eventId}/thumbnail.jpg',
+        cameraEventSnapshot: '/cameras/{id}/events/{eventId}/snapshot.jpg',
+        cameraEventClip: '/cameras/{id}/events/{eventId}/clip.mp4',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

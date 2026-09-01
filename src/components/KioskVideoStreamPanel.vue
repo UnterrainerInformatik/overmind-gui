@@ -1,7 +1,7 @@
 <template>
   <KioskPanel borderColor="secondary" bgColor="black" :min-width="width" :max-width="width" :pa="1" :renderTitle="false">
     <template>
-      <VideoStreamRtc v-if="rtc" :width="width-8" :height="height-4" :wsUrl="url" :photoEnabled="photoEnabled" :overlayObjects="overlayObjects"></VideoStreamRtc>
+      <VideoStreamRtc v-if="rtc" :width="width-8" :height="height-4" :wsUrl="url" :mode="mode" :photoEnabled="photoEnabled" :overlayObjects="overlayObjects"></VideoStreamRtc>
       <VideoStream v-else :width="width-8" :height="height-4" :url="url" :photoEnabled="photoEnabled" :overlayObjects="overlayObjects"></VideoStream>
     </template>
   </KioskPanel>
@@ -41,6 +41,11 @@ export default {
     rtc: {
       type: Boolean,
       default: false
+    },
+    /** the go2rtc transport, passed through to VideoStreamRtc */
+    mode: {
+      type: String,
+      default: 'mse'
     }
   },
 

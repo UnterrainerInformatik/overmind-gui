@@ -63,7 +63,18 @@
           </div>
         </div>
 
-        <v-card v-if="fetchError" outlined color="error" class="pa-4 mb-4">
+        <v-card v-if="camerasError" outlined color="error" class="pa-4 mb-4">
+          <v-icon left color="white">warning</v-icon>
+          {{ $t('page.kiosk.personenEvents.registryError') }}
+        </v-card>
+        <v-card v-else-if="!camerasLoading && cameras.length === 0" outlined class="pa-4 mb-4">
+          <div class="mb-2">{{ $t('page.kiosk.personenEvents.noCamera') }}</div>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkCameras')"
+            route="/app/kioskcameras"
+          ></KioskLinkPanel>
+        </v-card>
+        <v-card v-else-if="fetchError" outlined color="error" class="pa-4 mb-4">
           <v-icon left color="white">warning</v-icon>
           {{ $t('page.kiosk.personenEvents.fetchError') }}
         </v-card>
@@ -71,7 +82,17 @@
           {{ $t('page.kiosk.personenEvents.empty') }}
         </v-card>
 
-        <v-row v-else dense>
+        <v-card
+          v-if="unreachableCameras.length"
+          outlined
+          color="warning"
+          class="pa-4 mb-4 events-partial-failure"
+        >
+          <v-icon left>warning</v-icon>
+          {{ $t('page.kiosk.personenEvents.partialFailure', { cameras: unreachableCameras.join(', ') }) }}
+        </v-card>
+
+        <v-row v-if="events.length" dense>
           <v-col v-for="event in events" :key="event.id" cols="6" sm="4" md="3" lg="2">
             <v-card
               outlined
@@ -85,6 +106,7 @@
                   {{ event.subLabel || $t('page.kiosk.personenEvents.unknown') }}
                 </div>
                 <div class="events-card-time">{{ dateUtils.dateToShortDateTime(dateOf(event), $i18n.locale) }}</div>
+                <div v-if="cameras.length > 1" class="events-card-camera text-truncate">{{ cameraName(event) }}</div>
                 <div v-if="event.zones.length" class="events-card-zones text-truncate">{{ event.zones.join(', ') }}</div>
               </v-card-text>
             </v-card>
@@ -142,6 +164,7 @@
         <v-card-text>
           <div class="events-detail-time mb-2">
             {{ dateUtils.dateToShortDateTime(dateOf(selectedEvent), $i18n.locale) }}
+            <span v-if="cameras.length > 1">&mdash; {{ cameraName(selectedEvent) }}</span>
             <span v-if="selectedEvent.zones.length">&mdash; {{ selectedEvent.zones.join(', ') }}</span>
           </div>
           <v-img
@@ -181,12 +204,12 @@
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import EventsTimeline from '@/components/EventsTimeline.vue'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
+import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 import { Debouncer } from '@/utils/debouncer'
 
 const PAGE_SIZE = 30
-const CAMERA = 'keller'
 
 const HOUR = 60 * 60 * 1000
 
@@ -249,6 +272,16 @@ export default {
   data: () => ({
     interval: null,
     debouncer: new Debouncer(),
+
+    // Which cameras this page covers is a setting in the registry, not a
+    // constant: every camera flagged for the events page, in the configured
+    // order.
+    cameras: [],
+    camerasLoading: true,
+    camerasError: false,
+    // display names of the cameras whose events could not be read on the last
+    // load; the list keeps standing for the ones that could
+    unreachableCameras: [],
 
     events: [],
     loading: true,
@@ -446,11 +479,69 @@ export default {
     },
 
     thumbnailUrl (event) {
-      return frigateService.getEventThumbnailUrl(event.id)
+      return frigateService.getEventThumbnailUrl(event.camera, event.id)
     },
 
     snapshotUrl (event) {
-      return frigateService.getEventSnapshotUrl(event.id)
+      return frigateService.getEventSnapshotUrl(event.camera, event.id)
+    },
+
+    cameraName (event) {
+      const camera = this.cameras.find(candidate => candidate.id === event.camera)
+      return camera ? camera.displayName : ''
+    },
+
+    async loadCameras () {
+      this.camerasLoading = true
+      this.camerasError = false
+      try {
+        this.cameras = await camerasService.getCamerasForEventsPage()
+      } catch (err) {
+        this.camerasError = true
+        this.cameras = []
+      }
+      this.camerasLoading = false
+    },
+
+    /**
+     * One page across every configured camera, merged into a single list
+     * ordered by time. Each camera is asked separately - overmind's event route
+     * addresses one camera - which is also what makes partial failure
+     * expressible: a camera whose node is down takes only its own events out of
+     * the list and its name into `unreachableCameras`, instead of failing the
+     * whole listing.
+     * @param cursor the `startTime` to page back from, or null for the first page
+     */
+    async fetchPage (cursor) {
+      const results = await Promise.all(this.cameras.map(async camera => {
+        try {
+          return { camera, events: await frigateService.getPastEvents(camera.id, this.buildFilters(), cursor, PAGE_SIZE) }
+        } catch (err) {
+          return { camera, events: null }
+        }
+      }))
+      const reached = results.filter(result => result.events !== null)
+      return {
+        page: reached
+          .reduce((all, result) => all.concat(result.events), [])
+          .sort((a, b) => b.startTime - a.startTime),
+        failed: results.filter(result => result.events === null).map(result => result.camera.displayName),
+        // any camera that filled its page may still have older events
+        full: reached.some(result => result.events.length >= PAGE_SIZE),
+        allFailed: reached.length === 0
+      }
+    },
+
+    /**
+     * Appends a page, skipping what is already listed. The cameras page back
+     * against one shared cursor but hold events at different times, so a page
+     * can carry entries an earlier one already delivered.
+     */
+    appendEvents (page) {
+      const known = new Set(this.events.map(event => event.id))
+      this.events = this.events
+        .concat(page.filter(event => !known.has(event.id)))
+        .sort((a, b) => b.startTime - a.startTime)
     },
 
     async loadPeople () {
@@ -463,6 +554,12 @@ export default {
 
     async loadEvents (reset) {
       const requestId = ++this.requestId
+      if (!this.cameras.length) {
+        // nothing to ask; the page shows its no-camera state instead
+        this.loading = false
+        this.loadingMore = false
+        return
+      }
       if (reset) {
         this.loading = true
         this.fetchError = false
@@ -475,18 +572,12 @@ export default {
         this.loadMoreError = false
       }
       const cursor = reset ? null : (this.events.length ? this.events[this.events.length - 1].startTime : null)
-      try {
-        const page = await frigateService.getPastEvents(CAMERA, this.buildFilters(), cursor, PAGE_SIZE)
-        if (requestId !== this.requestId) {
-          // a newer filter change or load-more call already took over
-          return
-        }
-        this.events = reset ? page : this.events.concat(page)
-        this.hasMore = page.length >= PAGE_SIZE
-      } catch (err) {
-        if (requestId !== this.requestId) {
-          return
-        }
+      const { page, failed, full, allFailed } = await this.fetchPage(cursor)
+      if (requestId !== this.requestId) {
+        // a newer filter change or load-more call already took over
+        return
+      }
+      if (allFailed) {
         if (reset) {
           this.fetchError = true
           this.events = []
@@ -494,11 +585,17 @@ export default {
         } else {
           this.loadMoreError = true
         }
+      } else {
+        this.unreachableCameras = failed
+        if (reset) {
+          this.events = page
+        } else {
+          this.appendEvents(page)
+        }
+        this.hasMore = full
       }
-      if (requestId === this.requestId) {
-        this.loading = false
-        this.loadingMore = false
-      }
+      this.loading = false
+      this.loadingMore = false
     },
 
     /**
@@ -557,11 +654,12 @@ export default {
      * query and would be lost for the life of the page.
      */
     async refreshEvents () {
+      if (!this.cameras.length) {
+        return
+      }
       const requestId = this.requestId
-      let page
-      try {
-        page = await frigateService.getPastEvents(CAMERA, this.buildFilters(), null, PAGE_SIZE)
-      } catch (err) {
+      const { page, failed, allFailed } = await this.fetchPage(null)
+      if (allFailed) {
         // a hiccup at the detection source leaves `events`, `fetchError` and
         // `hasMore` exactly as they are - the list keeps standing and the next
         // tick supplies whatever completed meanwhile
@@ -571,6 +669,7 @@ export default {
         // a filter change or a "load more" already took over
         return
       }
+      this.unreachableCameras = failed
       // After a failed *initial* load the page sits on the error card with an
       // empty list; the first refresh that succeeds is what lets the kiosk
       // recover by itself instead of staying stranded until someone touches it.
@@ -655,7 +754,7 @@ export default {
       this.clipError = false
       const requestedId = event.id
       try {
-        const response = await fetch(frigateService.getEventClipUrl(event.id))
+        const response = await fetch(frigateService.getEventClipUrl(event.camera, event.id))
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
         }
@@ -718,7 +817,7 @@ export default {
     // dashboards this view does not call kioskMode(true) itself (same
     // rationale as KioskPersonenVerwaltung.vue / KioskMigrations.vue).
     this.loadPeople()
-    this.loadEvents(true)
+    this.loadCameras().then(() => this.loadEvents(true))
     // Frigate has no push channel this app can reach (see design.md), so the
     // list keeps itself current by polling - same Debouncer + interval shape as
     // KioskMigrations.vue, and at the same 5s: a grid of completed events does
@@ -810,6 +909,7 @@ $events-timeline-width: 56px;
 }
 
 .events-card-time,
+.events-card-camera,
 .events-card-zones {
   font-size: 12px;
   opacity: 0.8;
