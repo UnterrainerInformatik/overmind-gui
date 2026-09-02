@@ -56,7 +56,7 @@ const store = {
         cameraEvents: '/cameras/{id}/events',
         cameraEventThumbnail: '/cameras/{id}/events/{eventId}/thumbnail.jpg',
         cameraEventSnapshot: '/cameras/{id}/events/{eventId}/snapshot.jpg',
-        cameraEventClip: '/cameras/{id}/events/{eventId}/clip.mp4',
+        cameraEventClip: '/cameras/{id}/events/{eventId}/clip.m3u8',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

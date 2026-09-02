@@ -748,6 +748,13 @@ export default {
      * buffer it can't fetch a range for, which is what produced the recurring ~1s playback
      * stutter. Clips are short enough (a few MB) that fetching the whole thing up front into a
      * Blob and playing from that local object URL avoids the streaming path entirely.
+     *
+     * OPEN, and known: overmind will serve clips as HLS rather than MP4, because the same
+     * measurement upstream (Frigate 0.17.2 answers a Range request with the whole body) means
+     * seeking only works through the VOD playlist. A `.m3u8` cannot be played out of a Blob,
+     * so this path needs an HLS-capable player once media routing ships - it is not merely a
+     * URL change. Nothing to do before then: those routes do not exist yet.
+     * See ai/draft-cameras-for-frontend.md section 7 in java-overmind-server.
      */
     async loadClipBlob (event) {
       this.clipLoading = true

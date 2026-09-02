@@ -47,30 +47,44 @@ export interface CameraStreamHandle {
  * - which is why this is an ordinary rest.ts service and no longer the
  * documented BaseService exception it used to be.
  *
- * The contract it is written against (java-overmind-server change
- * camera-registry-and-node-routing, whose specs pin the two routes but not the
- * media paths or the payload shapes):
+ * The contract it is written against is `ai/draft-cameras-for-frontend.md` in
+ * java-overmind-server, section 6-7. Those sections are NOT implemented yet -
+ * the backend split them into a follow-up change - so nothing here can be
+ * exercised against a server; the shapes below are what that document
+ * specifies, plus two things it leaves open (marked GUESS).
  *
  *   GET /cameras/{id}/stream
- *     -> { "url": "<ws(s):// or /path>", "mode": "mse" }
- *     `mode` is what overmind can relay; it defaults to MSE here, because
- *     WebRTC would carry the media past overmind (see design.md).
+ *     -> { cameraId, kind, url }   `kind` is the transport, still being decided
+ *        backend-side; the handle is an object precisely so it is read rather
+ *        than assumed. Read as `mode` here because that is go2rtc's own name
+ *        for it, and pinned to MSE when absent - WebRTC's media does not travel
+ *        over the socket overmind relays.
  *
  *   GET /cameras/{id}/events?label=person&limit=&after=&before=&subLabel=
- *     -> { "entries": [ event, ... ] }   (a bare array is accepted too)
- *     Completed events, most recent first. `before` is exclusive, which is what
- *     paging uses as its cursor.
+ *     -> { entries: [ event ] }, newest first, `before` exclusive.
  *
  *   GET /cameras/{id}/events?inProgress=true&label=person&limit=
- *     -> the events the node reports as still running, each additionally
- *        carrying `box`, `score` and `subLabelScore` for the overlay.
+ *     -> GUESS: the contract has no in-progress filter yet, though the backend
+ *        spec has the scenario. Events additionally carry box/score/subLabelScore.
+ *
+ *   GET /cameras/{id}/events/{eventId}/thumbnail.jpg | snapshot.jpg
+ *   GET /cameras/{id}/events/{eventId}/clip.m3u8
+ *     -> HLS, not MP4: measured against the live Frigate 0.17.2, `clip.mp4`
+ *        answers a Range request with the whole body and no `Accept-Ranges`, so
+ *        seeking only works through the HLS VOD playlist. NOTE: the events
+ *        page still fetches this into a Blob, which an HLS playlist cannot be
+ *        played from - that needs an HLS-capable player when media routing
+ *        ships. See the note in KioskPersonenEvents.loadClipBlob().
  *
  *   event: { id, cameraId, label, subLabel, zones[], startTime, endTime,
- *            hasClip, hasSnapshot }   - seconds, camelCase, `endTime` null
- *            while an event is still in progress.
+ *            hasClip, hasSnapshot } - `endTime` null while in progress.
+ *            Whether the times are epoch seconds or overmind `LocalDateTime`
+ *            strings is explicitly still open backend-side, so both are
+ *            accepted and normalised to seconds.
  *
- *   GET /cameras/{id}/events/{eventId}/thumbnail.jpg | snapshot.jpg | clip.mp4
- *     -> the media itself, fetched by the browser through <img>/<video>.
+ * A single-camera route is enough: the events page asks per camera and merges
+ * client-side, so the contract's multi-camera `/cameras/events?cameraIds=` is
+ * deliberately unused.
  *
  * The `FrigateTrackedPerson` / `FrigatePastEvent` result shapes are unchanged
  * from when this talked to Frigate directly, so the pages consuming them did
@@ -99,7 +113,9 @@ export class FrigateService {
       // a relative handle is resolved against overmind, so the server is free to
       // answer with either
       url: /^(ws|http)s?:\/\//.test(url) ? url : `${axiosUtils.baseUrlOf(this.server)}${url}`,
-      mode: (response && response.mode) || 'mse'
+      // the contract calls it `kind`; `mode` is accepted too, since that is what
+      // go2rtc's element wants it in
+      mode: (response && (response.kind || response.mode)) || 'mse'
     }
   }
 
@@ -159,8 +175,8 @@ export class FrigateService {
         camera: cameraId,
         subLabel: event.subLabel,
         zones: event.zones || [],
-        startTime: event.startTime,
-        endTime: event.endTime,
+        startTime: this.toEpochSeconds(event.startTime),
+        endTime: this.toEpochSeconds(event.endTime),
         hasClip: !!event.hasClip,
         hasSnapshot: !!event.hasSnapshot
       }))
@@ -176,6 +192,20 @@ export class FrigateService {
 
   public getEventClipUrl (cameraId: number, eventId: string): string {
     return axiosUtils.urlFor(this.server, 'cameraEventClip', { id: cameraId, eventId })
+  }
+
+  /**
+   * Event times as this GUI uses them: epoch seconds. Which of the two formats
+   * the server settles on is still open (contract section 8), so a number is
+   * taken as it is and an overmind `LocalDateTime` string is read as UTC - the
+   * same reading dateUtils applies to every other timestamp from this server.
+   */
+  private toEpochSeconds (value: any): number {
+    if (typeof value === 'number') {
+      return value
+    }
+    const ms = Date.parse(`${value}Z`)
+    return Number.isFinite(ms) ? ms / 1000 : value
   }
 
   /** Overmind's list envelope, tolerating a bare array. */
