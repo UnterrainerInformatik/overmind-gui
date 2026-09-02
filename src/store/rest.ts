@@ -54,9 +54,12 @@ const store = {
         // shapes these answer with.
         cameraStream: '/cameras/{id}/stream',
         cameraEvents: '/cameras/{id}/events',
-        cameraEventThumbnail: '/cameras/{id}/events/{eventId}/thumbnail.jpg',
-        cameraEventSnapshot: '/cameras/{id}/events/{eventId}/snapshot.jpg',
-        cameraEventClip: '/cameras/{id}/events/{eventId}/clip.m3u8',
+        // The merged route is what the events page asks: one request per node
+        // instead of one per camera, and a node that is down is a named gap in
+        // the answer rather than a failed call. The media of an event is not
+        // listed here at all - the server sends the URLs with the event, so
+        // they are read from the payload instead of built from a template.
+        cameraEventsMerged: '/cameras/events',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

@@ -15,6 +15,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.10",
     "axios": "^0.27.2",
     "core-js": "^3.19.1",
+    "hls.js": "^1.7.1",
     "material-design-icons-iconfont": "^6.7.0",
     "typeface-roboto": "^1.1.13",
     "vue": "^2.6.14",

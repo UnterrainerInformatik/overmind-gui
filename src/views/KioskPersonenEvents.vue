@@ -100,7 +100,7 @@
               :class="{ 'events-card--highlighted': event.id === highlightedId }"
               @click="openEvent(event)"
             >
-              <v-img :src="thumbnailUrl(event)" aspect-ratio="1.7777" class="grey darken-4"></v-img>
+              <v-img :src="event.thumbnailUrl" aspect-ratio="1.7777" class="grey darken-4"></v-img>
               <v-card-text class="pa-2">
                 <div class="events-card-name text-truncate">
                   {{ event.subLabel || $t('page.kiosk.personenEvents.unknown') }}
@@ -170,7 +170,7 @@
           <v-img
             v-if="showSnapshot"
             contain
-            :src="snapshotUrl(selectedEvent)"
+            :src="selectedEvent.snapshotUrl"
             class="events-detail-media mb-2"
             :class="{ 'events-detail-media--solo': mediaSolo }"
           ></v-img>
@@ -182,12 +182,11 @@
               {{ $t('page.kiosk.personenEvents.clipError') }}
             </v-card>
             <video
-              v-show="clipBlobUrl && !clipLoading && !clipError"
+              v-show="!clipLoading && !clipError"
               ref="clipVideo"
               controls
               class="events-detail-media"
               :class="{ 'events-detail-media--solo': mediaSolo }"
-              :src="clipBlobUrl"
             ></video>
           </div>
         </v-card-text>
@@ -203,6 +202,7 @@
 <script type="js">
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import EventsTimeline from '@/components/EventsTimeline.vue'
+import Hls from 'hls.js'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
@@ -210,6 +210,12 @@ import { singleton as dateUtils } from '@/utils/dateUtils'
 import { Debouncer } from '@/utils/debouncer'
 
 const PAGE_SIZE = 30
+
+// What a page asks for while the name filter is set. Overmind's event route
+// filters by label only, so the name is matched here after the fact, and a
+// 30-event slice would routinely filter down to nothing while plenty of older
+// matches sit behind it. 300 is inside the route's cap of 500.
+const NAME_FILTER_PAGE_SIZE = 300
 
 const HOUR = 60 * 60 * 1000
 
@@ -308,7 +314,6 @@ export default {
 
     detailDialog: false,
     selectedEvent: null,
-    clipBlobUrl: null,
     clipLoading: false,
     clipError: false,
 
@@ -478,14 +483,6 @@ export default {
       return new Date(event.startTime * 1000)
     },
 
-    thumbnailUrl (event) {
-      return frigateService.getEventThumbnailUrl(event.camera, event.id)
-    },
-
-    snapshotUrl (event) {
-      return frigateService.getEventSnapshotUrl(event.camera, event.id)
-    },
-
     cameraName (event) {
       const camera = this.cameras.find(candidate => candidate.id === event.camera)
       return camera ? camera.displayName : ''
@@ -504,32 +501,42 @@ export default {
     },
 
     /**
-     * One page across every configured camera, merged into a single list
-     * ordered by time. Each camera is asked separately - overmind's event route
-     * addresses one camera - which is also what makes partial failure
-     * expressible: a camera whose node is down takes only its own events out of
-     * the list and its name into `unreachableCameras`, instead of failing the
-     * whole listing.
+     * One page across every configured camera. Overmind merges them itself -
+     * one request per node rather than one per camera - and answers a node it
+     * cannot reach with a named gap instead of a failed call, which is what
+     * makes partial failure expressible: that camera's events are missing, its
+     * name goes into `unreachableCameras`, and the rest of the list stands.
+     * Only when no camera at all answered is there nothing to show.
      * @param cursor the `startTime` to page back from, or null for the first page
      */
     async fetchPage (cursor) {
-      const results = await Promise.all(this.cameras.map(async camera => {
-        try {
-          return { camera, events: await frigateService.getPastEvents(camera.id, this.buildFilters(), cursor, PAGE_SIZE) }
-        } catch (err) {
-          return { camera, events: null }
+      const limit = this.nameFilter ? NAME_FILTER_PAGE_SIZE : PAGE_SIZE
+      const ids = this.cameras.map(camera => camera.id)
+      try {
+        const page = await frigateService.getPastEvents(ids, this.buildFilters(), cursor, limit)
+        return {
+          page: page.events,
+          failed: page.unavailable.map(entry => this.unavailableName(entry)),
+          // `returned` counts what the server sent, before the name filter took
+          // entries out of it: a page that matched nothing may still have older
+          // matches behind it.
+          full: page.returned >= limit,
+          allFailed: page.unavailable.length >= ids.length
         }
-      }))
-      const reached = results.filter(result => result.events !== null)
-      return {
-        page: reached
-          .reduce((all, result) => all.concat(result.events), [])
-          .sort((a, b) => b.startTime - a.startTime),
-        failed: results.filter(result => result.events === null).map(result => result.camera.displayName),
-        // any camera that filled its page may still have older events
-        full: reached.some(result => result.events.length >= PAGE_SIZE),
-        allFailed: reached.length === 0
+      } catch (err) {
+        return { page: [], failed: [], full: false, allFailed: true }
       }
+    },
+
+    /**
+     * What to call a camera whose events could not be read. The registry entry
+     * this page already holds is the first source, because the server can only
+     * name a camera it knows - an id it does not know has no display name at
+     * all, and an id is still better than an unexplained gap.
+     */
+    unavailableName (entry) {
+      const camera = this.cameras.find(candidate => candidate.id === entry.cameraId)
+      return (camera && camera.displayName) || entry.displayName || `#${entry.cameraId}`
     },
 
     /**
@@ -712,9 +719,9 @@ export default {
     openEvent (event) {
       this.selectedEvent = event
       this.detailDialog = true
-      this.releaseClipBlob()
+      this.stopClip()
       if (event.hasClip) {
-        this.loadClipBlob(event)
+        this.startClip(event)
       }
     },
 
@@ -725,63 +732,81 @@ export default {
     /**
      * The <video> is kept mounted across opens and the dialog's card stays
      * rendered once shown, so a closed dialog is a hidden element that is still
-     * playing - revoking the blob URL does nothing to media that is already
-     * loaded, which is why closing used to leave the clip audible.
-     * Detaching the source (rather than assigning '', which resolves to the
-     * page URL and fires a real failed request) is what makes the element let
-     * go of the buffered clip; the URL can only be revoked afterwards.
+     * playing - which is why closing has to take the clip apart rather than
+     * merely stop showing it. Destroying the player is what stops it fetching
+     * further segments; detaching the source (rather than assigning '', which
+     * resolves to the page URL and fires a real failed request) is what makes
+     * the element let go of what it has already buffered.
      */
     stopClip () {
+      if (this.hls) {
+        this.hls.destroy()
+        this.hls = null
+      }
       const video = this.$refs.clipVideo
       if (video) {
         video.pause()
         video.removeAttribute('src')
         video.load()
       }
-      this.releaseClipBlob()
     },
 
     /**
-     * The clip endpoint sends no `Accept-Ranges`/206 support and `cache-control: no-store`
-     * (confirmed against the running instance), so letting <video> stream it progressively
-     * forces Chrome's media pipeline to re-request from byte 0 whenever it needs to extend a
-     * buffer it can't fetch a range for, which is what produced the recurring ~1s playback
-     * stutter. Clips are short enough (a few MB) that fetching the whole thing up front into a
-     * Blob and playing from that local object URL avoids the streaming path entirely.
+     * A clip is HLS, and for a measured reason rather than a preference:
+     * Frigate answers a Range request on `clip.mp4` with the whole file and no
+     * `Accept-Ranges`, so an MP4 clip cannot be seeked at all, while its VOD
+     * playlist can. Overmind therefore serves `clip.m3u8` plus its segments
+     * under one path prefix, and the segment names in the playlist are
+     * relative, so the player fetches them back off overmind on its own.
      *
-     * OPEN, and known: overmind will serve clips as HLS rather than MP4, because the same
-     * measurement upstream (Frigate 0.17.2 answers a Range request with the whole body) means
-     * seeking only works through the VOD playlist. A `.m3u8` cannot be played out of a Blob,
-     * so this path needs an HLS-capable player once media routing ships - it is not merely a
-     * URL change. Nothing to do before then: those routes do not exist yet.
-     * See ai/draft-cameras-for-frontend.md section 7 in java-overmind-server.
+     * Chrome and Firefox play HLS only through Media Source Extensions, which
+     * is what hls.js drives; Safari plays a playlist natively and is handed the
+     * URL directly. A browser with neither cannot play this clip at all, and
+     * says so rather than sitting on an empty element.
+     *
+     * @param event the event whose clip to play; re-checked once the element is
+     *        there, so a close/reopen in between cannot attach this clip to
+     *        whatever dialog is on screen by then
      */
-    async loadClipBlob (event) {
+    async startClip (event) {
       this.clipLoading = true
       this.clipError = false
-      const requestedId = event.id
-      try {
-        const response = await fetch(frigateService.getEventClipUrl(event.camera, event.id))
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-        const blob = await response.blob()
-        // a close/reopen while the fetch was in flight must not attach a stale
-        // clip to whatever event dialog is on screen now
-        if (!this.selectedEvent || this.selectedEvent.id !== requestedId) {
-          return
-        }
-        this.releaseClipBlob()
-        this.clipBlobUrl = URL.createObjectURL(blob)
-        this.playClipWhenReady()
-      } catch (err) {
-        if (this.selectedEvent && this.selectedEvent.id === requestedId) {
-          this.clipError = true
-        }
+      await this.$nextTick()
+      const video = this.$refs.clipVideo
+      if (!video || !this.selectedEvent || this.selectedEvent.id !== event.id) {
+        return
       }
-      if (this.selectedEvent && this.selectedEvent.id === requestedId) {
-        this.clipLoading = false
+      if (Hls.isSupported()) {
+        const hls = new Hls()
+        this.hls = hls
+        hls.on(Hls.Events.MANIFEST_PARSED, () => this.clipReady())
+        hls.on(Hls.Events.ERROR, (kind, data) => {
+          // Only a fatal error is one the user has to be told about: the rest
+          // is hls.js recovering by itself - a segment it re-requests - and
+          // reporting those would put an error over a clip that plays fine.
+          if (data.fatal) {
+            this.failClip()
+          }
+        })
+        hls.loadSource(event.clipUrl)
+        hls.attachMedia(video)
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = event.clipUrl
+        video.addEventListener('loadedmetadata', () => this.clipReady(), { once: true })
+        video.addEventListener('error', () => this.failClip(), { once: true })
+      } else {
+        this.failClip()
       }
+    },
+
+    clipReady () {
+      this.clipLoading = false
+      this.playClipWhenReady()
+    },
+
+    failClip () {
+      this.clipError = true
+      this.clipLoading = false
     },
 
     // The dialog opened from a real click, so this still counts as
@@ -789,16 +814,14 @@ export default {
     // blocks it if too much time or too many awaits have passed. Falling
     // back to a muted play() covers that case: the clip starts moving
     // instead of sitting on the first frame waiting for a manual tap.
+    // Nothing calls load() here: the player is already attached to the
+    // element by now, and re-loading it would throw that attachment away.
     async playClipWhenReady () {
       await this.$nextTick()
       const video = this.$refs.clipVideo
       if (!video) {
         return
       }
-      // The <video> element is kept mounted across opens (v-show, not v-if)
-      // so a fresh decoder isn't spun up on every click; load() forces it to
-      // pick up the new `src` that just landed on the still-mounted element.
-      video.load()
       try {
         await video.play()
       } catch (err) {
@@ -808,14 +831,17 @@ export default {
           // try: the clip stays on its first frame until the user taps it.
         })
       }
-    },
-
-    releaseClipBlob () {
-      if (this.clipBlobUrl) {
-        URL.revokeObjectURL(this.clipBlobUrl)
-        this.clipBlobUrl = null
-      }
     }
+  },
+
+  /**
+   * The player is an instance property rather than a `data()` field on
+   * purpose: Vue would make an object of that size deeply reactive, walking
+   * every internal of a running media pipeline for no gain - nothing in the
+   * template reads it.
+   */
+  created () {
+    this.hls = null
   },
 
   mounted () {
