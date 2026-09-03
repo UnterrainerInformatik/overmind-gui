@@ -54,12 +54,6 @@ export interface FrigateEventsPage {
   events: FrigatePastEvent[];
   /** empty when every camera answered */
   unavailable: FrigateUnavailableCamera[];
-  /**
-   * How many events the server returned, before the name filter was applied
-   * here. It is what tells "the server has no more" from "none of this page
-   * matched the name", which a caller needs to decide whether to page on.
-   */
-  returned: number;
 }
 
 /** What a client needs to open the live stream overmind relays for a camera. */
@@ -95,7 +89,8 @@ export interface CameraStreamHandle {
  *   GET /cameras/{id}/events?...     the same for one camera, where an
  *     unreachable node is a 502 rather than a partial result.
  *
- *   event: { eventId, cameraId, label, subLabel, startTime, endTime, score,
+ *   event: { eventId, cameraId, label, subLabel, subLabelScore, startTime,
+ *            endTime, score, box, zones,
  *            snapshotUrl, thumbnailUrl, clipUrl }
  *     `endTime` is absent while an event is still in progress; the three media
  *     fields are absent when the node has no such media, so they are checked
@@ -104,17 +99,28 @@ export interface CameraStreamHandle {
  *     never reach here - while this GUI's own pages work in epoch seconds, so
  *     both conversions happen in this service and nowhere else.
  *
- * Two things the route does not carry, and what this service does about them:
+ *     Since `ai/draft-live-overlay-for-frontend.md` (deployed and verified
+ *     2026-09-02) an event additionally carries `box`, `subLabelScore` and
+ *     `zones`, and both routes take an `inProgress` and a `subLabel` filter.
+ *     Both filters are answered by the node, so this service asks for what it
+ *     wants rather than pulling a wide list to narrow it here.
  *
- *   - **No zone names.** `zones` is therefore always empty, and the pages that
- *     show zones show none. The field stays because it is part of the result
- *     shape and starts working the day overmind forwards them.
- *   - **No bounding boxes, and no way to ask for in-progress events.** The live
- *     overlay needs `box` per detection, which no route offers; see
- *     `getTrackedPersons()`.
+ *   box: [x, y, width, height], each normalised to 0..1 - in that order, which
+ *     nothing in the type enforces and the overlay destructures. Multiply by
+ *     the rendered size of the element the picture is drawn in. Absent when the
+ *     node reported none, and such an event is still returned.
+ *   subLabelScore: the confidence of `subLabel`, absent - never `0` - on an
+ *     event that names no sub-label, so missing means "unknown" rather than
+ *     "certainly not" and is normalised to null here rather than drawn as 0 %.
+ *   zones: always a list, `[]` rather than absent. It is empty on this
+ *     installation because no camera has a zone configured in Frigate at all,
+ *     which is worth knowing before an empty list is read as a fault.
  *
- * There is also no filter by sub-label, so the events page's name filter is
- * applied here rather than by the server - see `getPastEvents()`.
+ * One thing no field says: `box` is the box of the best frame the node has seen
+ * of that object, not the object's position now, so a box lags a person who
+ * moved after that frame. Unchanged from when this talked to Frigate directly -
+ * written down because it looks like a fault of the payload to anyone who did
+ * not know the field always behaved that way.
  *
  * The `FrigateTrackedPerson` / `FrigatePastEvent` result shapes are unchanged
  * from when this talked to Frigate directly, so the pages consuming them did
@@ -151,19 +157,20 @@ export class FrigateService {
    * reports as not yet ended, which is how this has always been read - Frigate
    * has no "currently tracked objects" route and overmind adds none.
    *
-   * It yields nothing today, and that is not a fault of the caller. Overmind's
-   * event payload carries no bounding box, and a detection without one cannot
-   * be drawn over the video; a box-less event is therefore dropped here rather
-   * than handed on to be drawn at an undefined position. The overlay then shows
-   * no boxes over a live picture that keeps playing, which is the behaviour the
-   * spec asks for when detections cannot be read. The day overmind carries
-   * `box` (and `subLabelScore`) on an event, this starts working as it stands.
+   * `inProgress=true` is answered by the node, which matters here rather than
+   * anywhere else: the live page polls this every two seconds per camera, and
+   * pulling a full list to keep the two events without an `endTime` is that
+   * work done sixty times a minute.
+   *
+   * An event without a `box` is dropped: it cannot be drawn anywhere, and a
+   * made-up position is worse than no box. The live picture keeps playing
+   * without one, which is what the spec asks for when detections cannot be
+   * read.
    */
   public async getTrackedPersons (cameraId: number, limit = 50): Promise<FrigateTrackedPerson[]> {
     const response = await axiosUtils.getFromPath(
-      this.server, 'cameraEvents', { id: cameraId }, `label=person&limit=${limit}`)
+      this.server, 'cameraEvents', { id: cameraId }, `inProgress=true&label=person&limit=${limit}`)
     return this.eventsOf(response)
-      .filter(event => event.endTime === null || event.endTime === undefined)
       .filter(event => !!event.box)
       .map(event => ({
         id: event.eventId,
@@ -177,8 +184,10 @@ export class FrigateService {
         data: {
           box: event.box,
           score: event.score,
+          // absent, rather than 0, on an event with no sub-label; null so the
+          // declared type holds and the overlay's own check keeps working
           // eslint-disable-next-line @typescript-eslint/camelcase
-          sub_label_score: event.subLabelScore
+          sub_label_score: event.subLabelScore === undefined ? null : event.subLabelScore
         }
       }))
   }
@@ -190,10 +199,15 @@ export class FrigateService {
    * never re-returns it. Without a cursor, `filters.before` bounds the first
    * page.
    *
-   * `filters.name` is applied here: the route filters by `label` only. That is
-   * also why `returned` is reported - a page can filter down to nothing and
-   * still have older events behind it, and only the caller knows how far it
-   * wants to keep asking.
+   * Completed, and by name, are both the node's work: `inProgress=false` and
+   * `subLabel` narrow the answer where the events are, so a page of thirty is
+   * thirty events the page will show rather than a wide slice to sieve here.
+   *
+   * A sub-label can name several recognised faces at once ("alexander,
+   * marlene") and matches a query for any of them, so what comes back is not
+   * always equal to what was asked for. Nothing here compares the two - the
+   * name goes into the request and the label that comes back is rendered as
+   * the label it is.
    */
   public async getPastEvents (
     cameraIds: number[],
@@ -201,7 +215,10 @@ export class FrigateService {
     cursor: number | null = null,
     limit = 30
   ): Promise<FrigateEventsPage> {
-    const params = [`cameraIds=${cameraIds.join(',')}`, 'label=person', `limit=${limit}`]
+    const params = [`cameraIds=${cameraIds.join(',')}`, 'label=person', 'inProgress=false', `limit=${limit}`]
+    if (filters.name) {
+      params.push(`subLabel=${encodeURIComponent(filters.name)}`)
+    }
     if (filters.after !== null && filters.after !== undefined) {
       params.push(`after=${this.toLocalDateTime(filters.after)}`)
     }
@@ -210,19 +227,13 @@ export class FrigateService {
       params.push(`before=${this.toLocalDateTime(before)}`)
     }
     const response = await axiosUtils.getResponse(this.server, 'cameraEventsMerged', params.join('&'))
-    const returned = this.eventsOf(response)
-    const events = returned
-      .filter(event => event.endTime !== null && event.endTime !== undefined)
-      .filter(event => !filters.name || event.subLabel === filters.name)
-      .map(event => this.toPastEvent(event))
     return {
-      events,
+      events: this.eventsOf(response).map(event => this.toPastEvent(event)),
       unavailable: ((response && response.unavailable) || []).map(entry => ({
         cameraId: entry.cameraId,
         displayName: entry.displayName || null,
         reason: entry.reason || null
-      })),
-      returned: returned.length
+      }))
     }
   }
 
@@ -231,7 +242,7 @@ export class FrigateService {
       id: event.eventId,
       camera: event.cameraId,
       subLabel: event.subLabel || null,
-      // overmind's event route carries no zones; see the class comment
+      // always a list on the wire; defaulted anyway so a reader never has to ask
       zones: event.zones || [],
       startTime: this.toEpochSeconds(event.startTime) as number,
       endTime: this.toEpochSeconds(event.endTime) as number,

@@ -211,12 +211,6 @@ import { Debouncer } from '@/utils/debouncer'
 
 const PAGE_SIZE = 30
 
-// What a page asks for while the name filter is set. Overmind's event route
-// filters by label only, so the name is matched here after the fact, and a
-// 30-event slice would routinely filter down to nothing while plenty of older
-// matches sit behind it. 300 is inside the route's cap of 500.
-const NAME_FILTER_PAGE_SIZE = 300
-
 const HOUR = 60 * 60 * 1000
 
 // Each range only ever writes into the existing "from" field, so there is no
@@ -510,17 +504,15 @@ export default {
      * @param cursor the `startTime` to page back from, or null for the first page
      */
     async fetchPage (cursor) {
-      const limit = this.nameFilter ? NAME_FILTER_PAGE_SIZE : PAGE_SIZE
       const ids = this.cameras.map(camera => camera.id)
       try {
-        const page = await frigateService.getPastEvents(ids, this.buildFilters(), cursor, limit)
+        const page = await frigateService.getPastEvents(ids, this.buildFilters(), cursor, PAGE_SIZE)
         return {
           page: page.events,
           failed: page.unavailable.map(entry => this.unavailableName(entry)),
-          // `returned` counts what the server sent, before the name filter took
-          // entries out of it: a page that matched nothing may still have older
-          // matches behind it.
-          full: page.returned >= limit,
+          // the filters are the server's, so a full page is a full page: there
+          // is nothing left here that could take entries back out of it
+          full: page.events.length >= PAGE_SIZE,
           allFailed: page.unavailable.length >= ids.length
         }
       } catch (err) {
