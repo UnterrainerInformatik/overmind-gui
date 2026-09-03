@@ -83,6 +83,11 @@ The events page SHALL let the user filter the event list by matched
 person name and by a date/time range. Filters SHALL be combinable and
 SHALL update the displayed list without navigating away from the page.
 
+An event MAY name more than one recognised person at once. Filtering by a
+person name SHALL show such an event when the chosen name is among the ones it
+names, and the entry SHALL keep the label the event source reported rather
+than being relabelled with the name that was searched for.
+
 The page SHALL open with a bounded date/time range already selected, so that
 its first read of the event source is bounded regardless of how much history
 the source holds. The preselected range SHALL end at the present and SHALL
@@ -105,6 +110,12 @@ honoured as given.
 #### Scenario: Filtering by person name
 - **WHEN** the user selects a specific person name in the filter
 - **THEN** the list shows only events matched to that person
+
+#### Scenario: Event naming several persons
+- **WHEN** an event names several recognised persons and the user filters by
+  one of them
+- **THEN** the event appears in the list, labeled with all the persons it
+  names rather than only the one filtered for
 
 #### Scenario: Filtering by date/time range
 - **WHEN** the user sets a date/time range in the filter
