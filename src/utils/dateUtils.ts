@@ -8,6 +8,12 @@ class DateUtils {
     return this.instanceField
   }
 
+  // Ceiling on one calendarBoundaries() walk. A scale that wanted more ticks
+  // than this would be drawing them under a pixel apart anyway, so the cap only
+  // ever bites on a pathological range - where it is the difference between a
+  // sparse axis and a hung tab.
+  public static readonly boundaryCap = 512
+
   public static readonly unitsInMinutes = [
     1 * 60 * 24 * 365,
     1 * 60 * 24 * 30,
@@ -116,6 +122,39 @@ class DateUtils {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
+    })
+  }
+
+  /**
+  * Day and month without the year - the format a graduation label has room for
+  * where a padded date does not. Locale-driven, so it is `2.9.` here and `9/2`
+  * in en-US rather than a hard-coded order.
+  */
+  public dateToShortDayMonth (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return d.toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'numeric'
+    })
+  }
+
+  public dateToShortMonth (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return d.toLocaleDateString(locale, {
+      month: 'short'
+    })
+  }
+
+  public dateToYear (d, locale) {
+    if (!d) {
+      return ''
+    }
+    return d.toLocaleDateString(locale, {
+      year: 'numeric'
     })
   }
 
@@ -229,6 +268,102 @@ class DateUtils {
     return down
       ? time - time % roundDownTime
       : time + (roundDownTime - (time % roundDownTime))
+  }
+
+  /**
+   * The local calendar boundaries of `unit` (in steps of `step`) that fall
+   * inside `[fromSeconds, toSeconds]`, as epoch seconds.
+   *
+   * Every hop is made with the local date setters - `setDate(d + 1)`,
+   * `setHours(h + 3)` - and never by adding a fixed number of milliseconds,
+   * because neither a day nor an hour has a fixed length: Austria puts the
+   * clock forward and back once a year each, so a walk stepped by 86400000 ends
+   * up naming 23:00 "midnight" for half the year, and February is not January.
+   * The setters know the calendar; arithmetic on epoch millis does not.
+   *
+   * The start is snapped *down* onto the step's own grid where the step divides
+   * its parent cycle evenly (5s within the minute, 3h within the day, ...), so
+   * a walk in 15-minute steps lands on :00 :15 :30 :45 rather than wherever the
+   * range happens to begin. `week` starts on Monday, matching the `dowOffset`
+   * default getWeek() already uses.
+   *
+   * Bounded on purpose: an unbounded range asked for in fine steps stops at
+   * `cap` boundaries instead of spinning, because the caller sizing a scale
+   * cannot draw more than a few hundred of them anyway.
+   */
+  public calendarBoundaries (unit, step, fromSeconds, toSeconds, cap = DateUtils.boundaryCap) {
+    const result: number[] = []
+    if (!Number.isFinite(fromSeconds) || !Number.isFinite(toSeconds) || toSeconds < fromSeconds) {
+      return result
+    }
+    const s = Math.max(Math.floor(step) || 1, 1)
+    const cursor = new Date(fromSeconds * 1000)
+
+    switch (unit) {
+      case 'second':
+        cursor.setMilliseconds(0)
+        cursor.setSeconds(Math.floor(cursor.getSeconds() / s) * s)
+        break
+      case 'minute':
+        cursor.setSeconds(0, 0)
+        cursor.setMinutes(Math.floor(cursor.getMinutes() / s) * s)
+        break
+      case 'hour':
+        cursor.setMinutes(0, 0, 0)
+        cursor.setHours(Math.floor(cursor.getHours() / s) * s)
+        break
+      case 'day':
+        cursor.setHours(0, 0, 0, 0)
+        break
+      case 'week':
+        cursor.setHours(0, 0, 0, 0)
+        // getDay() is 0 on Sunday; (day + 6) % 7 is the number of days back to
+        // the Monday that opens the week.
+        cursor.setDate(cursor.getDate() - ((cursor.getDay() + 6) % 7))
+        break
+      case 'month':
+        cursor.setHours(0, 0, 0, 0)
+        // day first: setMonth() on the 31st would overflow into the next month
+        cursor.setDate(1)
+        cursor.setMonth(Math.floor(cursor.getMonth() / s) * s)
+        break
+      case 'year':
+        cursor.setHours(0, 0, 0, 0)
+        cursor.setMonth(0, 1)
+        cursor.setFullYear(Math.floor(cursor.getFullYear() / s) * s)
+        break
+      default:
+        return result
+    }
+
+    // the snap can only ever land at or before the range start, but a step that
+    // does not divide its parent cycle (a 5-day step, say) leaves it short.
+    let guard = 0
+    while (cursor.getTime() < fromSeconds * 1000 && guard++ < cap) {
+      this.advanceBy(cursor, unit, s)
+    }
+
+    while (cursor.getTime() <= toSeconds * 1000 && result.length < cap) {
+      result.push(Math.floor(cursor.getTime() / 1000))
+      const before = cursor.getTime()
+      this.advanceBy(cursor, unit, s)
+      if (cursor.getTime() <= before) {
+        break
+      }
+    }
+    return result
+  }
+
+  private advanceBy (cursor, unit, step) {
+    switch (unit) {
+      case 'second': cursor.setSeconds(cursor.getSeconds() + step); break
+      case 'minute': cursor.setMinutes(cursor.getMinutes() + step); break
+      case 'hour': cursor.setHours(cursor.getHours() + step); break
+      case 'day': cursor.setDate(cursor.getDate() + step); break
+      case 'week': cursor.setDate(cursor.getDate() + 7 * step); break
+      case 'month': cursor.setMonth(cursor.getMonth() + step); break
+      case 'year': cursor.setFullYear(cursor.getFullYear() + step); break
+    }
   }
 }
 

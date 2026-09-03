@@ -876,6 +876,10 @@ export default {
    one variable, as $events-detail-chrome already does for the dialog. */
 $events-timeline-width: 56px;
 
+/* What the fixed corner button below the strip takes out of it: its own 28px
+   plus the 8px it sits off the edge, plus 4px of clearance. */
+$events-timeline-foot: 40px;
+
 .events-content {
   max-width: none;
   /* the back button is fixed over the bottom left corner: keep the grid
@@ -896,7 +900,14 @@ $events-timeline-width: 56px;
   top: 0;
   right: 0;
   width: $events-timeline-width;
-  height: 100vh;
+  /* Not the full 100vh: App.vue parks .kiosk-migrations-btn in the bottom
+     right corner at the same z-index, and a 28px button 8px off the edge
+     covers the bottom 36px of this column. That used to cost nothing - the
+     strip's foot was bare rail - but it now holds the label naming where the
+     axis starts, and a mark landing at axisStart was never clickable there
+     either. The axis stops above the button instead of running under it; the
+     timeline measures its own height, so the graduation follows. */
+  height: calc(100vh - #{$events-timeline-foot});
   z-index: 20;
 }
 

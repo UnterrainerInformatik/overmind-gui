@@ -202,6 +202,8 @@
 				"quickRangeHours": "{count} hours",
 				"quickRangeLabel": "Range",
 				"registryError": "The camera configuration could not be loaded",
+				"timelineAxisEnd": "Timeline end: {moment}",
+				"timelineAxisStart": "Timeline start: {moment}",
 				"timelineLabel": "Event timeline",
 				"title": "Events",
 				"unknown": "Unknown"

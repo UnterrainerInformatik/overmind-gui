@@ -202,6 +202,8 @@
 				"quickRangeHours": "{count} Stunden",
 				"quickRangeLabel": "Zeitraum",
 				"registryError": "Kamerakonfiguration konnte nicht geladen werden",
+				"timelineAxisEnd": "Zeitachse Ende: {moment}",
+				"timelineAxisStart": "Zeitachse Beginn: {moment}",
 				"timelineLabel": "Zeitachse der Ereignisse",
 				"title": "Ereignisse",
 				"unknown": "Unbekannt"
