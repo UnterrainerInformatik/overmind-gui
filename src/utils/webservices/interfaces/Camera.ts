@@ -73,9 +73,14 @@ export interface CameraDetectSettings {
 export interface StreamProbeResult {
   result: 'ok' | 'error';
   reason: string | null;
-  /** Only filled on success; the fields a probe measures, in the stream's own shape. */
+  /**
+   * Only filled on success; the fields a probe measures, in the stream's own
+   * shape. `probedAt` is the node's own measurement time and may be null where
+   * the server sent none - the caller then falls back to its own clock, so a
+   * stream that was just measured never reads as never probed.
+   */
   measured: Pick<CameraStream,
-    'width' | 'height' | 'fps' | 'bitrateKbps' | 'videoCodec' | 'audioCodec' | 'settableFields'> | null;
+    'width' | 'height' | 'fps' | 'bitrateKbps' | 'videoCodec' | 'audioCodec' | 'probedAt' | 'settableFields'> | null;
 }
 
 /**
@@ -85,14 +90,11 @@ export interface StreamProbeResult {
  * echoes it back, so `hasPassword` is all a reader gets - enough for the edit
  * form to say a password is stored without ever holding it.
  *
- * A camera can be pulled from up to three sources, because detect, record and
- * the live view want different streams of it - typically a substream for
- * detection and the main stream for watching. `sourceUrl` is the one that is
- * always there and is what gets recorded; the other two are overrides the node
- * resolves as live = `liveSourceUrl` ?? `sourceUrl` and detect =
- * `detectSourceUrl` ?? `liveSourceUrl` ?? `sourceUrl`. A detection source may
- * even be a different device, which is why it is a URL of its own rather than a
- * flag on the first one.
+ * The server carries two URL fields: `sourceUrl`, which is always there and is
+ * what gets recorded, and an optional lower-resolution one for the live view.
+ * `liveSourceUrl` below is the latter under this model's name and is derived on
+ * read, not stored - a detection source of its own is a third named stream that
+ * `roles.detect` points at, which is how the server expresses one.
  */
 export interface Camera extends LastKnownStatus {
   id: number;
@@ -100,8 +102,8 @@ export interface Camera extends LastKnownStatus {
   displayName: string;
   frigateKey: string;
   sourceUrl: string;
+  /** Derived from the server's `subStreamUrl`; never sent back under this name. */
   liveSourceUrl: string | null;
-  detectSourceUrl: string | null;
   username: string | null;
   hasPassword: boolean;
   usedOnLivePage: boolean;
@@ -111,9 +113,10 @@ export interface Camera extends LastKnownStatus {
   provisioningState: ProvisioningState;
   provisioningReason: string | null;
   /**
-   * The camera's streams, `main` first and always present. Derived from the
-   * URL fields above by `camerasService` for a camera the server stores in the
-   * older two-URL schema, so a reader never has to handle their absence.
+   * The camera's streams, `main` first and always present. The server answers
+   * them for every camera; `camerasService` derives them from the URL fields
+   * above for a server that predates them, so a reader never has to handle
+   * their absence.
    */
   streams: CameraStream[];
   /**
@@ -126,24 +129,27 @@ export interface Camera extends LastKnownStatus {
   recording: CameraRecordingSettings;
   detect: CameraDetectSettings;
   /**
-   * False when the server reported no recording/detect settings at all and the
-   * defaults above were filled in. The page shows unknown rather than "off",
-   * since "the node does not report this yet" is not a setting the user made.
+   * False when the server sent no `recordingEnabled` at all and the defaults
+   * above were filled in. The page shows unknown rather than "off", since "the
+   * node does not report this yet" is not a setting the user made.
    */
   settingsReported: boolean;
 }
 
 /**
- * The writable fields of a camera. `password` is only ever sent when the user
- * actually typed one: left out, the server keeps whatever it has stored.
+ * The writable fields of a camera, in the model's shape. `camerasService.toWire`
+ * flattens the two settings blocks and derives `sourceUrl` / `subStreamUrl` from
+ * the streams `record` and `live` point at, so nothing here names a wire field
+ * the server does not have.
+ *
+ * `password` is only ever sent when the user actually typed one: left out, the
+ * server keeps whatever it has stored.
  */
 export interface CameraWrite {
   nodeId: number;
   displayName: string;
   frigateKey: string;
   sourceUrl: string;
-  liveSourceUrl: string | null;
-  detectSourceUrl: string | null;
   username: string | null;
   password?: string;
   usedOnLivePage: boolean;

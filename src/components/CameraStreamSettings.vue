@@ -185,6 +185,12 @@
             class="mt-3 retention-days"
             style="max-width: 220px"
           ></v-text-field>
+          <!-- An unset retention is not unknown: the node applies its own
+               default, so the page names it rather than leaving the field
+               reading as a gap. -->
+          <div v-if="retentionHint" class="text--disabled mt-1 retention-hint">
+            {{ retentionHint }}
+          </div>
           <div v-if="draft.recording.mode === 'continuous'" class="mt-2 storage-estimate">
             <span v-if="storageEstimate !== null">
               {{ $t('page.kiosk.cameras.streams.storageEstimate', { gb: storageEstimate }) }}
@@ -307,7 +313,13 @@ export default {
 
   props: {
     value: { type: Boolean, default: false },
-    camera: { type: Object, default: null }
+    camera: { type: Object, default: null },
+    /**
+     * The camera's node, for the default retention it applies to a camera that
+     * states none. Passed in rather than fetched here: the page has the node
+     * list already, and a dialog that opens per camera must not add a request.
+     */
+    node: { type: Object, default: null }
   },
 
   data: () => ({
@@ -409,9 +421,26 @@ export default {
     },
 
     /**
+     * What applies while the camera states no retention of its own: the node's
+     * default, named in days, or nothing known at all. Null once the camera has
+     * a retention - the field then says it itself.
+     */
+    retentionHint () {
+      const stated = this.draft && this.draft.recording.retentionDays
+      if (stated !== null && stated !== undefined && stated !== '') {
+        return null
+      }
+      const fallback = this.node && this.node.defaultRetentionDays
+      return fallback === null || fallback === undefined
+        ? this.$t('page.kiosk.cameras.streams.retentionUnknownDefault')
+        : this.$t('page.kiosk.cameras.streams.retentionNodeDefault', { days: fallback })
+    },
+
+    /**
      * Rounded GB/day for continuous recording, from the record stream's
-     * measured bitrate. Null when it was never probed - there is no honest
-     * number then, so the page invites a probe instead of guessing one.
+     * reported bitrate. Null where the camera reports none - which is every
+     * camera here - so the page says the figure cannot be given rather than
+     * guessing one.
      */
     storageEstimate () {
       const stream = this.assignedRecordStream
@@ -504,6 +533,12 @@ export default {
         this.streamError = this.$t('page.kiosk.cameras.streams.addStreamIncomplete')
         return
       }
+      // the server refuses anything outside [a-z0-9_]; naming the allowed
+      // characters here saves a round trip that says the same thing
+      this.streamError = this.streamNameProblem(name)
+      if (this.streamError) {
+        return
+      }
       if (this.streamNames.indexOf(name) >= 0) {
         this.streamError = this.$t('page.kiosk.cameras.streams.addStreamDuplicate', { name })
         return
@@ -551,7 +586,7 @@ export default {
       try {
         const result = await camerasService.probeStream(this.camera.nodeId, stream.url, this.camera.username)
         if (result.result === 'ok' && result.measured) {
-          Object.assign(stream, result.measured, { probedAt: new Date().toISOString().replace('Z', '') })
+          Object.assign(stream, result.measured, { probedAt: this.measuredAt(result.measured) })
         } else {
           // the previously known values stay exactly as they were - a failed
           // measurement is not a reason to forget the last successful one
@@ -573,6 +608,13 @@ export default {
      * asks first.
      */
     submit () {
+      // what the server would refuse anyway, at the field and before anything
+      // is sent: a correctable mistake must not cost a round trip
+      this.saveError = this.retentionProblem(this.draft.recording) ||
+        this.streamUrlProblem(this.draft.streams)
+      if (this.saveError) {
+        return
+      }
       const lowered = this.originalRetention !== null && this.originalRetention !== undefined &&
         Number(this.draft.recording.retentionDays) < Number(this.originalRetention)
       if (this.draft.recording.enabled && lowered) {
@@ -601,8 +643,6 @@ export default {
         displayName: camera.displayName,
         frigateKey: camera.frigateKey,
         sourceUrl: camera.sourceUrl,
-        liveSourceUrl: camera.liveSourceUrl,
-        detectSourceUrl: camera.detectSourceUrl,
         username: camera.username,
         usedOnLivePage: camera.usedOnLivePage,
         usedOnEventsPage: camera.usedOnEventsPage,

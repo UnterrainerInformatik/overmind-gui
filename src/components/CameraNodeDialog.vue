@@ -24,9 +24,9 @@
           {{ testText(testResult) }}
         </div>
 
-        <!-- The server does not report either of these yet. Null is rendered as
-             unknown rather than as 0 GB, because "no storage" and "the node
-             never said" are different facts about a node. -->
+        <!-- What the node last reported about itself. Null is rendered as
+             unknown rather than as 0 GB or 0 days, because "no storage" and
+             "the node never said" are different facts about a node. -->
         <div class="mt-3 node-detail-version">
           {{ $t('page.kiosk.cameras.nodeDetail.frigateVersion') }}:
           <span :class="{ 'text--disabled': !node.frigateVersion }">
@@ -37,6 +37,12 @@
           {{ $t('page.kiosk.cameras.nodeDetail.storage') }}:
           <span :class="{ 'text--disabled': storageText === null }">
             {{ storageText === null ? $t('page.kiosk.cameras.nodeDetail.unknown') : storageText }}
+          </span>
+        </div>
+        <div class="node-detail-retention">
+          {{ $t('page.kiosk.cameras.nodeDetail.defaultRetention') }}:
+          <span :class="{ 'text--disabled': retentionText === null }">
+            {{ retentionText === null ? $t('page.kiosk.cameras.nodeDetail.unknown') : retentionText }}
           </span>
         </div>
 
@@ -117,6 +123,18 @@ export default {
         used: used === null ? '?' : used,
         total: total === null ? '?' : total
       })
+    },
+
+    /**
+     * The retention this node applies to a camera that sets none of its own -
+     * the fallback the stream settings name under an empty retention field, so
+     * the two say the same number.
+     */
+    retentionText () {
+      const days = this.node.defaultRetentionDays
+      return days === null || days === undefined
+        ? null
+        : this.$t('page.kiosk.cameras.nodeDetail.defaultRetentionValue', { days })
     }
   }
 }

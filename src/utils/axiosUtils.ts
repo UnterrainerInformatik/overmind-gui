@@ -104,15 +104,24 @@ export class AxiosUtils {
         status = err.response.status
       }
       let msg = err.message
-      if (err != null && err.response != null && err.response.data != null && err.response.data.message != null) {
-        msg = err.response.data.message
+      const data = err != null && err.response != null ? err.response.data : null
+      // `reason` first: a refused write answers `{"reason": "..."}` across
+      // /setup/nodes, /setup/cameras and every route that follows the house
+      // shape, and a route sending both means the reason to be the specific
+      // one. `message` stays as the framework's own text, so a failure that
+      // carries no reason still reaches the log and the generic dialogs.
+      if (data != null && data.reason != null) {
+        msg = data.reason
+      } else if (data != null && data.message != null) {
+        msg = data.message
       }
       log.error(msg, 'communication', status)
-      // The message the server sent is what a form has to put on screen when a
+      // The sentence the server sent is what a form has to put on screen when a
       // write is refused - a Frigate key already used on that node, a node that
       // still holds cameras - so it travels on the error instead of being
-      // dropped with it. The thrown error's own message stays 'Internal Error.',
-      // so callers that only read that are unaffected.
+      // dropped with it. The property keeps the name `serverMessage`: every
+      // reader already uses it. The thrown error's own message stays
+      // 'Internal Error.', so callers that only read that are unaffected.
       const error: any = new Error('Internal Error.')
       error.serverMessage = msg
       error.status = status

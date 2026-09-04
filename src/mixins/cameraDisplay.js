@@ -1,6 +1,10 @@
 import { singleton as cameraUtils } from '@/utils/cameraUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 
+// What the server accepts as a stream name. Frigate keys its configuration by
+// the name, so anything outside this set is refused there rather than here.
+const STREAM_NAME = /^[a-z0-9_]+$/
+
 /**
  * The wording the Kameras page, the node detail dialog and the setup assistant
  * all share: a stored status, a test outcome, a provisioning state, a stream
@@ -78,6 +82,52 @@ export const cameraDisplay = {
 
     shortTime (iso) {
       return dateUtils.isoToShortDateTime(iso, this.$i18n.locale)
+    },
+
+    /**
+     * The three refusals the server makes that the page can make itself, each
+     * returning the sentence to show or null when the value is acceptable.
+     * Here rather than in either dialog so the stream settings and the setup
+     * assistant refuse the same values and quote the same sentence - a rule
+     * that differs between the two is worse than one that is only in one.
+     */
+    streamNameProblem (name) {
+      return STREAM_NAME.test((name || '').trim())
+        ? null
+        : this.$t('page.kiosk.cameras.streams.streamNameInvalid')
+    },
+
+    streamUrlProblem (streams) {
+      const missing = (streams || []).find(stream => !(stream.url || '').trim())
+      return missing
+        ? this.$t('page.kiosk.cameras.streams.streamUrlMissing', { name: missing.name })
+        : null
+    },
+
+    /**
+     * Only while recording is on: with it off the retention is not a setting at
+     * all, and refusing an empty one there would block a save that is fine.
+     */
+    retentionProblem (recording) {
+      if (!recording || !recording.enabled) {
+        return null
+      }
+      const days = Number(recording.retentionDays)
+      const stated = recording.retentionDays !== null && recording.retentionDays !== undefined &&
+        recording.retentionDays !== ''
+      return stated && !isNaN(days) && days > 0
+        ? null
+        : this.$t('page.kiosk.cameras.streams.retentionRequired')
+    },
+
+    /**
+     * When a probe's measurement was taken: the node's own time, because it is
+     * the node that measured. This device's clock is the fallback for a server
+     * that sent none - a stream that was just measured must not read as never
+     * probed.
+     */
+    measuredAt (measured) {
+      return (measured && measured.probedAt) || new Date().toISOString().replace('Z', '')
     }
   }
 }

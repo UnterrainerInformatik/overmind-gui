@@ -188,8 +188,9 @@ The page SHALL NOT display a stored camera password.
 The node section SHALL offer a detail view per node, opened from its entry and
 shown without leaving the Kameras page, listing the cameras bound to that node
 with their stream assignment, its last-known reachability, and what the server
-reports about the node itself — its Frigate version and its storage use — with
-the node's edit, test and delete controls reachable from within it.
+reports about the node itself — its Frigate version, its storage use and the
+retention it applies to cameras that state none of their own — with the node's
+edit, test and delete controls reachable from within it.
 
 #### Scenario: Opening a node's details
 - **WHEN** the user selects a node's entry
@@ -204,8 +205,14 @@ the node's edit, test and delete controls reachable from within it.
 - **WHEN** the node has no cameras
 - **THEN** the detail view says so and offers to add one for this node
 
+#### Scenario: The node's default retention
+- **WHEN** the server reports the retention the node applies by default
+- **THEN** it is shown among the node's reported facts, in days, and identified
+  as what applies to a camera that sets none of its own
+
 #### Scenario: Reported node facts are missing
-- **WHEN** the server reports no version or no storage figures for a node
+- **WHEN** the server reports no version, no storage figures or no default
+  retention for a node
 - **THEN** those entries are shown as unknown rather than as zero or empty
 
 #### Scenario: Acting on the node from its details

@@ -14,17 +14,13 @@ import { ConnectionTestResult } from '@/utils/webservices/interfaces/ConnectionS
  * collection instead of extending it - the CRUD calls are exactly the house
  * ones, only the connection tests need an endpoint of their own.
  *
- * Written against `ai/draft-cameras-for-frontend.md` in java-overmind-server
- * (sections 2-5, deployed and verified 2026-09-01). Three places where this
- * service adapts rather than mirrors, all documented at the method:
- * the enums, which arrive uppercase, `subStreamUrl`, and the named streams.
- *
- * The streams, the role map, the recording and detect settings and the stream
- * probe are **not deployed**: the server still stores a camera as
- * `sourceUrl` + `subStreamUrl`. This service is the single seam - it derives
- * the streams from those URLs on the way in and writes the assignment back
- * onto them on the way out, so the page runs on the model while the wire stays
- * what the deployed server reads. See the change `camera-stream-settings`.
+ * Written against the deployed contract (`CameraJson`, `NodeJson`,
+ * `CameraStreamDefinitionJson`, `StreamProbeResultJson`). Three places where
+ * this service adapts rather than mirrors, all documented at the method: the
+ * enums, which arrive uppercase; `subStreamUrl`, which is this model's live
+ * source; and the recording and detection settings, which are flat on the wire
+ * and grouped into two blocks in the model - the grouping the stream dialog is
+ * laid out around. See the change `camera-contract-alignment`.
  */
 export class CamerasService {
   private static instanceField: CamerasService
@@ -167,21 +163,19 @@ export class CamerasService {
   }
 
   /**
-   * A camera as the pages want it. Besides the enums, this is where the
-   * deployed two-URL schema meets this GUI's three: the server carries one
+   * A camera as the pages want it. Besides the enums, this is where the wire's
+   * two URL fields meet this model's live source: the server carries one
    * optional `subStreamUrl` - "lower-res stream for the live view" - which is
-   * exactly this model's live source, so it is read as one. `liveSourceUrl`
-   * wins as soon as the server carries it.
+   * exactly that, so it is read as one. There is no third URL field; a separate
+   * detection source is a third named stream that `roles.detect` points at.
    */
   private normalizeCamera (camera: any): Camera {
-    const liveSourceUrl = camera.liveSourceUrl || camera.subStreamUrl || null
-    const detectSourceUrl = camera.detectSourceUrl || null
+    const liveSourceUrl = camera.subStreamUrl || null
     const streams = Array.isArray(camera.streams) && camera.streams.length
       ? camera.streams.map((stream: any) => this.normalizeStream(stream))
-      : this.derivedStreams(camera.sourceUrl, liveSourceUrl, detectSourceUrl)
+      : this.derivedStreams(camera.sourceUrl, liveSourceUrl)
     return Object.assign({}, camera, {
       liveSourceUrl,
-      detectSourceUrl,
       hasPassword: !!camera.hasPassword,
       lastStatus: this.lowered(camera.lastStatus),
       // never absent in practice; defaulted so a camera cannot be marked
@@ -189,32 +183,36 @@ export class CamerasService {
       provisioningState: this.lowered(camera.provisioningState) || 'provisioned',
       streams,
       roles: this.normalizeRoles(camera.roles, streams),
-      recording: this.normalizeRecording(camera.recording),
-      detect: this.normalizeDetect(camera.detect),
+      recording: this.normalizeRecording(camera),
+      detect: this.normalizeDetect(camera),
       // "the node does not report this yet" is not the same fact as "recording
-      // is switched off", and the page has to say the first one differently
-      settingsReported: !!(camera.recording || camera.detect)
+      // is switched off", and the page has to say the first one differently.
+      // `recordingEnabled` is the field the deployed server always sends, so in
+      // practice this is true - which is the point: the settings *are* reported
+      // now. A server predating the field would otherwise show `false` as a
+      // decision somebody made.
+      settingsReported: camera.recordingEnabled !== undefined && camera.recordingEnabled !== null
     })
   }
 
   /**
-   * The streams of a camera the server stores in the deployed two-URL schema,
-   * derived from the URLs it does send:
+   * The streams of a camera the server answered without any, derived from the
+   * two URLs it does send:
    *
-   *   sourceUrl only              -> main
-   *   sourceUrl + live/subStream  -> main, sub
-   *   all three                   -> main, sub, detect
+   *   sourceUrl only          -> main
+   *   sourceUrl + subStreamUrl -> main, sub
+   *
+   * The deployed server always answers `streams`, deriving them the same way
+   * for a camera stored before they existed - so this is the fallback for an
+   * older server rather than the normal path, and it must agree with it.
    *
    * Every parameter comes out null and `settableFields` empty: nothing here was
    * measured, and a derived stream must not read as a probed one.
    */
-  private derivedStreams (sourceUrl: string, liveSourceUrl: string | null, detectSourceUrl: string | null): CameraStream[] {
+  private derivedStreams (sourceUrl: string, liveSourceUrl: string | null): CameraStream[] {
     const streams = [this.emptyStream('main', sourceUrl || '')]
     if (liveSourceUrl) {
       streams.push(this.emptyStream('sub', liveSourceUrl))
-    }
-    if (detectSourceUrl) {
-      streams.push(this.emptyStream('detect', detectSourceUrl))
     }
     return streams
   }
@@ -267,23 +265,27 @@ export class CamerasService {
     return { live: kept('live'), detect: kept('detect'), record: kept('record') }
   }
 
-  /** Recording as sent; absent means off, around events, retention unknown. */
-  private normalizeRecording (recording: any): CameraRecordingSettings {
+  /**
+   * Recording, read off the flat fields the wire carries; absent means off,
+   * around events, retention unknown. `recordingMode` is an enum and arrives
+   * uppercase like every other one on this contract.
+   */
+  private normalizeRecording (camera: any): CameraRecordingSettings {
     return {
-      enabled: !!(recording && recording.enabled),
-      mode: recording && this.lowered(recording.mode) === 'continuous' ? 'continuous' : 'events',
-      retentionDays: this.orNull(recording && recording.retentionDays)
+      enabled: !!camera.recordingEnabled,
+      mode: this.lowered(camera.recordingMode) === 'continuous' ? 'continuous' : 'events',
+      retentionDays: this.orNull(camera.retentionDays)
     }
   }
 
-  /** Detection as sent; absent means every parameter unknown and audio off. */
-  private normalizeDetect (detect: any): CameraDetectSettings {
+  /** Detection, likewise flat; absent means every parameter unknown and audio off. */
+  private normalizeDetect (camera: any): CameraDetectSettings {
     return {
-      width: this.orNull(detect && detect.width),
-      height: this.orNull(detect && detect.height),
-      fps: this.orNull(detect && detect.fps),
-      audioEnabled: !!(detect && detect.audioEnabled),
-      motionThreshold: this.orNull(detect && detect.motionThreshold)
+      width: this.orNull(camera.detectWidth),
+      height: this.orNull(camera.detectHeight),
+      fps: this.orNull(camera.detectFps),
+      audioEnabled: !!camera.detectAudioEnabled,
+      motionThreshold: this.orNull(camera.motionThreshold)
     }
   }
 
@@ -299,15 +301,22 @@ export class CamerasService {
       // as unknown, so an omitted figure must not become a 0
       frigateVersion: node.frigateVersion || null,
       storageTotalBytes: this.orNull(node.storageTotalBytes),
-      storageUsedBytes: this.orNull(node.storageUsedBytes)
+      storageUsedBytes: this.orNull(node.storageUsedBytes),
+      // the retention the node applies to a camera that sets none of its own;
+      // null is what the page names as unknown rather than as "kept forever"
+      defaultRetentionDays: this.orNull(node.defaultRetentionDays)
     })
   }
 
   /**
-   * The write payload. The live source is sent under `subStreamUrl` as well,
-   * which is the only one of the three the deployed server knows - so the page
-   * keeps working against it without giving up the three-source model. Harmless
-   * once the server carries `liveSourceUrl`, since that one wins on read.
+   * The write payload, built field by field rather than spread from the model:
+   * the nested `recording` / `detect` blocks must not leak onto the wire beside
+   * the flat fields the server actually reads, and the model carries a derived
+   * `liveSourceUrl` the server has no column for.
+   *
+   * The two URL fields are kept in step with the streams `record` and `live`
+   * point at - the server does the same on its side, so a camera that is opened
+   * and saved unchanged comes back unchanged.
    */
   private toWire (camera: CameraWrite): object {
     const url = (role: StreamRole) => {
@@ -319,15 +328,37 @@ export class CamerasService {
     // copy of `sourceUrl`: the server already falls back that way, and writing
     // the copy would turn a camera that came in with no `subStreamUrl` into one
     // that has one merely by being opened and saved.
-    const liveSourceUrl = url('live') === sourceUrl ? null : url('live')
-    const detectUrl = url('detect')
-    const detectSourceUrl = detectUrl === sourceUrl || detectUrl === liveSourceUrl ? null : detectUrl
-    return Object.assign({}, camera, {
+    const subStreamUrl = url('live') === sourceUrl ? null : url('live')
+    const recording = camera.recording || {} as CameraRecordingSettings
+    const detect = camera.detect || {} as CameraDetectSettings
+    const payload: any = {
+      nodeId: camera.nodeId,
+      displayName: camera.displayName,
+      frigateKey: camera.frigateKey,
       sourceUrl,
-      liveSourceUrl,
-      detectSourceUrl,
-      subStreamUrl: liveSourceUrl
-    })
+      subStreamUrl,
+      streams: camera.streams,
+      roles: camera.roles,
+      username: camera.username,
+      recordingEnabled: !!recording.enabled,
+      recordingMode: recording.mode === 'continuous' ? 'CONTINUOUS' : 'EVENTS',
+      retentionDays: this.orNull(recording.retentionDays),
+      detectWidth: this.orNull(detect.width),
+      detectHeight: this.orNull(detect.height),
+      detectFps: this.orNull(detect.fps),
+      detectAudioEnabled: !!detect.audioEnabled,
+      motionThreshold: this.orNull(detect.motionThreshold),
+      usedOnLivePage: camera.usedOnLivePage,
+      usedOnEventsPage: camera.usedOnEventsPage,
+      sortOrder: camera.sortOrder,
+      enabled: camera.enabled
+    }
+    // only ever sent when the user actually typed one: absent, the server keeps
+    // whatever it has stored
+    if (camera.password) {
+      payload.password = camera.password
+    }
+    return payload
   }
 
   /**
@@ -349,6 +380,9 @@ export class CamerasService {
         bitrateKbps: this.orNull(response.bitrateKbps),
         videoCodec: response.videoCodec || null,
         audioCodec: response.audioCodec || null,
+        // the node's own measurement time, not the browser's clock - the caller
+        // falls back to its own only where the server sent none
+        probedAt: response.probedAt || null,
         settableFields: Array.isArray(response.settableFields) ? response.settableFields : []
       }
     }

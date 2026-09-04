@@ -16,14 +16,20 @@ export interface CameraNode extends LastKnownStatus {
   streamBaseUrl: string | null;
   enabled: boolean;
   /**
-   * What the node reports about itself, for the detail dialog. All three are
-   * null until the server reports them - which it does not yet - and null is
-   * shown as unknown rather than as a zero, since "0 bytes of storage" and "the
-   * node never said" are different facts about a node.
+   * What the node reports about itself, for the detail dialog. All four are
+   * null where the node did not report them, and null is shown as unknown
+   * rather than as a zero, since "0 bytes of storage" and "the node never said"
+   * are different facts about a node.
    */
   frigateVersion: string | null;
   storageTotalBytes: number | null;
   storageUsedBytes: number | null;
+  /**
+   * The retention the node applies to a camera that states none of its own, in
+   * days. Shown as the named fallback under an empty per-camera retention, so
+   * "not set" reads as "the node's default applies" rather than as unknown.
+   */
+  defaultRetentionDays: number | null;
 }
 
 /** The writable fields of a node; the server assigns and owns the rest. */

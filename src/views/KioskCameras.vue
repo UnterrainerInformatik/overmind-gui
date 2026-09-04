@@ -364,6 +364,7 @@
     <CameraStreamSettings
       v-model="streamSettingsDialog"
       :camera="streamSettingsCamera"
+      :node="streamSettingsNode"
       @saved="loadCameras"
     ></CameraStreamSettings>
 
@@ -403,12 +404,10 @@ const emptyCameraForm = () => ({
   nodeId: null,
   displayName: '',
   frigateKey: '',
-  // The URLs, the streams, the assignment and the two settings blocks are
+  // The source URL, the streams, the assignment and the two settings blocks are
   // carried through the form without being shown: they are edited in the stream
   // settings, and an edit here must not drop what it does not display.
   sourceUrl: '',
-  liveSourceUrl: '',
-  detectSourceUrl: '',
   streams: [],
   roles: {},
   recording: null,
@@ -505,6 +504,17 @@ export default {
         : []
     },
 
+    /**
+     * The node the stream settings need for its default retention. Taken from
+     * the list this page already holds rather than fetched per dialog; null
+     * while the list is still loading, which the dialog shows as unknown.
+     */
+    streamSettingsNode () {
+      return this.streamSettingsCamera
+        ? this.nodes.find(node => node.id === this.streamSettingsCamera.nodeId) || null
+        : null
+    },
+
     cameraFormValid () {
       const form = this.cameraForm
       return !!(form.nodeId !== null && form.nodeId !== undefined &&
@@ -594,8 +604,6 @@ export default {
         displayName: camera.displayName,
         frigateKey: camera.frigateKey,
         sourceUrl: camera.sourceUrl,
-        liveSourceUrl: camera.liveSourceUrl || '',
-        detectSourceUrl: camera.detectSourceUrl || '',
         streams: camera.streams,
         roles: camera.roles,
         recording: camera.recording,
@@ -641,8 +649,6 @@ export default {
         displayName: form.displayName,
         frigateKey: form.frigateKey,
         sourceUrl: form.sourceUrl,
-        liveSourceUrl: form.liveSourceUrl || null,
-        detectSourceUrl: form.detectSourceUrl || null,
         streams: form.streams,
         roles: form.roles,
         recording: form.recording,

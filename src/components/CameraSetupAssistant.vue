@@ -631,7 +631,7 @@ export default {
           this.draft.nodeId, stream.url, this.draft.username, this.draft.password)
         this.connectionTest = { result: result.result, reason: result.reason }
         if (result.result === 'ok' && result.measured) {
-          Object.assign(stream, result.measured, { probedAt: new Date().toISOString().replace('Z', '') })
+          Object.assign(stream, result.measured, { probedAt: this.measuredAt(result.measured) })
         }
       } catch (err) {
         this.connectionTest = { result: 'error', reason: (err && err.serverMessage) || null }
@@ -650,6 +650,13 @@ export default {
       const url = (this.newStreamUrl || '').trim()
       if (!name || !url || this.streamNames.indexOf(name) >= 0) {
         this.$set(this.stepErrors, 3, this.$t('page.kiosk.cameras.streams.addStreamIncomplete'))
+        return
+      }
+      // the same rule the stream settings apply, from the same place: the
+      // server refuses anything outside [a-z0-9_] either way
+      const problem = this.streamNameProblem(name)
+      if (problem) {
+        this.$set(this.stepErrors, 3, problem)
         return
       }
       this.$set(this.stepErrors, 3, null)
@@ -681,7 +688,7 @@ export default {
         const result = await camerasService.probeStream(
           this.draft.nodeId, stream.url, this.draft.username, this.draft.password)
         if (result.result === 'ok' && result.measured) {
-          Object.assign(stream, result.measured, { probedAt: new Date().toISOString().replace('Z', '') })
+          Object.assign(stream, result.measured, { probedAt: this.measuredAt(result.measured) })
         } else {
           this.$set(this.probeErrors, stream.name, result.reason || this.$t('page.kiosk.cameras.streams.probeFailedUnknown'))
         }
@@ -741,17 +748,15 @@ export default {
 
     payload () {
       const draft = this.draft
-      const url = role => {
-        const stream = draft.streams.find(candidate => candidate.name === draft.roles[role])
-        return (stream && stream.url) || null
-      }
+      const recordStream = draft.streams.find(candidate => candidate.name === draft.roles.record)
       const payload = {
         nodeId: draft.nodeId,
         displayName: draft.displayName,
         frigateKey: draft.frigateKey,
-        sourceUrl: url('record') || draft.address,
-        liveSourceUrl: url('live'),
-        detectSourceUrl: url('detect'),
+        // the service derives the wire's two URL fields from the streams
+        // `record` and `live` point at; this one is only the fallback for a
+        // draft whose record role somehow names no stream
+        sourceUrl: (recordStream && recordStream.url) || draft.address,
         username: draft.username || null,
         usedOnLivePage: draft.usedOnLivePage,
         usedOnEventsPage: draft.usedOnEventsPage,
