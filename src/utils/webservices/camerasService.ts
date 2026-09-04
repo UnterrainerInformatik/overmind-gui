@@ -1,6 +1,8 @@
 import { BaseService } from '@/utils/webservices/interfaces/BaseService'
 import { singleton as axiosUtils } from '@/utils/axiosUtils'
-import { Camera, CameraWrite } from '@/utils/webservices/interfaces/Camera'
+import {
+  Camera, CameraDetectSettings, CameraRecordingSettings, CameraStream, CameraWrite, StreamProbeResult, StreamRole
+} from '@/utils/webservices/interfaces/Camera'
 import { CameraNode, CameraNodeWrite } from '@/utils/webservices/interfaces/CameraNode'
 import { ConnectionTestResult } from '@/utils/webservices/interfaces/ConnectionStatus'
 
@@ -13,9 +15,16 @@ import { ConnectionTestResult } from '@/utils/webservices/interfaces/ConnectionS
  * ones, only the connection tests need an endpoint of their own.
  *
  * Written against `ai/draft-cameras-for-frontend.md` in java-overmind-server
- * (sections 2-5, deployed and verified 2026-09-01). Two places where this
- * service adapts rather than mirrors, both documented at the method:
- * the enums, which arrive uppercase, and `subStreamUrl`.
+ * (sections 2-5, deployed and verified 2026-09-01). Three places where this
+ * service adapts rather than mirrors, all documented at the method:
+ * the enums, which arrive uppercase, `subStreamUrl`, and the named streams.
+ *
+ * The streams, the role map, the recording and detect settings and the stream
+ * probe are **not deployed**: the server still stores a camera as
+ * `sourceUrl` + `subStreamUrl`. This service is the single seam - it derives
+ * the streams from those URLs on the way in and writes the assignment back
+ * onto them on the way out, so the page runs on the model while the wire stays
+ * what the deployed server reads. See the change `camera-stream-settings`.
  */
 export class CamerasService {
   private static instanceField: CamerasService
@@ -66,11 +75,11 @@ export class CamerasService {
   }
 
   public async createCamera (camera: CameraWrite): Promise<Camera> {
-    return this.cameras.post(() => this.toWire(camera))
+    return this.normalizeCamera(await this.cameras.post(() => this.toWire(camera)))
   }
 
   public async updateCamera (id: number, camera: CameraWrite): Promise<Camera> {
-    return this.cameras.put(id, () => this.toWire(camera))
+    return this.normalizeCamera(await this.cameras.put(id, () => this.toWire(camera)))
   }
 
   public async deleteCamera (id: number): Promise<any> {
@@ -116,6 +125,32 @@ export class CamerasService {
     return this.toTestResult(await axiosUtils.postToPath(this.server, 'nodeTest', id, () => ({})))
   }
 
+  /**
+   * Asks a node what a stream actually delivers. Addressed at the node rather
+   * than at the camera because the setup assistant probes a camera that does
+   * not exist yet - see `rest.ts`.
+   *
+   * A stream that cannot be read is not an HTTP error, same as the two test
+   * endpoints: the answer carries a `reason` and comes back as a result, so a
+   * caller shows it instead of catching it.
+   */
+  public async probeStream (nodeId: number, url: string, username?: string | null, password?: string | null): Promise<StreamProbeResult> {
+    const response = await axiosUtils.postToPath(this.server, 'nodeStreamProbe', nodeId, () => {
+      const payload: any = { url }
+      if (username) {
+        payload.username = username
+      }
+      // only ever sent when the caller actually has one to send: a stored
+      // password is never read back, so the assistant is the only caller that
+      // can supply it
+      if (password) {
+        payload.password = password
+      }
+      return payload
+    })
+    return this.toProbeResult(response)
+  }
+
   private sorted (cameras: Camera[]): Camera[] {
     return cameras
       .map(camera => this.normalizeCamera(camera))
@@ -139,19 +174,133 @@ export class CamerasService {
    * wins as soon as the server carries it.
    */
   private normalizeCamera (camera: any): Camera {
+    const liveSourceUrl = camera.liveSourceUrl || camera.subStreamUrl || null
+    const detectSourceUrl = camera.detectSourceUrl || null
+    const streams = Array.isArray(camera.streams) && camera.streams.length
+      ? camera.streams.map((stream: any) => this.normalizeStream(stream))
+      : this.derivedStreams(camera.sourceUrl, liveSourceUrl, detectSourceUrl)
     return Object.assign({}, camera, {
-      liveSourceUrl: camera.liveSourceUrl || camera.subStreamUrl || null,
-      detectSourceUrl: camera.detectSourceUrl || null,
+      liveSourceUrl,
+      detectSourceUrl,
       hasPassword: !!camera.hasPassword,
       lastStatus: this.lowered(camera.lastStatus),
       // never absent in practice; defaulted so a camera cannot be marked
       // unprovisioned merely because the field was omitted
-      provisioningState: this.lowered(camera.provisioningState) || 'provisioned'
+      provisioningState: this.lowered(camera.provisioningState) || 'provisioned',
+      streams,
+      roles: this.normalizeRoles(camera.roles, streams),
+      recording: this.normalizeRecording(camera.recording),
+      detect: this.normalizeDetect(camera.detect),
+      // "the node does not report this yet" is not the same fact as "recording
+      // is switched off", and the page has to say the first one differently
+      settingsReported: !!(camera.recording || camera.detect)
     })
   }
 
+  /**
+   * The streams of a camera the server stores in the deployed two-URL schema,
+   * derived from the URLs it does send:
+   *
+   *   sourceUrl only              -> main
+   *   sourceUrl + live/subStream  -> main, sub
+   *   all three                   -> main, sub, detect
+   *
+   * Every parameter comes out null and `settableFields` empty: nothing here was
+   * measured, and a derived stream must not read as a probed one.
+   */
+  private derivedStreams (sourceUrl: string, liveSourceUrl: string | null, detectSourceUrl: string | null): CameraStream[] {
+    const streams = [this.emptyStream('main', sourceUrl || '')]
+    if (liveSourceUrl) {
+      streams.push(this.emptyStream('sub', liveSourceUrl))
+    }
+    if (detectSourceUrl) {
+      streams.push(this.emptyStream('detect', detectSourceUrl))
+    }
+    return streams
+  }
+
+  private emptyStream (name: string, url: string): CameraStream {
+    return {
+      name,
+      url,
+      width: null,
+      height: null,
+      fps: null,
+      bitrateKbps: null,
+      videoCodec: null,
+      audioCodec: null,
+      probedAt: null,
+      settableFields: []
+    }
+  }
+
+  /** A stream as sent, with the nullable parameters defaulted rather than left undefined. */
+  private normalizeStream (stream: any): CameraStream {
+    return Object.assign(this.emptyStream(stream.name, stream.url || ''), {
+      width: this.orNull(stream.width),
+      height: this.orNull(stream.height),
+      fps: this.orNull(stream.fps),
+      bitrateKbps: this.orNull(stream.bitrateKbps),
+      videoCodec: stream.videoCodec || null,
+      audioCodec: stream.audioCodec || null,
+      probedAt: stream.probedAt || null,
+      settableFields: Array.isArray(stream.settableFields) ? stream.settableFields : []
+    })
+  }
+
+  /**
+   * The role map, either as sent or derived from the streams: record on `main`,
+   * live on the sub stream where there is one, detect on the detect stream and
+   * otherwise on the live one. A role naming a stream the camera does not have
+   * falls back to `main` rather than pointing nowhere.
+   */
+  private normalizeRoles (roles: any, streams: CameraStream[]): Record<StreamRole, string> {
+    const names = streams.map(stream => stream.name)
+    const main = names[0] || 'main'
+    const sub = names.indexOf('sub') >= 0 ? 'sub' : main
+    const detect = names.indexOf('detect') >= 0 ? 'detect' : sub
+    const derived: Record<StreamRole, string> = { record: main, live: sub, detect }
+    if (!roles) {
+      return derived
+    }
+    const kept = (role: StreamRole) => (names.indexOf(roles[role]) >= 0 ? roles[role] : derived[role])
+    return { live: kept('live'), detect: kept('detect'), record: kept('record') }
+  }
+
+  /** Recording as sent; absent means off, around events, retention unknown. */
+  private normalizeRecording (recording: any): CameraRecordingSettings {
+    return {
+      enabled: !!(recording && recording.enabled),
+      mode: recording && this.lowered(recording.mode) === 'continuous' ? 'continuous' : 'events',
+      retentionDays: this.orNull(recording && recording.retentionDays)
+    }
+  }
+
+  /** Detection as sent; absent means every parameter unknown and audio off. */
+  private normalizeDetect (detect: any): CameraDetectSettings {
+    return {
+      width: this.orNull(detect && detect.width),
+      height: this.orNull(detect && detect.height),
+      fps: this.orNull(detect && detect.fps),
+      audioEnabled: !!(detect && detect.audioEnabled),
+      motionThreshold: this.orNull(detect && detect.motionThreshold)
+    }
+  }
+
+  /** A number as sent, or null - so an omitted parameter never reads as a measured 0. */
+  private orNull (value: any): number | null {
+    return typeof value === 'number' && !isNaN(value) ? value : null
+  }
+
   private normalizeNode (node: any): CameraNode {
-    return Object.assign({}, node, { lastStatus: this.lowered(node.lastStatus) })
+    return Object.assign({}, node, {
+      lastStatus: this.lowered(node.lastStatus),
+      // absent until the server reports them; null is what the dialog renders
+      // as unknown, so an omitted figure must not become a 0
+      frigateVersion: node.frigateVersion || null,
+      storageTotalBytes: this.orNull(node.storageTotalBytes),
+      storageUsedBytes: this.orNull(node.storageUsedBytes)
+    })
   }
 
   /**
@@ -161,7 +310,48 @@ export class CamerasService {
    * once the server carries `liveSourceUrl`, since that one wins on read.
    */
   private toWire (camera: CameraWrite): object {
-    return Object.assign({}, camera, { subStreamUrl: camera.liveSourceUrl || null })
+    const url = (role: StreamRole) => {
+      const stream = (camera.streams || []).find(candidate => candidate.name === (camera.roles || {} as any)[role])
+      return (stream && stream.url) || null
+    }
+    const sourceUrl = url('record') || camera.sourceUrl
+    // A role served by the source stream is written as null rather than as a
+    // copy of `sourceUrl`: the server already falls back that way, and writing
+    // the copy would turn a camera that came in with no `subStreamUrl` into one
+    // that has one merely by being opened and saved.
+    const liveSourceUrl = url('live') === sourceUrl ? null : url('live')
+    const detectUrl = url('detect')
+    const detectSourceUrl = detectUrl === sourceUrl || detectUrl === liveSourceUrl ? null : detectUrl
+    return Object.assign({}, camera, {
+      sourceUrl,
+      liveSourceUrl,
+      detectSourceUrl,
+      subStreamUrl: liveSourceUrl
+    })
+  }
+
+  /**
+   * `POST .../streamProbe` answers with the measured parameters, or with a
+   * `reason` - the same house shape as the two test endpoints, so a stream that
+   * cannot be read is a result rather than an exception.
+   */
+  private toProbeResult (response: any): StreamProbeResult {
+    if (!response || response.reason || this.lowered(response.status) === 'error') {
+      return { result: 'error', reason: (response && response.reason) || null, measured: null }
+    }
+    return {
+      result: 'ok',
+      reason: null,
+      measured: {
+        width: this.orNull(response.width),
+        height: this.orNull(response.height),
+        fps: this.orNull(response.fps),
+        bitrateKbps: this.orNull(response.bitrateKbps),
+        videoCodec: response.videoCodec || null,
+        audioCodec: response.audioCodec || null,
+        settableFields: Array.isArray(response.settableFields) ? response.settableFields : []
+      }
+    }
   }
 
   /**

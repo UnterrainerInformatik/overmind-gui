@@ -4,7 +4,7 @@
       <v-container fluid class="cameras-content">
         <div class="text-h5 mb-2">{{ $t('page.kiosk.cameras.title') }}</div>
 
-        <v-btn color="primary" class="mb-4" @click="openCreateCamera">
+        <v-btn color="primary" class="mb-4" @click="openAssistant(null)">
           {{ $t('page.kiosk.cameras.addCamera') }}
         </v-btn>
 
@@ -43,16 +43,8 @@
                 >{{ $t('page.kiosk.cameras.usageNone') }}</v-chip>
               </v-list-item-title>
 
-              <v-list-item-subtitle class="cameras-line">
-                {{ $t('page.kiosk.cameras.rowSource') }}: {{ camera.sourceUrl }}
-              </v-list-item-subtitle>
-
-              <v-list-item-subtitle v-if="camera.liveSourceUrl" class="cameras-line">
-                {{ $t('page.kiosk.cameras.rowLiveSource') }}: {{ camera.liveSourceUrl }}
-              </v-list-item-subtitle>
-
-              <v-list-item-subtitle v-if="camera.detectSourceUrl" class="cameras-line">
-                {{ $t('page.kiosk.cameras.rowDetectSource') }}: {{ camera.detectSourceUrl }}
+              <v-list-item-subtitle class="cameras-line cameras-assignment">
+                {{ assignmentText(camera) }}
               </v-list-item-subtitle>
 
               <v-list-item-subtitle class="cameras-line" :class="statusClass(camera)">
@@ -85,6 +77,14 @@
               >
                 <v-icon>network_check</v-icon>
               </v-btn>
+              <v-btn
+                icon
+                class="cameras-streams-btn"
+                :title="$t('page.kiosk.cameras.streamSettings')"
+                @click.stop="openStreamSettings(camera)"
+              >
+                <v-icon>tune</v-icon>
+              </v-btn>
               <v-btn icon :title="$t('page.kiosk.cameras.edit')" @click.stop="openEditCamera(camera)">
                 <v-icon>edit</v-icon>
               </v-btn>
@@ -114,7 +114,12 @@
         </v-card>
 
         <v-list v-else outlined class="mb-4">
-          <v-list-item v-for="node in nodes" :key="node.id" class="cameras-row cameras-node-row">
+          <v-list-item
+            v-for="node in nodes"
+            :key="node.id"
+            class="cameras-row cameras-node-row"
+            @click="openNodeDetail(node)"
+          >
             <v-list-item-content>
               <v-list-item-title class="d-flex align-center flex-wrap">
                 <span class="mr-2">{{ node.name }}</span>
@@ -178,17 +183,8 @@
 
     <v-dialog v-model="cameraDialog" max-width="560" :fullscreen="$vuetify.breakpoint.xsOnly" scrollable>
       <v-card>
-        <v-card-title>
-          {{ cameraForm.id === null ? $t('page.kiosk.cameras.createCameraTitle') : $t('page.kiosk.cameras.editCameraTitle') }}
-        </v-card-title>
+        <v-card-title>{{ $t('page.kiosk.cameras.editCameraTitle') }}</v-card-title>
         <v-card-text>
-          <v-alert v-if="!hasNodes" dense outlined type="info" class="mb-2">
-            {{ $t('page.kiosk.cameras.noNodes') }}
-            <v-btn small text class="mt-1" @click="openCreateNode">
-              {{ $t('page.kiosk.cameras.addNode') }}
-            </v-btn>
-          </v-alert>
-
           <v-select
             v-model="cameraForm.nodeId"
             :items="nodeItems"
@@ -222,34 +218,9 @@
             outlined
             class="mb-2"
           ></v-text-field>
-          <v-text-field
-            v-model="cameraForm.sourceUrl"
-            :label="$t('page.kiosk.cameras.fieldSourceUrl')"
-            :rules="[requiredRule]"
-            validate-on-blur
-            dense
-            outlined
-            hide-details="auto"
-            class="mb-2"
-          ></v-text-field>
-          <v-text-field
-            v-model="cameraForm.liveSourceUrl"
-            :label="$t('page.kiosk.cameras.fieldLiveSourceUrl')"
-            :hint="$t('page.kiosk.cameras.fieldLiveSourceUrlHint')"
-            persistent-hint
-            dense
-            outlined
-            class="mb-2"
-          ></v-text-field>
-          <v-text-field
-            v-model="cameraForm.detectSourceUrl"
-            :label="$t('page.kiosk.cameras.fieldDetectSourceUrl')"
-            :hint="$t('page.kiosk.cameras.fieldDetectSourceUrlHint')"
-            persistent-hint
-            dense
-            outlined
-            class="mb-2"
-          ></v-text-field>
+          <div class="text--disabled mb-2 cameras-streams-hint">
+            {{ $t('page.kiosk.cameras.streamsMovedHint') }}
+          </div>
           <v-text-field
             v-model="cameraForm.username"
             :label="$t('page.kiosk.cameras.fieldUsername')"
@@ -381,6 +352,33 @@
       </v-card>
     </v-dialog>
 
+    <CameraSetupAssistant
+      v-model="assistantDialog"
+      :nodes="nodes"
+      :cameras="cameras"
+      :presetNodeId="assistantNodeId"
+      @nodes-changed="loadNodes"
+      @created="onCameraCreated"
+    ></CameraSetupAssistant>
+
+    <CameraStreamSettings
+      v-model="streamSettingsDialog"
+      :camera="streamSettingsCamera"
+      @saved="loadCameras"
+    ></CameraStreamSettings>
+
+    <CameraNodeDialog
+      v-model="nodeDetailDialog"
+      :node="nodeDetailNode"
+      :cameras="nodeDetailCameras"
+      :testResult="nodeDetailNode ? nodeTestResults[nodeDetailNode.id] : null"
+      :testing="nodeDetailNode ? testingNodeId === nodeDetailNode.id : false"
+      @test="testNode"
+      @edit="openEditNode"
+      @delete="requestDeleteNode"
+      @add-camera="openAssistantForNode"
+    ></CameraNodeDialog>
+
     <ConfirmDialog
       ref="confirmDialog"
       :confirmText="$t('page.kiosk.cameras.confirm')"
@@ -393,6 +391,10 @@
 import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import CameraSetupAssistant from '@/components/CameraSetupAssistant.vue'
+import CameraStreamSettings from '@/components/CameraStreamSettings.vue'
+import CameraNodeDialog from '@/components/CameraNodeDialog.vue'
+import { cameraDisplay } from '@/mixins/cameraDisplay'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
 
@@ -401,12 +403,16 @@ const emptyCameraForm = () => ({
   nodeId: null,
   displayName: '',
   frigateKey: '',
+  // The URLs, the streams, the assignment and the two settings blocks are
+  // carried through the form without being shown: they are edited in the stream
+  // settings, and an edit here must not drop what it does not display.
   sourceUrl: '',
-  // Optional overrides of `sourceUrl`: the node resolves live from
-  // `liveSourceUrl` and detect from `detectSourceUrl`, each falling back to the
-  // next one that is filled. Only `sourceUrl` is required.
   liveSourceUrl: '',
   detectSourceUrl: '',
+  streams: [],
+  roles: {},
+  recording: null,
+  detect: null,
   username: '',
   // Always empty when the form opens - a stored password is never fetched and
   // never rendered; `hasPassword` is all the server tells us about it.
@@ -432,9 +438,14 @@ const emptyNodeForm = () => ({
 export default {
   name: 'kioskCameras',
 
+  mixins: [cameraDisplay],
+
   components: {
     KioskLinkPanel,
-    ConfirmDialog
+    ConfirmDialog,
+    CameraSetupAssistant,
+    CameraStreamSettings,
+    CameraNodeDialog
   },
 
   data: () => ({
@@ -452,6 +463,17 @@ export default {
     cameraForm: emptyCameraForm(),
     cameraSaving: false,
     cameraFormError: null,
+
+    // the assistant replaces the create dialog; the edit dialog above stays a
+    // form, as the spec requires
+    assistantDialog: false,
+    assistantNodeId: null,
+
+    streamSettingsDialog: false,
+    streamSettingsCamera: null,
+
+    nodeDetailDialog: false,
+    nodeDetailNode: null,
 
     nodeDialog: false,
     nodeForm: emptyNodeForm(),
@@ -475,6 +497,12 @@ export default {
 
     nodeItems () {
       return this.nodes.map(node => ({ value: node.id, text: node.name }))
+    },
+
+    nodeDetailCameras () {
+      return this.nodeDetailNode
+        ? this.cameras.filter(camera => camera.nodeId === this.nodeDetailNode.id)
+        : []
     },
 
     cameraFormValid () {
@@ -501,61 +529,9 @@ export default {
       return typeof value === 'string' && /^https?:\/\/.+/.test(value.trim())
     },
 
-    /**
-     * The reason the server gave, which is what the user has to see to correct
-     * a refused write - a duplicate Frigate key, a node that still holds
-     * cameras. axiosUtils carries it on the error; the generic text is only the
-     * fallback for a failure that carried none.
-     */
-    errorMessage (err) {
-      return (err && err.serverMessage) || this.$t('page.kiosk.cameras.saveError')
-    },
-
     nodeName (nodeId) {
       const node = this.nodes.find(candidate => candidate.id === nodeId)
       return node ? node.name : this.$t('page.kiosk.cameras.unknownNode')
-    },
-
-    statusText (entry) {
-      if (!entry.lastStatus) {
-        return this.$t('page.kiosk.cameras.statusUnknown')
-      }
-      const at = dateUtils.isoToShortDateTime(entry.lastStatusAt, this.$i18n.locale)
-      const key = entry.lastStatus === 'ok' ? 'statusOk' : 'statusError'
-      const text = this.$t(`page.kiosk.cameras.${key}`, { at })
-      return entry.lastStatus === 'ok' || !entry.lastStatusReason
-        ? text
-        : `${text} - ${entry.lastStatusReason}`
-    },
-
-    statusClass (entry) {
-      if (!entry.lastStatus) {
-        return 'text--disabled'
-      }
-      return entry.lastStatus === 'ok' ? 'success--text' : 'error--text'
-    },
-
-    provisioningText (camera) {
-      const key = camera.provisioningState === 'failed' ? 'provisioningFailed' : 'provisioningPending'
-      const text = this.$t(`page.kiosk.cameras.${key}`)
-      return camera.provisioningReason ? `${text} - ${camera.provisioningReason}` : text
-    },
-
-    provisioningClass (camera) {
-      return camera.provisioningState === 'failed' ? 'error--text' : 'warning--text'
-    },
-
-    testText (result) {
-      if (result.result === 'ok') {
-        return this.$t('page.kiosk.cameras.testOk')
-      }
-      return result.reason
-        ? this.$t('page.kiosk.cameras.testFailedReason', { reason: result.reason })
-        : this.$t('page.kiosk.cameras.testFailed')
-    },
-
-    testClass (result) {
-      return result.result === 'ok' ? 'success--text' : 'error--text'
     },
 
     async loadCameras () {
@@ -580,17 +556,34 @@ export default {
       this.nodesLoading = false
     },
 
-    openCreateCamera () {
-      this.cameraFormError = null
-      this.cameraForm = emptyCameraForm()
-      // a new camera goes to the end of the configured order
-      this.cameraForm.sortOrder = this.cameras.length
-        ? Math.max(...this.cameras.map(camera => camera.sortOrder)) + 1
-        : 0
-      if (this.nodes.length === 1) {
-        this.cameraForm.nodeId = this.nodes[0].id
-      }
-      this.cameraDialog = true
+    /**
+     * Adding a camera runs through the assistant, which owns the whole draft
+     * until its final confirm - see the `camera-setup-assistant` capability.
+     * `nodeId` is set when the assistant is opened for one node, which answers
+     * its first step.
+     */
+    openAssistant (nodeId) {
+      this.assistantNodeId = nodeId
+      this.assistantDialog = true
+    },
+
+    openAssistantForNode (node) {
+      this.nodeDetailDialog = false
+      this.openAssistant(node.id)
+    },
+
+    async onCameraCreated () {
+      await this.loadCameras()
+    },
+
+    openStreamSettings (camera) {
+      this.streamSettingsCamera = camera
+      this.streamSettingsDialog = true
+    },
+
+    openNodeDetail (node) {
+      this.nodeDetailNode = node
+      this.nodeDetailDialog = true
     },
 
     openEditCamera (camera) {
@@ -603,6 +596,10 @@ export default {
         sourceUrl: camera.sourceUrl,
         liveSourceUrl: camera.liveSourceUrl || '',
         detectSourceUrl: camera.detectSourceUrl || '',
+        streams: camera.streams,
+        roles: camera.roles,
+        recording: camera.recording,
+        detect: camera.detect,
         username: camera.username || '',
         hasPassword: !!camera.hasPassword,
         usedOnLivePage: camera.usedOnLivePage,
@@ -624,7 +621,7 @@ export default {
         return
       }
       const form = this.cameraForm
-      if (form.id !== null && form.frigateKey !== form.originalFrigateKey) {
+      if (form.frigateKey !== form.originalFrigateKey) {
         this.$refs.confirmDialog.open(
           this.$t('page.kiosk.cameras.frigateKeyChangeConfirm', {
             oldKey: form.originalFrigateKey,
@@ -646,6 +643,10 @@ export default {
         sourceUrl: form.sourceUrl,
         liveSourceUrl: form.liveSourceUrl || null,
         detectSourceUrl: form.detectSourceUrl || null,
+        streams: form.streams,
+        roles: form.roles,
+        recording: form.recording,
+        detect: form.detect,
         username: form.username || null,
         usedOnLivePage: form.usedOnLivePage,
         usedOnEventsPage: form.usedOnEventsPage,
@@ -665,12 +666,7 @@ export default {
       this.cameraSaving = true
       this.cameraFormError = null
       try {
-        const payload = this.cameraPayload()
-        if (this.cameraForm.id === null) {
-          await camerasService.createCamera(payload)
-        } else {
-          await camerasService.updateCamera(this.cameraForm.id, payload)
-        }
+        await camerasService.updateCamera(this.cameraForm.id, this.cameraPayload())
         this.cameraDialog = false
         await this.loadCameras()
       } catch (err) {
@@ -748,13 +744,8 @@ export default {
       }
       try {
         if (this.nodeForm.id === null) {
-          const created = await camerasService.createNode(payload)
+          await camerasService.createNode(payload)
           await this.loadNodes()
-          // Adding the node from the camera form is the way out of "no node
-          // exists yet", so the camera being entered picks it up right away.
-          if (this.cameraDialog && (this.cameraForm.nodeId === null || this.cameraForm.nodeId === undefined) && created) {
-            this.cameraForm.nodeId = created.id
-          }
         } else {
           await camerasService.updateNode(this.nodeForm.id, payload)
           await this.loadNodes()
@@ -802,6 +793,12 @@ export default {
       }
       this.testingNodeId = null
       await this.loadNodes()
+      // `loadNodes` replaces the array, so the open detail dialog would keep a
+      // node object that no longer carries the status the test just stored
+      if (this.nodeDetailNode) {
+        this.nodeDetailNode = this.nodes.find(candidate => candidate.id === this.nodeDetailNode.id) || null
+        this.nodeDetailDialog = !!this.nodeDetailNode
+      }
     },
 
     ...mapActions('gui', {

@@ -47,6 +47,13 @@ const store = {
         cameraTest: '/setup/cameras/{id}/test',
         nodes: '/setup/nodes',
         nodeTest: '/setup/nodes/{id}/test',
+        // The probe hangs off the node rather than off a camera because the
+        // setup assistant probes a camera that does not exist yet - a
+        // /setup/cameras/{id}/... route could not serve that caller at all.
+        // The node is the machine that can reach the camera, so it takes the
+        // URL to probe in the body; the stored camera's settings dialog simply
+        // passes the URL it already has.
+        nodeStreamProbe: '/setup/nodes/{id}/streamProbe',
         // Camera media, resolved by overmind to the node that holds the camera
         // (top-level, not /setup/... - computed/streamed rather than stored,
         // same precedent as /usedswitches and /reconciliation). The GUI never

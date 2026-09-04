@@ -45,8 +45,14 @@ import Vuetify, {
   VCol,
   VProgressLinear,
   VProgressCircular,
+  VRadio,
+  VRadioGroup,
   VSimpleTable,
   VSlider,
+  VStepper,
+  VStepperContent,
+  VStepperHeader,
+  VStepperStep,
   VSheet,
   VSpacer,
   VSwitch,
@@ -68,7 +74,7 @@ import { preset } from 'vue-cli-plugin-vuetify-preset-basil/preset'
 
 Vue.use(Vuetify, {
   components: {
-    VAlert, VApp, VAppBar, VAppBarTitle, VAppBarNavIcon, VAvatar, VBtn, VBtnToggle, VCard, VCardTitle, VCardSubtitle, VCardText, VCardActions, VChip, VColorPicker, VContainer, VDialog, VDivider, VExpansionPanels, VExpansionPanel, VExpansionPanelHeader, VExpansionPanelContent, VFileInput, VHover, VIcon, VImg, VList, VListItem, VListItemAction, VListItemTitle, VListItemSubtitle, VListItemContent, VListItemIcon, VListGroup, VMain, VMenu, VNavigationDrawer, VRow, VTabs, VTab, VTabsItems, VTabItem, VTooltip, VCol, VProgressLinear, VProgressCircular, VSpacer, VSheet, VSimpleTable, VSlider, VSwitch, VTextField, VTextarea, VToolbar, VToolbarTitle, VToolbarItems, VCheckbox, VSelect, VSnackbar
+    VAlert, VApp, VAppBar, VAppBarTitle, VAppBarNavIcon, VAvatar, VBtn, VBtnToggle, VCard, VCardTitle, VCardSubtitle, VCardText, VCardActions, VChip, VColorPicker, VContainer, VDialog, VDivider, VExpansionPanels, VExpansionPanel, VExpansionPanelHeader, VExpansionPanelContent, VFileInput, VHover, VIcon, VImg, VList, VListItem, VListItemAction, VListItemTitle, VListItemSubtitle, VListItemContent, VListItemIcon, VListGroup, VMain, VMenu, VNavigationDrawer, VRow, VTabs, VTab, VTabsItems, VTabItem, VTooltip, VCol, VProgressLinear, VProgressCircular, VRadio, VRadioGroup, VSpacer, VSheet, VSimpleTable, VSlider, VStepper, VStepperContent, VStepperHeader, VStepperStep, VSwitch, VTextField, VTextarea, VToolbar, VToolbarTitle, VToolbarItems, VCheckbox, VSelect, VSnackbar
   },
   directives: { Ripple, Intersect, Touch, Resize, ClickOutside, Mutate, Scroll }
 })
