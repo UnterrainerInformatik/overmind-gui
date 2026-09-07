@@ -100,7 +100,20 @@
               :class="{ 'events-card--highlighted': event.id === highlightedId }"
               @click="openEvent(event)"
             >
+              <div class="events-card-media">
               <v-img :src="event.thumbnailUrl" aspect-ratio="1.7777" class="grey darken-4"></v-img>
+              <!-- Over the thumbnail rather than in the text block on purpose:
+                   the archive index arrives on its own request, and a marker
+                   that took a line of its own would reflow the grid under the
+                   scroll-anchor compensation refreshEvents() does. -->
+              <v-icon
+                v-if="archiveOf(event)"
+                small
+                class="events-card-archived"
+                :class="{ 'events-card-archived--failed': archiveOf(event).state === 'failed' }"
+                :title="archiveTileTitle(event)"
+              >{{ archiveOf(event).state === 'failed' ? 'error_outline' : 'bookmark' }}</v-icon>
+            </div>
               <v-card-text class="pa-2">
                 <div class="events-card-name text-truncate">
                   {{ event.subLabel || $t('page.kiosk.personenEvents.unknown') }}
@@ -170,11 +183,11 @@
           <v-img
             v-if="showSnapshot"
             contain
-            :src="selectedEvent.snapshotUrl"
+            :src="selectedMedia.snapshotUrl"
             class="events-detail-media mb-2"
             :class="{ 'events-detail-media--solo': mediaSolo }"
           ></v-img>
-          <div v-if="selectedEvent.hasClip">
+          <div v-if="selectedMedia.hasClip">
             <div v-if="clipLoading" class="d-flex justify-center pa-4">
               <v-progress-circular indeterminate color="grey"></v-progress-circular>
             </div>
@@ -189,21 +202,65 @@
               :class="{ 'events-detail-media--solo': mediaSolo }"
             ></video>
           </div>
+          <div
+            v-if="archiveNote"
+            class="events-archive-note mt-2"
+            :class="`events-archive-note--${selectedArchive.state}`"
+          >{{ archiveNote }}</div>
         </v-card-text>
         <v-card-actions>
+          <div
+            v-if="selectedArchive"
+            class="events-archive-state"
+            :class="{ 'events-archive-state--failed': selectedArchive.state === 'failed' }"
+          >
+            <v-icon small class="mr-1">{{ selectedArchive.state === 'failed' ? 'error_outline' : 'bookmark' }}</v-icon>
+            <span class="events-archive-state-text">{{ archiveStateText }}</span>
+            <span v-if="originExpiresText" class="events-archive-origin ml-2">{{ originExpiresText }}</span>
+          </div>
           <v-spacer></v-spacer>
+          <!-- Dismiss first, the action that changes something last - the order
+               ConfirmDialog already uses for its own pair. -->
           <v-btn text @click="closeEvent">{{ $t('page.kiosk.personenEvents.close') }}</v-btn>
+          <v-btn
+            v-if="!selectedArchive"
+            text
+            class="events-archive-save"
+            :loading="archiveSaving"
+            @click="saveToArchive"
+          >{{ $t('page.kiosk.personenEvents.archiveSave') }}</v-btn>
+          <!-- An entry this view inserted itself carries no `originExpiresAt`,
+               so what releasing it means cannot be read yet: the control waits
+               for the index read that replaces it, a tick away at most. -->
+          <v-btn
+            v-else-if="!selectedArchive.local"
+            text
+            class="events-archive-release"
+            :loading="archiveReleasing"
+            @click="requestRelease"
+          >{{ releaseLabel }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- One instance, not two: `confirmText` is a prop rather than an argument
+         of open(), so the wording the release carries is bound to
+         `pendingRelease` instead of being passed in. -->
+    <ConfirmDialog
+      ref="confirmDialog"
+      :confirmText="releaseConfirmText"
+      :cancelText="$t('page.kiosk.personenEvents.cancel')"
+    ></ConfirmDialog>
   </div>
 </template>
 
 <script type="js">
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import EventsTimeline from '@/components/EventsTimeline.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import Hls from 'hls.js'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
+import { singleton as archiveService } from '@/utils/webservices/archiveService'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
@@ -266,7 +323,8 @@ export default {
 
   components: {
     KioskLinkPanel,
-    EventsTimeline
+    EventsTimeline,
+    ConfirmDialog
   },
 
   data: () => ({
@@ -311,6 +369,18 @@ export default {
     clipLoading: false,
     clipError: false,
 
+    // The archive's own index, keyed by the event each entry was made from.
+    // A second map rather than a flag on the events: the join is what answers
+    // "is this one already saved?", and keeping it beside `events` means
+    // nothing about the list, its merge or its scroll anchoring changes with
+    // it. An absent archive simply leaves it empty.
+    archiveByEventId: {},
+    archiveSaving: false,
+    archiveReleasing: false,
+    // the archive item a release was requested for, plus what releasing it
+    // means - the ConfirmDialog's own labels are computed off this
+    pendingRelease: null,
+
     dateUtils,
     // guards a stale response from an earlier filter change writing over a
     // later one - same pattern as KioskMigrations.vue's loadAppliance()
@@ -354,13 +424,78 @@ export default {
         return false
       }
       const tight = this.$vuetify.breakpoint.xsOnly || this.$vuetify.breakpoint.height < 640
-      return !(this.selectedEvent.hasClip && !this.clipError && tight)
+      return !(this.selectedMedia.hasClip && !this.clipError && tight)
     },
 
     // Only one media element on screen, so it may claim the whole body height
     // instead of the half-height budget the stacked case has to share.
     mediaSolo () {
-      return !(this.showSnapshot && this.selectedEvent && this.selectedEvent.hasClip)
+      return !(this.showSnapshot && this.selectedMedia.hasClip)
+    },
+
+    /** The archive entry of the event whose dialog is open, or null. */
+    selectedArchive () {
+      return this.archiveOf(this.selectedEvent)
+    },
+
+    /** Which media the open dialog plays - see mediaOf(). */
+    selectedMedia () {
+      return this.mediaOf(this.selectedEvent)
+    },
+
+    // "Saved", or the failure - an entry the server reports as failed is not a
+    // safely saved event and must not read like one.
+    archiveStateText () {
+      if (!this.selectedArchive) {
+        return ''
+      }
+      return this.selectedArchive.state === 'failed'
+        ? this.$t('page.kiosk.personenEvents.archiveFailed')
+        : this.$t('page.kiosk.personenEvents.archiveSaved')
+    },
+
+    /**
+     * What is worth saying about the copy under the media: that it is still
+     * being prepared, or why it failed. Both cases keep the source's own media
+     * on screen, so the note explains what is playing rather than replacing it.
+     */
+    archiveNote () {
+      const item = this.selectedArchive
+      if (!item) {
+        return ''
+      }
+      if (item.state === 'pending') {
+        return this.$t('page.kiosk.personenEvents.archivePreparing')
+      }
+      if (item.state === 'failed') {
+        return this.$t('page.kiosk.personenEvents.archiveFailedNote', { reason: item.failureReason || '' })
+      }
+      return ''
+    },
+
+    /**
+     * How much longer the original is held at its source, whenever the server
+     * states it at all. The fact, beside the wording that was derived from it -
+     * which is what a user near the 24h boundary needs to see.
+     */
+    originExpiresText () {
+      const item = this.selectedArchive
+      if (!item || item.originExpiresAt === null || item.originExpiresAt === undefined) {
+        return ''
+      }
+      return this.$t('page.kiosk.personenEvents.archiveOriginUntil', {
+        moment: dateUtils.dateToShortDateTime(new Date(item.originExpiresAt * 1000), this.$i18n.locale)
+      })
+    },
+
+    releaseLabel () {
+      return this.releaseWording(archiveService.releaseKind(this.selectedArchive))
+    },
+
+    // Computed off `pendingRelease`, because ConfirmDialog takes its labels as
+    // props: one instance cannot be handed a different confirm label per call.
+    releaseConfirmText () {
+      return this.releaseWording(this.pendingRelease ? this.pendingRelease.kind : 'delete')
     },
 
     // `$vuetify.breakpoint.width` is reactive, so rotating or resizing brings
@@ -543,6 +678,106 @@ export default {
         .sort((a, b) => b.startTime - a.startTime)
     },
 
+    /** The archive entry made from an event, or null - the join, in one place. */
+    archiveOf (event) {
+      return (event && this.archiveByEventId[event.id]) || null
+    },
+
+    archiveTileTitle (event) {
+      const item = this.archiveOf(event)
+      return item && item.state === 'failed'
+        ? this.$t('page.kiosk.personenEvents.archiveFailed')
+        : this.$t('page.kiosk.personenEvents.archiveSaved')
+    },
+
+    /**
+     * Which media the dialog plays for an event: the archived copy once it is
+     * `ready`, the source's own otherwise. One path, so the day the original
+     * expires nothing on screen changes - and a copy that is still `pending` or
+     * has `failed` keeps the source's media rather than leaving the dialog
+     * empty.
+     */
+    mediaOf (event) {
+      const item = this.archiveOf(event)
+      if (item && item.state === 'ready' && (item.clipUrl || item.snapshotUrl)) {
+        return {
+          hasClip: !!item.clipUrl,
+          clipUrl: item.clipUrl,
+          snapshotUrl: item.snapshotUrl
+        }
+      }
+      return {
+        hasClip: !!(event && event.hasClip),
+        clipUrl: (event && event.clipUrl) || '',
+        snapshotUrl: (event && event.snapshotUrl) || ''
+      }
+    },
+
+    releaseWording (kind) {
+      return kind === 'unsave'
+        ? this.$t('page.kiosk.personenEvents.archiveReleaseUnsave')
+        : this.$t('page.kiosk.personenEvents.archiveReleaseDelete')
+    },
+
+    /**
+     * The window the archive index is read for: what the list actually spans,
+     * not what the filter allows. An unbounded filter would otherwise ask for
+     * the whole archive on every 5s tick.
+     * `after` is the oldest listed event's start time less a second, because
+     * the bound is exclusive and an archive entry carries its source event's
+     * own start time - asked for exactly, the oldest tile would be the one
+     * event that could never show its marker.
+     */
+    archiveWindow () {
+      const oldest = this.events.length ? this.events[this.events.length - 1].startTime : null
+      return {
+        after: oldest !== null ? oldest - 1 : this.epochFromLocal(this.fromLocal),
+        before: this.epochFromLocal(this.toLocal)
+      }
+    },
+
+    /**
+     * Re-reads the archive index for what the list spans and folds it into
+     * `archiveByEventId`. Called after every load, every "load more" and every
+     * refresh tick - one request for the whole page, on the same tick as the
+     * events read rather than on an interval of its own.
+     *
+     * A failure changes nothing: the map keeps what it has, no error card is
+     * raised and no snackbar is dispatched. That is what lets this ship before
+     * the backend does - every route answers 404, the markers never appear, and
+     * the events page behaves exactly as it does without an archive.
+     *
+     * Deliberately not awaited by its callers: a slow or hanging archive must
+     * not hold up the events list it was read alongside.
+     */
+    async loadArchive () {
+      if (!this.cameras.length) {
+        return
+      }
+      const ids = this.cameras.map(camera => camera.id)
+      let items
+      try {
+        items = await archiveService.getItems(ids, this.archiveWindow())
+      } catch (err) {
+        return // the archive is not served, or not reachable; see above
+      }
+      const map = {}
+      items.forEach(item => {
+        if (item.sourceEventId) {
+          map[item.sourceEventId] = item
+        }
+      })
+      // An entry this view inserted itself survives an index read that was
+      // already in flight when the save went out - otherwise the marker a user
+      // just earned would blink off until the following tick.
+      Object.keys(this.archiveByEventId).forEach(eventId => {
+        if (this.archiveByEventId[eventId].local && !map[eventId]) {
+          map[eventId] = this.archiveByEventId[eventId]
+        }
+      })
+      this.archiveByEventId = map
+    },
+
     async loadPeople () {
       try {
         this.people = await doubleTakeService.getPeople()
@@ -592,6 +827,9 @@ export default {
           this.appendEvents(page)
         }
         this.hasMore = full
+        // after the list is set, so the window is the one the list now spans -
+        // a page of older events brought in by "load more" widens it
+        this.loadArchive()
       }
       this.loading = false
       this.loadingMore = false
@@ -673,6 +911,13 @@ export default {
       // empty list; the first refresh that succeeds is what lets the kiosk
       // recover by itself instead of staying stranded until someone touches it.
       this.fetchError = false
+      // One index read per tick, on the events tick rather than an interval of
+      // its own, and before the early return below so a quiet tick still
+      // refreshes the markers. Not awaited: the merge and its scroll
+      // compensation must not wait on the archive, and the marker it may add is
+      // drawn over the thumbnail rather than in the tile's flow, so it moves
+      // nothing the anchor is measured against.
+      this.loadArchive()
 
       // Read back in the running app (task 2.1): the events page has no inner
       // scroll container - #app, .v-main, .home and .events-content are all
@@ -712,9 +957,113 @@ export default {
       this.selectedEvent = event
       this.detailDialog = true
       this.stopClip()
-      if (event.hasClip) {
+      if (this.mediaOf(event).hasClip) {
         this.startClip(event)
       }
+    },
+
+    /**
+     * Saves the open event to the archive. The server answers only with the id
+     * of the copy, so the marker is put up from here and the next index read
+     * replaces it with the server's own item - `local` marks it as ours until
+     * then. The release control waits for that item: what releasing means is
+     * read from `originExpiresAt`, which this stub cannot state.
+     * The dialog stays open on the same event throughout, and neither the list
+     * nor its order is touched.
+     */
+    async saveToArchive () {
+      const event = this.selectedEvent
+      // the guard, not just the button's loading state: a second tap must not
+      // reach the server even if it arrives before the disabled state renders
+      if (!event || this.archiveSaving || this.archiveOf(event)) {
+        return
+      }
+      this.archiveSaving = true
+      try {
+        const archiveId = await archiveService.archiveEvent(event.camera, event.id)
+        this.$set(this.archiveByEventId, event.id, {
+          archiveId,
+          sourceEventId: event.id,
+          cameraId: event.camera,
+          state: 'pending',
+          failureReason: null,
+          originExpiresAt: null,
+          thumbnailUrl: '',
+          snapshotUrl: '',
+          clipUrl: '',
+          local: true
+        })
+        this.notify('success', 'archiveSavedMessage')
+      } catch (err) {
+        this.notify('error', 'archiveSaveFailedMessage', err && err.serverMessage)
+      }
+      this.archiveSaving = false
+    },
+
+    /**
+     * Asks before releasing, in the terms the release actually carries: the
+     * kind is settled here and kept in `pendingRelease`, which is what the one
+     * ConfirmDialog's confirm label is computed off.
+     */
+    requestRelease () {
+      const item = this.selectedArchive
+      if (!item || this.archiveReleasing) {
+        return
+      }
+      const kind = archiveService.releaseKind(item)
+      this.pendingRelease = { item, kind }
+      this.$refs.confirmDialog.open(this.releaseMessage(kind, item), () => this.releaseArchive(item))
+    },
+
+    releaseMessage (kind, item) {
+      if (kind === 'unsave') {
+        return this.$t('page.kiosk.personenEvents.archiveReleaseUnsaveConfirm', {
+          moment: dateUtils.dateToShortDateTime(new Date(item.originExpiresAt * 1000), this.$i18n.locale)
+        })
+      }
+      return this.$t('page.kiosk.personenEvents.archiveReleaseDeleteConfirm')
+    },
+
+    /**
+     * Removes the archive entry, and with it the marker. A refusal leaves the
+     * event marked as saved and says so with the server's own sentence -
+     * `loggingUtils` is inert, so a failing request reports nothing by itself.
+     */
+    async releaseArchive (item) {
+      if (this.archiveReleasing) {
+        return
+      }
+      this.archiveReleasing = true
+      try {
+        await archiveService.deleteItem(item.archiveId)
+        if (item.sourceEventId) {
+          this.$delete(this.archiveByEventId, item.sourceEventId)
+        }
+        this.notify('success', 'archiveReleasedMessage')
+      } catch (err) {
+        this.notify('error', 'archiveReleaseFailedMessage', err && err.serverMessage)
+      }
+      this.archiveReleasing = false
+    },
+
+    /**
+     * The snackbar, dispatched from the view rather than through
+     * `loggingUtils`: that path is switched off (`activated` is false and
+     * nothing sets it), so a save whose outcome went only through it would tell
+     * the user nothing at all. Reviving it globally is a decision of its own -
+     * see design.md.
+     * @param color 'success' or 'error', which also picks the heading
+     * @param key the message key under page.kiosk.personenEvents
+     * @param message the server's own sentence, when it sent one
+     */
+    notify (color, key, message) {
+      this.$store.dispatch('gui/snackbar/snackbarEnqueue', {
+        color,
+        headingTKey: `message.${color}.heading`,
+        descriptionTKey: `page.kiosk.personenEvents.${key}`,
+        status: null,
+        message: message || ''
+      })
     },
 
     closeEvent () {
@@ -768,6 +1117,8 @@ export default {
       if (!video || !this.selectedEvent || this.selectedEvent.id !== event.id) {
         return
       }
+      // the archived copy once it is ready, the source's own otherwise
+      const clipUrl = this.mediaOf(event).clipUrl
       if (Hls.isSupported()) {
         const hls = new Hls()
         this.hls = hls
@@ -780,10 +1131,10 @@ export default {
             this.failClip()
           }
         })
-        hls.loadSource(event.clipUrl)
+        hls.loadSource(clipUrl)
         hls.attachMedia(video)
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = event.clipUrl
+        video.src = clipUrl
         video.addEventListener('loadedmetadata', () => this.clipReady(), { once: true })
         video.addEventListener('error', () => this.failClip(), { once: true })
       } else {
@@ -938,6 +1289,58 @@ $events-timeline-foot: 40px;
 
 .events-card {
   cursor: pointer;
+}
+
+/* The saved badge sits over the thumbnail and takes no space in the tile's
+   flow: the archive index arrives on a request of its own, and a marker that
+   reflowed the grid would move tiles under the scroll compensation
+   refreshEvents() does after a merge. */
+.events-card-media {
+  position: relative;
+}
+
+.v-icon.events-card-archived {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: #fff;
+  /* the thumbnails are photographs: a plain white glyph disappears over a
+     bright frame, so the badge carries its own ground */
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.v-icon.events-card-archived--failed {
+  color: var(--v-error-base, #ff5252);
+}
+
+.events-archive-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.events-archive-state--failed {
+  color: var(--v-error-base, #ff5252);
+  opacity: 1;
+}
+
+.events-archive-origin {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.events-archive-note {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.events-archive-note--failed {
+  color: var(--v-error-base, #ff5252);
+  opacity: 1;
 }
 
 .events-card-name {

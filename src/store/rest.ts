@@ -67,6 +67,22 @@ const store = {
         // listed here at all - the server sends the URLs with the event, so
         // they are read from the payload instead of built from a template.
         cameraEventsMerged: '/cameras/events',
+        // The long-term event archive (openspec change `archive-save-button`).
+        // **Assumed shapes**: java-overmind-server serves none of these routes
+        // yet - they are the ones `ai/open-proposals.md` section A states, which
+        // mirror that repository's own primer, and they are re-checked once it
+        // does. Until then every call answers 404, which the events page
+        // swallows: see archiveService.ts.
+        //   POST   eventArchive  -> { archiveId }
+        //   GET    archiveItems  -> { items: [...] }
+        //   DELETE archiveItems/{archiveId} -> 204
+        // A single item is addressed through the house CRUD helper -
+        // `axiosUtils.del(server, 'archiveItems', archiveId)` appends the id and
+        // resolves to '/archive/items/{archiveId}' - so it needs no entry of its
+        // own, while the POST's path carries two placeholders and is filled by
+        // `axiosUtils.postToPath()`.
+        archiveItems: '/archive/items',
+        eventArchive: '/cameras/{id}/events/{eventId}/archive',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

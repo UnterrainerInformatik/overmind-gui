@@ -34,18 +34,25 @@ SHALL NOT be reachable from the kiosk overview.
 The events page SHALL load and display past (completed) person-detection
 events for the cameras configured for the events page, most recent first, each
 shown with its snapshot thumbnail, resolved person name (or an "unknown"
-indicator when no name was matched), timestamp, and zone(s) when the event
-carries any. When more than one camera is configured, the list SHALL cover all
-of them merged in time order and SHALL show which camera each event came from.
+indicator when no name was matched), timestamp, zone(s) when the event
+carries any, and a marking when the event is saved to the archive. When more
+than one camera is configured, the list SHALL cover all of them merged in time
+order and SHALL show which camera each event came from.
 The cameras SHALL be resolved from the camera registry rather than from a
 compiled-in camera name. The page SHALL show an empty state when there are no
 events and an error state if loading fails.
+
+An event that exists both at its source and in the archive SHALL be listed once.
 
 #### Scenario: Events listed most recent first
 - **WHEN** past events exist for a configured camera
 - **THEN** they are shown in the list ordered from most recent to oldest,
   each with its thumbnail, name (or "unknown"), timestamp, and zone(s)
   when present
+
+#### Scenario: A saved event in the list
+- **WHEN** a listed event is saved to the archive
+- **THEN** its entry is marked as saved, and it appears once rather than twice
 
 #### Scenario: Several cameras configured
 - **WHEN** more than one camera is flagged for the events page

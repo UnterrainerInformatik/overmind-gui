@@ -214,14 +214,22 @@ export class AxiosUtils {
   }
 
   /**
-   * Sends a POST to an endpoint whose path carries an entry's ID *inside* it.
+   * Sends a POST to an endpoint whose path carries IDs *inside* it.
+   *
+   * A path with one placeholder is the common case and takes the bare id
+   * ('/setup/cameras/{id}/test'); a path that names more than one takes them as
+   * an object ('/cameras/{id}/events/{eventId}/archive'). Anything that is not
+   * an object keeps meaning `{ id }`, so the two existing callers are
+   * unaffected. Deliberately the same method rather than a second one beside
+   * it: `getFromPath` and `postToPath` should keep answering the same question.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
-   * @param id the ID of the object the action applies to
+   * @param idOrParams the ID of the object the action applies to, or values for the path's `{...}` placeholders
    * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
    */
-  public async postToPath (server: string, endpointPath: string, id: string | number, dataProvider: () => object): Promise<any> {
-    return this.internalRestCall(this.internalPost(server, this.resolveEndpoint(endpointPath, { id }), dataProvider))
+  public async postToPath (server: string, endpointPath: string, idOrParams: string | number | object, dataProvider: () => object): Promise<any> {
+    const params = idOrParams !== null && typeof idOrParams === 'object' ? idOrParams : { id: idOrParams }
+    return this.internalRestCall(this.internalPost(server, this.resolveEndpoint(endpointPath, params), dataProvider))
   }
 
   /**
