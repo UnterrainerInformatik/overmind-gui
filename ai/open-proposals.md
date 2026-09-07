@@ -59,13 +59,14 @@ Overlay-Code kann unverändert bleiben.
 
 ### Offene Punkte
 
-- **Der Contract ist bis heute gegen keinen laufenden Server geprüft.**
-  `archive-save-button` ist gebaut und gegen Mocks verifiziert; sobald overmind die
-  Archiv-Routen bedient, sind die Formen gegenzuprüfen und ein Verifikationsdatum in
-  `src/utils/webservices/archiveService.ts` einzutragen, so wie `frigateService.ts`
-  eines trägt. Das war Task 7.4 jenes Changes und ist als einziger offen archiviert
-  worden — es steht hier, damit es nicht mit dem Change im Archiv verschwindet.
-  Was der Server dafür wissen muss, steht in
+- **Abnahme am laufenden System steht noch aus.** Die Formen sind am 2026-09-07 gegen
+  den Quelltext von `java-overmind-server` (Change `event-archive`) gegengeprüft und
+  in `src/utils/webservices/archiveService.ts` datiert; zwei Abweichungen sind dabei
+  aufgefallen und dort behoben (`state` und `kind` kommen groß, `kind` heißt `EVENT`
+  statt `saved-event`). Was fehlt, ist der Durchlauf gegen einen **deployten** Server
+  mit echtem Node dahinter: ein Ereignis sichern, markiert sehen, abspielen und wieder
+  freigeben. Das war Task 7.4 des Changes `archive-save-button` und steht hier, damit
+  es nicht mit dem Change im Archiv verschwindet. Was der Server dazu weiß, steht in
   `java-overmind-server/ai/draft-archive-from-gui.md`.
 - Eigene Ansicht oder ein Umschalter „Frigate / Archiv" in der bestehenden
   Events-Ansicht? Verlangt ist eine weitere Ansicht — beim Propose gegenprüfen, wie viel

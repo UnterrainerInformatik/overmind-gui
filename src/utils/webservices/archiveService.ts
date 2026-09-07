@@ -11,8 +11,8 @@ export interface ArchiveItem {
   /** the overmind camera id the copy was made on */
   cameraId: number;
   cameraName: string | null;
-  /** 'saved-event' today; 'screenshot' / 'alarm' / 'recording' are the archive view's */
-  kind: string;
+  /** lowercased here - see lowered() */
+  kind: ArchiveItemKind;
   /** the event this copy was made from - the key the events page joins on */
   sourceEventId: string | null;
   label: string | null;
@@ -45,6 +45,12 @@ export interface ArchiveItem {
 
 export type ArchiveItemState = 'pending' | 'ready' | 'failed'
 
+/**
+ * What an entry was made from. `event` is the only value the server produces
+ * today; `snapshot` and `recording` are the archive view's.
+ */
+export type ArchiveItemKind = 'event' | 'snapshot' | 'recording' | string
+
 export interface ArchiveItemFilters {
   after?: number | null;
   before?: number | null;
@@ -76,12 +82,21 @@ export const ORIGIN_GRACE_HOURS = 24
  * The long-term archive: the copies of person events that outlive the node's
  * own retention.
  *
- * **Not verified against a running server.** java-overmind-server serves none
- * of these routes yet; the shapes below are the ones `ai/open-proposals.md`
- * section A states - they mirror that repository's own primer - and they are
- * re-checked, and this comment dated the way `frigateService.ts` dates its own,
- * once the backend lands. Until then every call answers 404, which is why the
- * events page swallows a failing index read instead of showing an error.
+ * Checked 2026-09-07 against java-overmind-server's own change `event-archive`
+ * - its routes, its `ArchiveItemJson` and its `ArchiveQuery`, i.e. the source
+ * that is about to be deployed rather than a running instance. Two things came
+ * back different from what this service was first written against, both handled
+ * in `lowered()`: `state` and `kind` arrive uppercase, and `kind` is `EVENT`
+ * rather than `saved-event`. Everything else held - the three routes, the
+ * `{ items: [...] }` envelope, the `{ archiveId }` answer, the 204, absent
+ * fields omitted rather than null, `originExpiresAt` omitted when the original
+ * is gone *or* the retention is unknown, no media on a `pending` entry, and the
+ * exclusive `after`/`before` on `startTime`.
+ *
+ * What is still open is the run against a **deployed** server with a real node
+ * behind it: saving, marking, playing and releasing one actual event end to end
+ * (`ai/open-proposals.md`, section A). Until then a failing index read is
+ * swallowed, which is also what makes the deploy order not matter.
  *
  *   POST /cameras/{id}/events/{eventId}/archive
  *     -> { archiveId }
@@ -103,7 +118,9 @@ export const ORIGIN_GRACE_HOURS = 24
  *           snapshotUrl, thumbnailUrl, clipUrl }
  *     Times are overmind's `LocalDateTime` in UTC in both directions, absent
  *     fields are omitted rather than sent as null, and a refusal carries a
- *     `reason` - the same house shapes the camera routes answer in. This change
+ *     `reason` - the same house shapes the camera routes answer in. `state` and
+ *     `kind` arrive uppercase, as every enum on this contract does, and are
+ *     lowered here - see lowered(). This change
  *     reads `archiveId`, `sourceEventId`, `state`, `failureReason`,
  *     `originExpiresAt` and the three media URLs; the rest is normalised anyway
  *     because it is what the archive view needs and that view should not have
@@ -180,7 +197,7 @@ export class ArchiveService {
       archiveId: item.archiveId,
       cameraId: item.cameraId,
       cameraName: item.cameraName || null,
-      kind: item.kind || 'saved-event',
+      kind: this.lowered(item.kind) || 'event',
       sourceEventId: item.sourceEventId || null,
       label: item.label || null,
       subLabel: item.subLabel || null,
@@ -191,7 +208,7 @@ export class ArchiveService {
       zones: item.zones || [],
       startTime: this.toEpochSeconds(item.startTime),
       endTime: this.toEpochSeconds(item.endTime),
-      state: item.state || 'ready',
+      state: this.lowered(item.state) || 'ready',
       failureReason: item.failureReason || null,
       sizeBytes: item.sizeBytes === undefined ? null : item.sizeBytes,
       // omitted, rather than null, for an item whose original is gone - which
@@ -201,6 +218,20 @@ export class ArchiveService {
       snapshotUrl: this.absoluteUrl(item.snapshotUrl),
       clipUrl: this.absoluteUrl(item.clipUrl)
     }
+  }
+
+  /**
+   * The server's enums are uppercase (`READY`, `EVENT`) while everything that
+   * reads them here compares lowercase, so they are lowered once at this seam -
+   * the same thing `camerasService` does with `OK` and `PROVISIONED`, and for
+   * the same reason: one place that knows, and no reader that has to remember.
+   *
+   * `kind` is `EVENT` rather than the `saved-event` this service was first
+   * written against; the server's enum is the contract, and nothing in this
+   * change reads the value.
+   */
+  private lowered (value: any): any {
+    return typeof value === 'string' ? value.toLowerCase() : null
   }
 
   /**
