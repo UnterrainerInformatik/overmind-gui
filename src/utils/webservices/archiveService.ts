@@ -55,6 +55,10 @@ export interface ArchiveItemFilters {
   after?: number | null;
   before?: number | null;
   kind?: string | null;
+  /** the detected object class, e.g. `person` - matched exactly by the server */
+  label?: string | null;
+  /** the matched person's name, likewise matched exactly */
+  subLabel?: string | null;
   limit?: number;
 }
 
@@ -104,10 +108,14 @@ export const ORIGIN_GRACE_HOURS = 24
  *     more about it, so the caller marks optimistically and lets the next index
  *     read replace what it wrote.
  *
- *   GET /archive/items?cameraIds=10,11&after=&before=&kind=&limit=
+ *   GET /archive/items?cameraIds=10,11&after=&before=&kind=&label=&subLabel=&limit=
  *     -> { items: [...] }
  *     `after` / `before` bound the item's start time and are assumed to be
  *     exclusive, as the events route's are (design.md, Open Questions).
+ *     `label` / `subLabel` are the primer's own filters and are read here as
+ *     exact matches; whether the deployed route honours them is the second
+ *     thing the run below has to establish - unhonoured, they would silently
+ *     answer an unfiltered list.
  *
  *   DELETE /archive/items/{archiveId}
  *     -> 204
@@ -121,10 +129,15 @@ export const ORIGIN_GRACE_HOURS = 24
  *     `reason` - the same house shapes the camera routes answer in. `state` and
  *     `kind` arrive uppercase, as every enum on this contract does, and are
  *     lowered here - see lowered(). This change
- *     reads `archiveId`, `sourceEventId`, `state`, `failureReason`,
- *     `originExpiresAt` and the three media URLs; the rest is normalised anyway
- *     because it is what the archive view needs and that view should not have
- *     to rewrite this service.
+ *     The save button reads `archiveId`, `sourceEventId`, `state`,
+ *     `failureReason`, `originExpiresAt` and the three media URLs. Since
+ *     openspec change `kiosk-archive-page` this service has a second caller,
+ *     the archive view, which reads the rest of what is normalised here:
+ *     `cameraId` and `cameraName` to name the camera an entry was kept from,
+ *     `kind` to label and filter it, `subLabel` and `zones` for the tile, and
+ *     `startTime` to order and page the list. That is why the whole item was
+ *     normalised from the start rather than only the fields the first caller
+ *     needed.
  *
  * A service of its own rather than a corner of `frigateService`: the archive is
  * a second media store with its own routes, and the archive view grows this
@@ -169,6 +182,15 @@ export class ArchiveService {
     }
     if (filters.kind) {
       params.push(`kind=${encodeURIComponent(filters.kind)}`)
+    }
+    // The archive view's person filter. Sent only when set, so "every kind" and
+    // "everybody" cost no parameter at all and a server that narrows on an
+    // empty value cannot mistake one for the other.
+    if (filters.label) {
+      params.push(`label=${encodeURIComponent(filters.label)}`)
+    }
+    if (filters.subLabel) {
+      params.push(`subLabel=${encodeURIComponent(filters.subLabel)}`)
     }
     const response = await axiosUtils.getResponse(this.server, 'archiveItems', params.join('&'))
     return this.itemsOf(response).map(item => this.toItem(item))

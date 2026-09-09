@@ -3,6 +3,13 @@
 		"false": "false",
 		"true": "true"
 	},
+	"component": {
+		"events": {
+			"clipError": "Could not load clip",
+			"close": "Close",
+			"unknown": "Unknown"
+		}
+	},
 	"message": {
 		"error": {
 			"communication": "There was an error communicating with the server.",
@@ -61,6 +68,7 @@
 			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPersonen": "Persons",
+			"linkPersonenArchiv": "Archive",
 			"linkPersonenEvents": "Events",
 			"linkPersonenVerwaltung": "Persons",
 			"linkPlugs": "Plugs",
@@ -276,6 +284,43 @@
 				"registryError": "The camera configuration could not be loaded",
 				"streamError": "The live stream for {name} could not be opened"
 			},
+			"personenArchiv": {
+				"allCameras": "All cameras",
+				"cancel": "Cancel",
+				"deleteAction": "Delete permanently",
+				"deleteConfirm": "This recording will be deleted everywhere: the archived copy and the event on the device, if it still exists. This cannot be undone.",
+				"deleteDoneMessage": "The recording was deleted everywhere.",
+				"deleteFailedMessage": "The recording was not deleted.",
+				"deletePartialCopyMessage": "The event on the device was deleted, the archived copy is still there.",
+				"deletePartialOriginMessage": "The archived copy was deleted, the event on the device is still there.",
+				"empty": "Nothing is kept for this period",
+				"fetchError": "The archive could not be read",
+				"filterCamera": "Camera",
+				"filterFrom": "From",
+				"filterKind": "Kind",
+				"filterName": "Person",
+				"filterTo": "To",
+				"kindAll": "All kinds",
+				"loadMore": "Load more",
+				"loadMoreError": "Could not load more entries",
+				"noCamera": "No camera is configured for the events page.",
+				"quickRangeDays": "{count} days",
+				"quickRangeHours": "{count} hours",
+				"quickRangeLabel": "Period",
+				"registryError": "Could not load the camera configuration",
+				"stateFailed": "Archiving failed",
+				"stateFailedNote": "The archived copy could not be created: {reason}",
+				"stateFailedPlainNote": "The archived copy could not be created.",
+				"statePending": "Being prepared",
+				"statePendingNote": "The archived copy is still being prepared and cannot be played yet.",
+				"timelineLabel": "Archive timeline",
+				"title": "Archive",
+				"kinds": {
+					"event": "Event",
+					"recording": "Recording",
+					"snapshot": "Snapshot"
+				}
+			},
 			"personenEvents": {
 				"archiveFailed": "Saving failed",
 				"archiveFailedNote": "The saved copy could not be created: {reason}",
@@ -290,8 +335,6 @@
 				"archiveSaved": "Saved",
 				"archiveSavedMessage": "The event was saved.",
 				"cancel": "Cancel",
-				"clipError": "Could not load clip",
-				"close": "Close",
 				"deleteAction": "Delete permanently",
 				"deleteConfirm": "This recording will be deleted everywhere: the event on the device and every copy saved from it. This cannot be undone.",
 				"deleteDoneMessage": "The recording was deleted everywhere.",
@@ -314,8 +357,7 @@
 				"timelineAxisEnd": "Timeline end: {moment}",
 				"timelineAxisStart": "Timeline start: {moment}",
 				"timelineLabel": "Event timeline",
-				"title": "Events",
-				"unknown": "Unknown"
+				"title": "Events"
 			},
 			"presence": {
 				"title": "Presence"

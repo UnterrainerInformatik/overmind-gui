@@ -94,35 +94,13 @@
 
         <v-row v-if="events.length" dense>
           <v-col v-for="event in events" :key="event.id" cols="6" sm="4" md="3" lg="2">
-            <v-card
-              outlined
-              class="events-card noFocus"
-              :class="{ 'events-card--highlighted': event.id === highlightedId }"
-              @click="openEvent(event)"
-            >
-              <div class="events-card-media">
-              <v-img :src="event.thumbnailUrl" aspect-ratio="1.7777" class="grey darken-4"></v-img>
-              <!-- Over the thumbnail rather than in the text block on purpose:
-                   the archive index arrives on its own request, and a marker
-                   that took a line of its own would reflow the grid under the
-                   scroll-anchor compensation refreshEvents() does. -->
-              <v-icon
-                v-if="archiveOf(event)"
-                small
-                class="events-card-archived"
-                :class="{ 'events-card-archived--failed': archiveOf(event).state === 'failed' }"
-                :title="archiveTileTitle(event)"
-              >{{ archiveOf(event).state === 'failed' ? 'error_outline' : 'bookmark' }}</v-icon>
-            </div>
-              <v-card-text class="pa-2">
-                <div class="events-card-name text-truncate">
-                  {{ event.subLabel || $t('page.kiosk.personenEvents.unknown') }}
-                </div>
-                <div class="events-card-time">{{ dateUtils.dateToShortDateTime(dateOf(event), $i18n.locale) }}</div>
-                <div v-if="cameras.length > 1" class="events-card-camera text-truncate">{{ cameraName(event) }}</div>
-                <div v-if="event.zones.length" class="events-card-zones text-truncate">{{ event.zones.join(', ') }}</div>
-              </v-card-text>
-            </v-card>
+            <EventTile
+              :entry="event"
+              :highlighted="event.id === highlightedId"
+              :camera-name="cameras.length > 1 ? cameraName(event) : ''"
+              :marker="archiveMarker(event)"
+              @select="openEvent"
+            ></EventTile>
           </v-col>
         </v-row>
 
@@ -154,107 +132,58 @@
       route="/app/kioskpersonen"
     ></KioskLinkPanel>
 
-    <v-dialog
+    <EventMediaDialog
       v-model="detailDialog"
-      max-width="720"
-      content-class="events-detail-dialog"
-      :fullscreen="$vuetify.breakpoint.xsOnly"
+      :entry="selectedEvent"
+      :media="selectedMedia"
+      :subtitle="detailSubtitle"
+      :note="archiveNote"
+      :note-tone="selectedArchive ? selectedArchive.state : ''"
     >
-      <v-card v-if="selectedEvent" outlined class="events-detail-card">
-        <v-card-title>
-          <span class="text-truncate">{{ selectedEvent.subLabel || $t('page.kiosk.personenEvents.unknown') }}</span>
-          <v-spacer></v-spacer>
-          <v-btn
-            icon
-            class="events-detail-close"
-            :title="$t('page.kiosk.personenEvents.close')"
-            :aria-label="$t('page.kiosk.personenEvents.close')"
-            @click="closeEvent"
-          >
-            <v-icon>close</v-icon>
-          </v-btn>
-        </v-card-title>
-        <v-card-text>
-          <div class="events-detail-time mb-2">
-            {{ dateUtils.dateToShortDateTime(dateOf(selectedEvent), $i18n.locale) }}
-            <span v-if="cameras.length > 1">&mdash; {{ cameraName(selectedEvent) }}</span>
-            <span v-if="selectedEvent.zones.length">&mdash; {{ selectedEvent.zones.join(', ') }}</span>
-          </div>
-          <v-img
-            v-if="showSnapshot"
-            contain
-            :src="selectedMedia.snapshotUrl"
-            class="events-detail-media mb-2"
-            :class="{ 'events-detail-media--solo': mediaSolo }"
-          ></v-img>
-          <div v-if="selectedMedia.hasClip">
-            <div v-if="clipLoading" class="d-flex justify-center pa-4">
-              <v-progress-circular indeterminate color="grey"></v-progress-circular>
-            </div>
-            <v-card v-if="clipError" outlined color="error" class="pa-4">
-              {{ $t('page.kiosk.personenEvents.clipError') }}
-            </v-card>
-            <video
-              v-show="!clipLoading && !clipError"
-              ref="clipVideo"
-              controls
-              class="events-detail-media"
-              :class="{ 'events-detail-media--solo': mediaSolo }"
-            ></video>
-          </div>
-          <div
-            v-if="archiveNote"
-            class="events-archive-note mt-2"
-            :class="`events-archive-note--${selectedArchive.state}`"
-          >{{ archiveNote }}</div>
-        </v-card-text>
-        <v-card-actions>
-          <div
-            v-if="selectedArchive"
-            class="events-archive-state"
-            :class="{ 'events-archive-state--failed': selectedArchive.state === 'failed' }"
-          >
-            <v-icon small class="mr-1">{{ selectedArchive.state === 'failed' ? 'error_outline' : 'bookmark' }}</v-icon>
-            <span class="events-archive-state-text">{{ archiveStateText }}</span>
-            <span v-if="originExpiresText" class="events-archive-origin ml-2">{{ originExpiresText }}</span>
-          </div>
-          <v-spacer></v-spacer>
-          <!-- Dismiss first, the action that changes something last - the order
-               ConfirmDialog already uses for its own pair. -->
-          <v-btn text @click="closeEvent">{{ $t('page.kiosk.personenEvents.close') }}</v-btn>
-          <v-btn
-            v-if="!selectedArchive"
-            text
-            class="events-archive-save"
-            :loading="archiveSaving"
-            @click="saveToArchive"
-          >{{ $t('page.kiosk.personenEvents.archiveSave') }}</v-btn>
-          <!-- An entry this view inserted itself carries no `originExpiresAt`,
-               so what releasing it means cannot be read yet: the control waits
-               for the index read that replaces it, a tick away at most. And
-               once that is read, the release is offered only while the original
-               is still held - see releaseOffered(). -->
-          <v-btn
-            v-else-if="releaseOffered"
-            text
-            class="events-archive-release"
-            :loading="archiveReleasing"
-            @click="requestRelease"
-          >{{ releaseLabel }}</v-btn>
-          <!-- Offered on every event the dialog can play, saved or not, and
-               guarded by its confirmation alone: this GUI holds no identity it
-               could check a role against, and a check against an absent one
-               would be a claim of protection rather than a protection. -->
-          <v-btn
-            text
-            color="error"
-            class="events-delete"
-            :loading="deleting"
-            @click="requestDelete"
-          >{{ $t('page.kiosk.personenEvents.deleteAction') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      <template #state>
+        <div
+          v-if="selectedArchive"
+          class="events-archive-state"
+          :class="{ 'events-archive-state--failed': selectedArchive.state === 'failed' }"
+        >
+          <v-icon small class="mr-1">{{ selectedArchive.state === 'failed' ? 'error_outline' : 'bookmark' }}</v-icon>
+          <span class="events-archive-state-text">{{ archiveStateText }}</span>
+          <span v-if="originExpiresText" class="events-archive-origin ml-2">{{ originExpiresText }}</span>
+        </div>
+      </template>
+      <template #actions>
+        <v-btn
+          v-if="!selectedArchive"
+          text
+          class="events-archive-save"
+          :loading="archiveSaving"
+          @click="saveToArchive"
+        >{{ $t('page.kiosk.personenEvents.archiveSave') }}</v-btn>
+        <!-- An entry this view inserted itself carries no `originExpiresAt`,
+             so what releasing it means cannot be read yet: the control waits
+             for the index read that replaces it, a tick away at most. And
+             once that is read, the release is offered only while the original
+             is still held - see releaseOffered(). -->
+        <v-btn
+          v-else-if="releaseOffered"
+          text
+          class="events-archive-release"
+          :loading="archiveReleasing"
+          @click="requestRelease"
+        >{{ releaseLabel }}</v-btn>
+        <!-- Offered on every event the dialog can play, saved or not, and
+             guarded by its confirmation alone: this GUI holds no identity it
+             could check a role against, and a check against an absent one
+             would be a claim of protection rather than a protection. -->
+        <v-btn
+          text
+          color="error"
+          class="events-delete"
+          :loading="deleting"
+          @click="requestDelete"
+        >{{ $t('page.kiosk.personenEvents.deleteAction') }}</v-btn>
+      </template>
+    </EventMediaDialog>
 
     <!-- One instance, not two: `confirmText` is a prop rather than an argument
          of open(), so the wording the pending action carries is bound to
@@ -271,13 +200,15 @@
 <script type="js">
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import EventsTimeline from '@/components/EventsTimeline.vue'
+import EventTile from '@/components/EventTile.vue'
+import EventMediaDialog from '@/components/EventMediaDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import Hls from 'hls.js'
 import { singleton as frigateService } from '@/utils/webservices/frigateService'
 import { singleton as archiveService } from '@/utils/webservices/archiveService'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
+import { deleteRecording } from '@/utils/recordingDeletion'
 import { Debouncer } from '@/utils/debouncer'
 
 const PAGE_SIZE = 30
@@ -338,6 +269,8 @@ export default {
   components: {
     KioskLinkPanel,
     EventsTimeline,
+    EventTile,
+    EventMediaDialog,
     ConfirmDialog
   },
 
@@ -380,8 +313,6 @@ export default {
 
     detailDialog: false,
     selectedEvent: null,
-    clipLoading: false,
-    clipError: false,
 
     // The archive's own index, keyed by the event each entry was made from.
     // A second map rather than a flag on the events: the join is what answers
@@ -404,16 +335,6 @@ export default {
   }),
 
   watch: {
-    // The two close buttons are not the only way out of the dialog: Escape and
-    // a click on the backdrop are handled by v-dialog itself and only write
-    // `false` through the v-model. The flag is therefore the one thing every
-    // closing path has in common, which is why the clip teardown hangs off it
-    // rather than off the click handlers.
-    detailDialog (open) {
-      if (!open) {
-        this.stopClip()
-      }
-    },
     nameFilter () {
       this.loadEvents(true)
     },
@@ -427,26 +348,24 @@ export default {
 
   computed: {
     /**
-     * A short viewport cannot hold the snapshot and the clip at a usable size, so
-     * the still is what gives way - the clip's first frame is essentially the same
-     * picture. `$vuetify.breakpoint` is reactive in both dimensions, so rotating or
-     * resizing re-evaluates this while the dialog is open, and `v-if` (rather than
-     * a CSS media query) also keeps v-img from fetching a snapshot nobody sees.
-     * A clip that failed to load keeps the snapshot: dropping it there would leave
-     * the dialog with no media at all.
+     * The line under the dialog's title: when the event happened, and - where
+     * there is more than one camera or any zone - where. The dialog is handed
+     * the finished sentence rather than the event, because which camera a
+     * camera id names is this page's registry read.
      */
-    showSnapshot () {
-      if (!this.selectedEvent) {
-        return false
+    detailSubtitle () {
+      const event = this.selectedEvent
+      if (!event) {
+        return ''
       }
-      const tight = this.$vuetify.breakpoint.xsOnly || this.$vuetify.breakpoint.height < 640
-      return !(this.selectedMedia.hasClip && !this.clipError && tight)
-    },
-
-    // Only one media element on screen, so it may claim the whole body height
-    // instead of the half-height budget the stacked case has to share.
-    mediaSolo () {
-      return !(this.showSnapshot && this.selectedMedia.hasClip)
+      const parts = [dateUtils.dateToShortDateTime(this.dateOf(event), this.$i18n.locale)]
+      if (this.cameras.length > 1) {
+        parts.push(this.cameraName(event))
+      }
+      if (event.zones.length) {
+        parts.push(event.zones.join(', '))
+      }
+      return parts.join(' \u2014 ')
     },
 
     /** The archive entry of the event whose dialog is open, or null. */
@@ -715,11 +634,25 @@ export default {
       return (event && this.archiveByEventId[event.id]) || null
     },
 
-    archiveTileTitle (event) {
+    /**
+     * What EventTile draws over an event's thumbnail, or null for nothing: the
+     * saved badge, or the failure. The wording stays here - the tile knows only
+     * that there is a marker - because "gesichert" is a sentence about this
+     * page's subject.
+     */
+    archiveMarker (event) {
       const item = this.archiveOf(event)
-      return item && item.state === 'failed'
-        ? this.$t('page.kiosk.personenEvents.archiveFailed')
-        : this.$t('page.kiosk.personenEvents.archiveSaved')
+      if (!item) {
+        return null
+      }
+      const failed = item.state === 'failed'
+      return {
+        icon: failed ? 'error_outline' : 'bookmark',
+        tone: failed ? 'failed' : 'saved',
+        title: failed
+          ? this.$t('page.kiosk.personenEvents.archiveFailed')
+          : this.$t('page.kiosk.personenEvents.archiveSaved')
+      }
     },
 
     /**
@@ -982,10 +915,6 @@ export default {
     openEvent (event) {
       this.selectedEvent = event
       this.detailDialog = true
-      this.stopClip()
-      if (this.mediaOf(event).hasClip) {
-        this.startClip(event)
-      }
     },
 
     /**
@@ -1089,20 +1018,10 @@ export default {
     },
 
     /**
-     * The deletion itself: the original at its source first, then the archive
-     * copy when the index names one. Source first, because it is the one that
-     * keeps producing a playable recording while it exists - the copy is the
-     * one a user could still get rid of by hand through the release control.
-     *
-     * The second call is not skipped on the assumption that the server
-     * cascaded: a DELETE on an entry that is already gone answers 404, which
-     * both services count as success, so the redundant request costs one round
-     * trip while skipping it would cost a copy left behind.
-     *
-     * An entry with no original at its source skips the first step and runs the
-     * second alone. This page cannot produce one - every event listed here is
-     * one a node reported - but it is the archive view's ordinary case, and the
-     * spec asks for the same control and the same wording there.
+     * The deletion itself, which is `deleteRecording()` - the sequence is
+     * shared with the archive view and lives in `utils/recordingDeletion.ts`.
+     * What is left here is what only this page can decide: that the list
+     * follows the *original*, and how the three outcomes are worded.
      */
     async deleteEverywhere (event) {
       // the guard, not just the button's loading state: a second tap must not
@@ -1112,32 +1031,12 @@ export default {
       }
       this.deleting = true
       const item = this.archiveOf(event)
-      const hasOrigin = event.camera !== null && event.camera !== undefined
-      // A place that was never there counts as cleared, so the two flags say
-      // "nothing of the recording is left here" rather than "a request
-      // succeeded" - but only a place that really existed can be *reported* as
-      // one half of a half-finished deletion, which is why `item` travels on.
-      let originGone = !hasOrigin
-      let copyGone = !item
-      let originReason = ''
-      let copyReason = ''
-      if (hasOrigin) {
-        try {
-          await frigateService.deleteEvent(event.camera, event.id)
-          originGone = true
-        } catch (err) {
-          originReason = (err && err.serverMessage) || ''
-        }
-      }
-      if (item) {
-        try {
-          await archiveService.deleteItem(item.archiveId)
-          copyGone = true
-        } catch (err) {
-          copyReason = (err && err.serverMessage) || ''
-        }
-      }
-      this.reportDeletion(event, originGone, copyGone, !!item, originReason || copyReason)
+      const { originGone, copyGone, hadCopy, reason } = await deleteRecording({
+        cameraId: event.camera,
+        eventId: event.id,
+        archiveId: item ? item.archiveId : null
+      })
+      this.reportDeletion(event, originGone, copyGone, hadCopy, reason)
       this.deleting = false
     },
 
@@ -1201,123 +1100,7 @@ export default {
 
     closeEvent () {
       this.detailDialog = false
-    },
-
-    /**
-     * The <video> is kept mounted across opens and the dialog's card stays
-     * rendered once shown, so a closed dialog is a hidden element that is still
-     * playing - which is why closing has to take the clip apart rather than
-     * merely stop showing it. Destroying the player is what stops it fetching
-     * further segments; detaching the source (rather than assigning '', which
-     * resolves to the page URL and fires a real failed request) is what makes
-     * the element let go of what it has already buffered.
-     */
-    stopClip () {
-      if (this.hls) {
-        this.hls.destroy()
-        this.hls = null
-      }
-      const video = this.$refs.clipVideo
-      if (video) {
-        video.pause()
-        video.removeAttribute('src')
-        video.load()
-      }
-    },
-
-    /**
-     * A clip is HLS, and for a measured reason rather than a preference:
-     * Frigate answers a Range request on `clip.mp4` with the whole file and no
-     * `Accept-Ranges`, so an MP4 clip cannot be seeked at all, while its VOD
-     * playlist can. Overmind therefore serves `clip.m3u8` plus its segments
-     * under one path prefix, and the segment names in the playlist are
-     * relative, so the player fetches them back off overmind on its own.
-     *
-     * Chrome and Firefox play HLS only through Media Source Extensions, which
-     * is what hls.js drives; Safari plays a playlist natively and is handed the
-     * URL directly. A browser with neither cannot play this clip at all, and
-     * says so rather than sitting on an empty element.
-     *
-     * @param event the event whose clip to play; re-checked once the element is
-     *        there, so a close/reopen in between cannot attach this clip to
-     *        whatever dialog is on screen by then
-     */
-    async startClip (event) {
-      this.clipLoading = true
-      this.clipError = false
-      await this.$nextTick()
-      const video = this.$refs.clipVideo
-      if (!video || !this.selectedEvent || this.selectedEvent.id !== event.id) {
-        return
-      }
-      // the archived copy once it is ready, the source's own otherwise
-      const clipUrl = this.mediaOf(event).clipUrl
-      if (Hls.isSupported()) {
-        const hls = new Hls()
-        this.hls = hls
-        hls.on(Hls.Events.MANIFEST_PARSED, () => this.clipReady())
-        hls.on(Hls.Events.ERROR, (kind, data) => {
-          // Only a fatal error is one the user has to be told about: the rest
-          // is hls.js recovering by itself - a segment it re-requests - and
-          // reporting those would put an error over a clip that plays fine.
-          if (data.fatal) {
-            this.failClip()
-          }
-        })
-        hls.loadSource(clipUrl)
-        hls.attachMedia(video)
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = clipUrl
-        video.addEventListener('loadedmetadata', () => this.clipReady(), { once: true })
-        video.addEventListener('error', () => this.failClip(), { once: true })
-      } else {
-        this.failClip()
-      }
-    },
-
-    clipReady () {
-      this.clipLoading = false
-      this.playClipWhenReady()
-    },
-
-    failClip () {
-      this.clipError = true
-      this.clipLoading = false
-    },
-
-    // The dialog opened from a real click, so this still counts as
-    // gesture-initiated as far down the promise chain as this - Chrome just
-    // blocks it if too much time or too many awaits have passed. Falling
-    // back to a muted play() covers that case: the clip starts moving
-    // instead of sitting on the first frame waiting for a manual tap.
-    // Nothing calls load() here: the player is already attached to the
-    // element by now, and re-loading it would throw that attachment away.
-    async playClipWhenReady () {
-      await this.$nextTick()
-      const video = this.$refs.clipVideo
-      if (!video) {
-        return
-      }
-      try {
-        await video.play()
-      } catch (err) {
-        video.muted = true
-        video.play().catch(() => {
-          // Muted playback was refused as well, so there is nothing left to
-          // try: the clip stays on its first frame until the user taps it.
-        })
-      }
     }
-  },
-
-  /**
-   * The player is an instance property rather than a `data()` field on
-   * purpose: Vue would make an object of that size deeply reactive, walking
-   * every internal of a running media pipeline for no gain - nothing in the
-   * template reads it.
-   */
-  created () {
-    this.hls = null
   },
 
   mounted () {
@@ -1339,10 +1122,6 @@ export default {
     if (this.interval) {
       clearInterval(this.interval)
     }
-    // Leaving the page unmounts the component without ever flipping
-    // `detailDialog`, so the watcher does not run here - a clip playing at
-    // that moment has to be stopped through the same teardown.
-    this.stopClip()
   }
 }
 </script>
@@ -1350,56 +1129,11 @@ export default {
 <style lang="scss">
 @import 'index.scss';
 
-/* The timeline is fixed against the viewport rather than sticky inside the
-   grid column: the page scrolls <html> (refreshEvents() records the read-back),
-   so a sticky element here has no scrolling ancestor to stick within and would
-   simply scroll away. Same shape .events-back-btn already uses for the bottom
-   left corner.
-   The width is a two-place contract - the strip itself and the padding that
-   keeps the rightmost tile column out from under it - so both come off this
-   one variable, as $events-detail-chrome already does for the dialog. */
-$events-timeline-width: 56px;
-
-/* What the fixed corner button below the strip takes out of it: its own 28px
-   plus the 8px it sits off the edge, plus 4px of clearance. */
-$events-timeline-foot: 40px;
-
 .events-content {
   max-width: none;
   /* the back button is fixed over the bottom left corner: keep the grid
      clear of it, same padding convention as personen-verwaltung-content */
   padding: 8px 8px 100px 8px;
-}
-
-/* Qualified with Vuetify's own .container, which owns the padding this is
-   correcting; an unqualified selector ties on specificity and wins or loses
-   on source order alone. The modifier only exists while the timeline does, so
-   the reserved column disappears with it on a narrow viewport. */
-.container.events-content--with-timeline {
-  padding-right: $events-timeline-width;
-}
-
-.events-timeline {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: $events-timeline-width;
-  /* Not the full 100vh: App.vue parks .kiosk-migrations-btn in the bottom
-     right corner at the same z-index, and a 28px button 8px off the edge
-     covers the bottom 36px of this column. That used to cost nothing - the
-     strip's foot was bare rail - but it now holds the label naming where the
-     axis starts, and a mark landing at axisStart was never clickable there
-     either. The axis stops above the button instead of running under it; the
-     timeline measures its own height, so the graduation follows. */
-  height: calc(100vh - #{$events-timeline-foot});
-  z-index: 20;
-}
-
-/* .v-card--outlined's border is what this replaces, so the rule is qualified
-   with .v-card to clear that specificity. */
-.v-card.events-card--highlighted {
-  border-color: var(--v-primary-base, #1976d2);
-  box-shadow: 0 0 0 2px var(--v-primary-base, #1976d2);
 }
 
 .events-filter-name {
@@ -1420,34 +1154,6 @@ $events-timeline-foot: 40px;
   font-size: 14px;
 }
 
-.events-card {
-  cursor: pointer;
-}
-
-/* The saved badge sits over the thumbnail and takes no space in the tile's
-   flow: the archive index arrives on a request of its own, and a marker that
-   reflowed the grid would move tiles under the scroll compensation
-   refreshEvents() does after a merge. */
-.events-card-media {
-  position: relative;
-}
-
-.v-icon.events-card-archived {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  color: #fff;
-  /* the thumbnails are photographs: a plain white glyph disappears over a
-     bright frame, so the badge carries its own ground */
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 50%;
-  padding: 2px;
-}
-
-.v-icon.events-card-archived--failed {
-  color: var(--v-error-base, #ff5252);
-}
-
 .events-archive-state {
   display: flex;
   align-items: center;
@@ -1466,96 +1172,11 @@ $events-timeline-foot: 40px;
   opacity: 0.8;
 }
 
-.events-archive-note {
-  font-size: 13px;
-  opacity: 0.85;
-}
-
-.events-archive-note--failed {
-  color: var(--v-error-base, #ff5252);
-  opacity: 1;
-}
-
-.events-card-name {
-  font-weight: 500;
-}
-
-.events-card-time,
-.events-card-camera,
-.events-card-zones {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
 .events-back-btn {
   position: fixed;
   left: 8px;
   bottom: 8px;
   z-index: 20;
-}
-
-/* Vuetify's own .v-dialog scrolls its whole content at max-height: 90%, which
-   takes the actions row - and with it the close button - out of view. The
-   dialog is pinned instead and the card owns the scrolling, so only the body
-   between the title and the actions moves. Every override is qualified with
-   the Vuetify class it is fighting: those rules carry inflated specificity and
-   an unqualified selector would silently lose the cascade. */
-.v-dialog.events-detail-dialog {
-  overflow: hidden;
-}
-
-.v-card.events-detail-card {
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-
-  > .v-card__title,
-  > .v-card__actions {
-    flex: 0 0 auto;
-  }
-
-  > .v-card__text {
-    flex: 1 1 auto;
-    overflow-y: auto;
-  }
-}
-
-/* fullscreen has no overlay margin to spare, so the card takes the lot */
-.v-dialog--fullscreen .v-card.events-detail-card {
-  height: 100%;
-  max-height: 100%;
-}
-
-/* Height caps in vh rather than an aspect ratio: an aspect ratio derives the
-   height from the width, which is exactly what lets a wide, short viewport
-   blow the card open vertically.
-   The subtracted constant is the card's own chrome - title, actions, card
-   paddings and the timestamp line. That cost is in fixed pixels, so on a short
-   viewport it eats a much larger share of the height than on a tall one; a
-   plain `vh` cap ignores it and lands the body back in a scroll (measured at
-   174px on a 1280x600 viewport, rounded up here for slack). The paired cap
-   also gives up the 8px margin between the two media elements. */
-$events-detail-chrome: 180px;
-
-.events-detail-media {
-  width: 100%;
-  display: block;
-  max-height: calc((90vh - #{$events-detail-chrome} - 8px) / 2);
-  object-fit: contain;
-}
-
-.events-detail-media--solo {
-  max-height: calc(90vh - #{$events-detail-chrome});
-}
-
-/* fullscreen spends no height on the overlay margin, so the budget is the
-   whole viewport rather than the 90vh the floating card is capped at */
-.v-dialog--fullscreen .events-detail-media {
-  max-height: calc((100vh - #{$events-detail-chrome} - 8px) / 2);
-}
-
-.v-dialog--fullscreen .events-detail-media--solo {
-  max-height: calc(100vh - #{$events-detail-chrome});
 }
 
 .noFocus:focus::before {

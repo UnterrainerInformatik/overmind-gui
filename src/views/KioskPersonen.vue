@@ -18,6 +18,11 @@
           route="/app/kioskpersonenevents"
         ></KioskLinkPanel>
 
+        <KioskLinkPanel
+          :text="$t('page.kiosk.linkPersonenArchiv')"
+          route="/app/kioskpersonenarchiv"
+        ></KioskLinkPanel>
+
         <v-card v-if="cameras.length > 1" outlined class="ma-1 pa-2 personen-camera-switch">
           <v-select
             v-model="selectedCameraId"

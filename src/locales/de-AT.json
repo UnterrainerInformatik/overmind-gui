@@ -3,6 +3,13 @@
 		"false": "Falsch",
 		"true": "Richtig"
 	},
+	"component": {
+		"events": {
+			"clipError": "Clip konnte nicht geladen werden",
+			"close": "Schließen",
+			"unknown": "Unbekannt"
+		}
+	},
 	"message": {
 		"error": {
 			"communication": "Bei der Kommunikation mit dem Server trat ein Fehler auf.",
@@ -61,6 +68,7 @@
 			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPersonen": "Personen",
+			"linkPersonenArchiv": "Archiv",
 			"linkPersonenEvents": "Events",
 			"linkPersonenVerwaltung": "Personen",
 			"linkPlugs": "Steckdosen",
@@ -276,6 +284,43 @@
 				"registryError": "Kamerakonfiguration konnte nicht geladen werden",
 				"streamError": "Der Live-Stream für {name} konnte nicht geöffnet werden"
 			},
+			"personenArchiv": {
+				"allCameras": "Alle Kameras",
+				"cancel": "Abbrechen",
+				"deleteAction": "Endgültig löschen",
+				"deleteConfirm": "Diese Aufnahme wird überall gelöscht: die gesicherte Kopie und das Ereignis am Gerät, sofern es noch vorhanden ist. Das kann nicht rückgängig gemacht werden.",
+				"deleteDoneMessage": "Die Aufnahme wurde überall gelöscht.",
+				"deleteFailedMessage": "Die Aufnahme wurde nicht gelöscht.",
+				"deletePartialCopyMessage": "Das Ereignis am Gerät wurde gelöscht, die gesicherte Kopie ist noch vorhanden.",
+				"deletePartialOriginMessage": "Die gesicherte Kopie wurde gelöscht, das Ereignis am Gerät ist noch vorhanden.",
+				"empty": "Für diesen Zeitraum ist nichts gesichert",
+				"fetchError": "Das Archiv konnte nicht gelesen werden",
+				"filterCamera": "Kamera",
+				"filterFrom": "Von",
+				"filterKind": "Art",
+				"filterName": "Person",
+				"filterTo": "Bis",
+				"kindAll": "Alle Arten",
+				"loadMore": "Weitere laden",
+				"loadMoreError": "Weitere Einträge konnten nicht geladen werden",
+				"noCamera": "Für die Ereignis-Seite ist keine Kamera konfiguriert.",
+				"quickRangeDays": "{count} Tage",
+				"quickRangeHours": "{count} Stunden",
+				"quickRangeLabel": "Zeitraum",
+				"registryError": "Kamerakonfiguration konnte nicht geladen werden",
+				"stateFailed": "Sicherung fehlgeschlagen",
+				"stateFailedNote": "Die gesicherte Kopie konnte nicht erstellt werden: {reason}",
+				"stateFailedPlainNote": "Die gesicherte Kopie konnte nicht erstellt werden.",
+				"statePending": "Wird vorbereitet",
+				"statePendingNote": "Die gesicherte Kopie wird noch vorbereitet und kann noch nicht abgespielt werden.",
+				"timelineLabel": "Zeitachse des Archivs",
+				"title": "Archiv",
+				"kinds": {
+					"event": "Ereignis",
+					"recording": "Aufzeichnung",
+					"snapshot": "Standbild"
+				}
+			},
 			"personenEvents": {
 				"archiveFailed": "Sicherung fehlgeschlagen",
 				"archiveFailedNote": "Die gesicherte Kopie konnte nicht erstellt werden: {reason}",
@@ -290,8 +335,6 @@
 				"archiveSaved": "Gesichert",
 				"archiveSavedMessage": "Das Ereignis wurde gesichert.",
 				"cancel": "Abbrechen",
-				"clipError": "Clip konnte nicht geladen werden",
-				"close": "Schließen",
 				"deleteAction": "Endgültig löschen",
 				"deleteConfirm": "Diese Aufnahme wird überall gelöscht: das Ereignis am Gerät und jede davon gesicherte Kopie. Das kann nicht rückgängig gemacht werden.",
 				"deleteDoneMessage": "Die Aufnahme wurde überall gelöscht.",
@@ -314,8 +357,7 @@
 				"timelineAxisEnd": "Zeitachse Ende: {moment}",
 				"timelineAxisStart": "Zeitachse Beginn: {moment}",
 				"timelineLabel": "Zeitachse der Ereignisse",
-				"title": "Ereignisse",
-				"unknown": "Unbekannt"
+				"title": "Ereignisse"
 			},
 			"presence": {
 				"title": "Präsenz"

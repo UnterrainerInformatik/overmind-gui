@@ -311,10 +311,50 @@ export default {
 <style lang="scss">
 @import 'index.scss';
 
-/* Where this sits on the page - fixed against the right edge - and the grid
-   padding that keeps the tiles out from under it are owned by
-   KioskPersonenEvents.vue, which drives both from one width variable. This
-   block is only the timeline's own insides. */
+/* Where this sits on the page - fixed against the right edge - and the padding
+   that keeps a grid's rightmost column out from under it. The two are one
+   contract and come off one variable, which is why they live here rather than
+   with either page: both the events page and the archive page put this strip
+   beside their grid, and a second copy of the width in a second view is how
+   the strip and the column it reserves would drift apart.
+   A page opts its container in by carrying `events-content--with-timeline`
+   while the strip is shown. */
+$events-timeline-width: 56px;
+
+/* What the fixed corner button below the strip takes out of it: its own 28px
+   plus the 8px it sits off the edge, plus 4px of clearance. */
+$events-timeline-foot: 40px;
+
+.events-timeline {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: $events-timeline-width;
+  /* Not the full 100vh: App.vue parks .kiosk-migrations-btn in the bottom
+     right corner at the same z-index, and a 28px button 8px off the edge
+     covers the bottom 36px of this column. That used to cost nothing - the
+     strip's foot was bare rail - but it now holds the label naming where the
+     axis starts, and a mark landing at axisStart was never clickable there
+     either. The axis stops above the button instead of running under it; the
+     timeline measures its own height, so the graduation follows. */
+  height: calc(100vh - #{$events-timeline-foot});
+  z-index: 20;
+  /* `fixed` is also what makes this the containing block every absolutely
+     positioned part below - the rail, the scale, the marks - is measured
+     against. This rule used to be split in two, a `position: relative` here
+     and the placement on the page; merged, because the later of two rules at
+     the same specificity silently won, and one of them has to. */
+}
+
+/* Qualified with Vuetify's own .container, which owns the padding this is
+   correcting; an unqualified selector ties on specificity and wins or loses
+   on source order alone. The modifier only exists while the timeline does, so
+   the reserved column disappears with it on a narrow viewport. */
+.container.events-content--with-timeline {
+  padding-right: $events-timeline-width;
+}
+
+/* What follows is the timeline's own insides. */
 /* The strip's 56px splits into two lanes: every piece of text the scale draws
    lives on the left, the rail, the ticks and the event marks on the right.
    Separating them is what makes "the scale never obscures a mark" structural
@@ -342,11 +382,6 @@ $events-timeline-rail-center: $events-timeline-graphic-lane / 2;
   /* nothing in this lane is a target: a pointer aimed at a mark passes
      through it to the button underneath. */
   pointer-events: none;
-}
-
-.events-timeline {
-  position: relative;
-  height: 100%;
 }
 
 .events-timeline-rail {
