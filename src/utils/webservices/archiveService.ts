@@ -174,9 +174,27 @@ export class ArchiveService {
     return this.itemsOf(response).map(item => this.toItem(item))
   }
 
-  /** Releases one archive entry. Nothing comes back; a 204 is the whole answer. */
+  /**
+   * Releases one archive entry. Nothing comes back; a 204 is the whole answer.
+   *
+   * Since openspec change `event-permanent-delete` this is also the second half
+   * of a permanent delete, issued after the source event was removed and
+   * without knowing whether the server cascaded into the archive by itself. So
+   * a 404 resolves here, for the same reason it does in
+   * `frigateService.deleteEvent()`: an entry that is already gone is the state
+   * the caller asked for, not a failure to report. A release of an entry
+   * somebody else released a moment earlier reads the same way, which is what
+   * that user meant too.
+   */
   public async deleteItem (archiveId: string): Promise<void> {
-    await axiosUtils.del(this.server, 'archiveItems', archiveId)
+    try {
+      await axiosUtils.del(this.server, 'archiveItems', archiveId)
+    } catch (err) {
+      if (err && err.status === 404) {
+        return
+      }
+      throw err
+    }
   }
 
   /**

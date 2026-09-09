@@ -67,22 +67,32 @@ const store = {
         // listed here at all - the server sends the URLs with the event, so
         // they are read from the payload instead of built from a template.
         cameraEventsMerged: '/cameras/events',
-        // The long-term event archive (openspec change `archive-save-button`).
+        // The long-term event archive (openspec change `archive-save-button`)
+        // and the permanent delete of a recording (openspec change
+        // `event-permanent-delete`). One comment, because they are one story:
+        // a saved event lives in two places and the delete has to reach both.
         // **Assumed shapes**: java-overmind-server serves none of these routes
-        // yet - they are the ones `ai/open-proposals.md` section A states, which
-        // mirror that repository's own primer, and they are re-checked once it
-        // does. Until then every call answers 404, which the events page
-        // swallows: see archiveService.ts.
+        // yet - the archive ones are what `ai/open-proposals.md` section A
+        // states, which mirror that repository's own primer, the delete is what
+        // its section F states, and both are re-checked once it does. Until
+        // then every call answers 404, which the events page swallows for the
+        // archive (see archiveService.ts) and reports for the delete.
         //   POST   eventArchive  -> { archiveId }
         //   GET    archiveItems  -> { items: [...] }
         //   DELETE archiveItems/{archiveId} -> 204
-        // A single item is addressed through the house CRUD helper -
+        //   DELETE cameraEvent   -> 204, the event and its media gone at the
+        //          source. 404 is counted as success by both deletes alike:
+        //          what is already gone is the state the caller asked for.
+        // A single archive item is addressed through the house CRUD helper -
         // `axiosUtils.del(server, 'archiveItems', archiveId)` appends the id and
         // resolves to '/archive/items/{archiveId}' - so it needs no entry of its
-        // own, while the POST's path carries two placeholders and is filled by
-        // `axiosUtils.postToPath()`.
+        // own, while the two paths that carry placeholders are filled by
+        // `axiosUtils.postToPath()` and `axiosUtils.deleteFromPath()`.
         archiveItems: '/archive/items',
         eventArchive: '/cameras/{id}/events/{eventId}/archive',
+        // The event itself. `cameraEvents` above is the same path without the
+        // event id and is only ever read; this one is only ever deleted.
+        cameraEvent: '/cameras/{id}/events/{eventId}',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

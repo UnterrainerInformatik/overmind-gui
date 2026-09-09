@@ -245,6 +245,22 @@ export class AxiosUtils {
   }
 
   /**
+   * Sends a DELETE to an endpoint whose path carries IDs inside it. `del()`
+   * above can only append an id to a collection path, which a route naming an
+   * event inside a camera ('/cameras/{id}/events/{eventId}') cannot be
+   * addressed with - and building that URL in the service would be the first
+   * place in this codebase where a service assembles a path by hand.
+   * `void` rather than the `any` its siblings answer with, because a DELETE on
+   * this contract answers 204 and there is no body to hand on.
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param params values for the path's `{...}` placeholders
+   */
+  public async deleteFromPath (server: string, endpointPath: string, params: object): Promise<void> {
+    return this.internalRestCall(this.internalDelete(server, this.resolveEndpoint(endpointPath, params)))
+  }
+
+  /**
    * The absolute URL of such an endpoint, for the places that need a URL rather
    * than a call - an `<img src>` or a `<video src>` the browser fetches itself.
    * @param server name of the rest/config/servers property to use

@@ -4,9 +4,9 @@
 
 Lets a kiosk user keep a person event beyond the node's own retention by saving
 it to the long-term archive from the event's detail view, see at a glance which
-events are already saved, and release a saved event again — under the two
-distinct meanings that releasing carries depending on whether the original still
-exists.
+events are already saved, and release a saved event again while its original is
+still held at its source — where the original is gone, or all but gone, the
+permanent delete takes the release control's place.
 
 ## Requirements
 
@@ -76,19 +76,19 @@ saved.
 
 ### Requirement: Releasing a saved event
 
-The detail view of a saved event SHALL offer a control that releases it from the
-archive, and SHALL require an explicit confirmation before doing so. Cancelling
-the confirmation SHALL leave the archive entry untouched.
+The detail view of a saved event whose original is still held at its source SHALL
+offer a control that releases it from the archive, and SHALL require an explicit
+confirmation before doing so. Cancelling the confirmation SHALL leave the archive
+entry untouched.
 
-The control SHALL carry one of two meanings, and SHALL say in its own wording and
-in its confirmation which one applies:
+Releasing SHALL only ever remove the archive copy. It SHALL present the action as
+no longer keeping the event — the copy goes, the event itself remains available
+until its ordinary retention passes — and its confirmation SHALL say so.
 
-- when the original is still held at its source for **more than one day**, the
-  control SHALL present the action as no longer keeping the event — the copy goes,
-  the event itself remains available until its ordinary retention passes;
-- when the original is **already gone, or is held for one day or less**, the
-  control SHALL present the action as a final deletion, in wording distinct from
-  the first case.
+Where the original is **already gone, or is held for one day or less**, the detail
+view SHALL NOT offer the release control at all: with no original to fall back on
+there is only one meaning left, and it belongs to the permanent delete control,
+which SHALL be offered there in its place.
 
 Releasing SHALL report its outcome to the user, and a failed release SHALL leave
 the event marked as saved.
@@ -101,13 +101,14 @@ the event marked as saved.
 
 #### Scenario: Original about to expire
 - **WHEN** the user opens a saved event whose original expires within one day
-- **THEN** the control offers a deletion, and its confirmation says that the
-  event is gone for good
+- **THEN** no release control is offered, and the permanent delete control is
+  offered in its place
 
 #### Scenario: Original already gone
 - **WHEN** the user opens a saved event whose original is no longer held at its
   source
-- **THEN** the control offers a deletion, exactly as in the expiring case
+- **THEN** no release control is offered, and the permanent delete control is
+  offered in its place, exactly as in the expiring case
 
 #### Scenario: Confirming a release
 - **WHEN** the user confirms the release
@@ -131,15 +132,16 @@ own timestamp, a configured retention, or any other local assumption, as the
 installation's retention is not known to it.
 
 An archive entry for which the server states nothing about the original SHALL be
-treated as one whose original is gone.
+treated as one whose original is gone, and its detail view SHALL therefore offer
+the permanent delete rather than a release.
 
 When the server does state how much longer the original is held, the detail view
-SHALL show that remaining time alongside the release control.
+SHALL show that remaining time alongside the control it offers.
 
 #### Scenario: The server states no remaining time
 - **WHEN** an archive entry carries no statement about its original
-- **THEN** the release control presents a deletion, on the assumption that the
-  original is gone
+- **THEN** the view treats the original as gone and offers the permanent delete
+  instead of a release
 
 #### Scenario: Remaining time shown
 - **WHEN** an archive entry states that its original is still held for a period

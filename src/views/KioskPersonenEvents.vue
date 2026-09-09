@@ -231,24 +231,38 @@
           >{{ $t('page.kiosk.personenEvents.archiveSave') }}</v-btn>
           <!-- An entry this view inserted itself carries no `originExpiresAt`,
                so what releasing it means cannot be read yet: the control waits
-               for the index read that replaces it, a tick away at most. -->
+               for the index read that replaces it, a tick away at most. And
+               once that is read, the release is offered only while the original
+               is still held - see releaseOffered(). -->
           <v-btn
-            v-else-if="!selectedArchive.local"
+            v-else-if="releaseOffered"
             text
             class="events-archive-release"
             :loading="archiveReleasing"
             @click="requestRelease"
           >{{ releaseLabel }}</v-btn>
+          <!-- Offered on every event the dialog can play, saved or not, and
+               guarded by its confirmation alone: this GUI holds no identity it
+               could check a role against, and a check against an absent one
+               would be a claim of protection rather than a protection. -->
+          <v-btn
+            text
+            color="error"
+            class="events-delete"
+            :loading="deleting"
+            @click="requestDelete"
+          >{{ $t('page.kiosk.personenEvents.deleteAction') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- One instance, not two: `confirmText` is a prop rather than an argument
-         of open(), so the wording the release carries is bound to
-         `pendingRelease` instead of being passed in. -->
+         of open(), so the wording the pending action carries is bound to
+         `pendingAction` instead of being passed in. A second instance for the
+         delete would only invite a third. -->
     <ConfirmDialog
       ref="confirmDialog"
-      :confirmText="releaseConfirmText"
+      :confirmText="confirmActionText"
       :cancelText="$t('page.kiosk.personenEvents.cancel')"
     ></ConfirmDialog>
   </div>
@@ -377,9 +391,11 @@ export default {
     archiveByEventId: {},
     archiveSaving: false,
     archiveReleasing: false,
-    // the archive item a release was requested for, plus what releasing it
-    // means - the ConfirmDialog's own labels are computed off this
-    pendingRelease: null,
+    deleting: false,
+    // what the one ConfirmDialog is currently asking about:
+    // { kind: 'unsave' | 'delete-everywhere', item, event }. The dialog's own
+    // labels are computed off this, because it takes them as props.
+    pendingAction: null,
 
     dateUtils,
     // guards a stale response from an earlier filter change writing over a
@@ -488,14 +504,30 @@ export default {
       })
     },
 
-    releaseLabel () {
-      return this.releaseWording(archiveService.releaseKind(this.selectedArchive))
+    /**
+     * Whether releasing still has a meaning of its own. It has one only while
+     * the original is still held at its source: below that, "release the copy"
+     * and "delete the recording" are the same act, and the permanent delete
+     * beside it is the control that says so. An entry this view inserted itself
+     * states no `originExpiresAt` yet and waits for the index read.
+     */
+    releaseOffered () {
+      const item = this.selectedArchive
+      return !!item && !item.local && archiveService.releaseKind(item) === 'unsave'
     },
 
-    // Computed off `pendingRelease`, because ConfirmDialog takes its labels as
+    // One wording rather than a pair to pick from: the control is only ever on
+    // screen for the case it describes - see releaseOffered().
+    releaseLabel () {
+      return this.$t('page.kiosk.personenEvents.archiveReleaseUnsave')
+    },
+
+    // Computed off `pendingAction`, because ConfirmDialog takes its labels as
     // props: one instance cannot be handed a different confirm label per call.
-    releaseConfirmText () {
-      return this.releaseWording(this.pendingRelease ? this.pendingRelease.kind : 'delete')
+    confirmActionText () {
+      return this.pendingAction && this.pendingAction.kind === 'delete-everywhere'
+        ? this.$t('page.kiosk.personenEvents.deleteAction')
+        : this.$t('page.kiosk.personenEvents.archiveReleaseUnsave')
     },
 
     // `$vuetify.breakpoint.width` is reactive, so rotating or resizing brings
@@ -711,12 +743,6 @@ export default {
         clipUrl: (event && event.clipUrl) || '',
         snapshotUrl: (event && event.snapshotUrl) || ''
       }
-    },
-
-    releaseWording (kind) {
-      return kind === 'unsave'
-        ? this.$t('page.kiosk.personenEvents.archiveReleaseUnsave')
-        : this.$t('page.kiosk.personenEvents.archiveReleaseDelete')
     },
 
     /**
@@ -1002,26 +1028,25 @@ export default {
 
     /**
      * Asks before releasing, in the terms the release actually carries: the
-     * kind is settled here and kept in `pendingRelease`, which is what the one
-     * ConfirmDialog's confirm label is computed off.
+     * pending action is kept in `pendingAction`, which is what the one
+     * ConfirmDialog's confirm label is computed off. The kind is always
+     * `unsave` - the control is offered nowhere else - and the confirmation
+     * names the date the original is held until, so a user near the boundary
+     * sees the fact and not only our reading of it.
      */
     requestRelease () {
       const item = this.selectedArchive
       if (!item || this.archiveReleasing) {
         return
       }
-      const kind = archiveService.releaseKind(item)
-      this.pendingRelease = { item, kind }
-      this.$refs.confirmDialog.open(this.releaseMessage(kind, item), () => this.releaseArchive(item))
+      this.pendingAction = { kind: 'unsave', item, event: this.selectedEvent }
+      this.$refs.confirmDialog.open(this.releaseMessage(item), () => this.releaseArchive(item))
     },
 
-    releaseMessage (kind, item) {
-      if (kind === 'unsave') {
-        return this.$t('page.kiosk.personenEvents.archiveReleaseUnsaveConfirm', {
-          moment: dateUtils.dateToShortDateTime(new Date(item.originExpiresAt * 1000), this.$i18n.locale)
-        })
-      }
-      return this.$t('page.kiosk.personenEvents.archiveReleaseDeleteConfirm')
+    releaseMessage (item) {
+      return this.$t('page.kiosk.personenEvents.archiveReleaseUnsaveConfirm', {
+        moment: dateUtils.dateToShortDateTime(new Date(item.originExpiresAt * 1000), this.$i18n.locale)
+      })
     },
 
     /**
@@ -1044,6 +1069,114 @@ export default {
         this.notify('error', 'archiveReleaseFailedMessage', err && err.serverMessage)
       }
       this.archiveReleasing = false
+    },
+
+    /**
+     * Asks before deleting, with a sentence of its own: it names both places
+     * the recording can live and says that this cannot be undone. Deliberately
+     * not the release's sentence with a stronger adjective - the two actions
+     * must not be readable as one.
+     */
+    requestDelete () {
+      const event = this.selectedEvent
+      if (!event || this.deleting) {
+        return
+      }
+      this.pendingAction = { kind: 'delete-everywhere', item: this.archiveOf(event), event }
+      this.$refs.confirmDialog.open(
+        this.$t('page.kiosk.personenEvents.deleteConfirm'),
+        () => this.deleteEverywhere(event))
+    },
+
+    /**
+     * The deletion itself: the original at its source first, then the archive
+     * copy when the index names one. Source first, because it is the one that
+     * keeps producing a playable recording while it exists - the copy is the
+     * one a user could still get rid of by hand through the release control.
+     *
+     * The second call is not skipped on the assumption that the server
+     * cascaded: a DELETE on an entry that is already gone answers 404, which
+     * both services count as success, so the redundant request costs one round
+     * trip while skipping it would cost a copy left behind.
+     *
+     * An entry with no original at its source skips the first step and runs the
+     * second alone. This page cannot produce one - every event listed here is
+     * one a node reported - but it is the archive view's ordinary case, and the
+     * spec asks for the same control and the same wording there.
+     */
+    async deleteEverywhere (event) {
+      // the guard, not just the button's loading state: a second tap must not
+      // reach the server even if it arrives before the disabled state renders
+      if (!event || this.deleting) {
+        return
+      }
+      this.deleting = true
+      const item = this.archiveOf(event)
+      const hasOrigin = event.camera !== null && event.camera !== undefined
+      // A place that was never there counts as cleared, so the two flags say
+      // "nothing of the recording is left here" rather than "a request
+      // succeeded" - but only a place that really existed can be *reported* as
+      // one half of a half-finished deletion, which is why `item` travels on.
+      let originGone = !hasOrigin
+      let copyGone = !item
+      let originReason = ''
+      let copyReason = ''
+      if (hasOrigin) {
+        try {
+          await frigateService.deleteEvent(event.camera, event.id)
+          originGone = true
+        } catch (err) {
+          originReason = (err && err.serverMessage) || ''
+        }
+      }
+      if (item) {
+        try {
+          await archiveService.deleteItem(item.archiveId)
+          copyGone = true
+        } catch (err) {
+          copyReason = (err && err.serverMessage) || ''
+        }
+      }
+      this.reportDeletion(event, originGone, copyGone, !!item, originReason || copyReason)
+      this.deleting = false
+    },
+
+    /**
+     * The three outcomes, and what each of them lets the view do.
+     *
+     * The optimistic removal follows the original: where it went, the entry
+     * leaves the list and the dialog closes with it, even if the copy stayed -
+     * what the list shows is what the source still has. Where only the copy
+     * went, the event stays listed and merely loses its marking, which is
+     * exactly what a release does. Where nothing went, nothing here moves.
+     *
+     * A half-finished deletion is its own message rather than a success or a
+     * failure: reporting it as a success would leave a recording playable after
+     * the GUI said it was gone, and it names what is still kept because that is
+     * the part the user can still act on.
+     */
+    reportDeletion (event, originGone, copyGone, hadCopy, reason) {
+      if (originGone && copyGone) {
+        this.notify('success', 'deleteDoneMessage')
+      } else if (originGone) {
+        // only reachable with a copy that stayed behind: `copyGone` is true by
+        // default where there was none
+        this.notify('error', 'deletePartialCopyMessage', reason)
+      } else if (copyGone && hadCopy) {
+        this.notify('error', 'deletePartialOriginMessage', reason)
+      } else {
+        this.notify('error', 'deleteFailedMessage', reason)
+      }
+      if (copyGone) {
+        this.$delete(this.archiveByEventId, event.id)
+      }
+      if (originGone) {
+        this.events = this.events.filter(entry => entry.id !== event.id)
+        if (this.highlightedId === event.id) {
+          this.highlightedId = null
+        }
+        this.closeEvent()
+      }
     },
 
     /**

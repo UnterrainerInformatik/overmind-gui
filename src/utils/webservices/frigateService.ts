@@ -89,6 +89,20 @@ export interface CameraStreamHandle {
  *   GET /cameras/{id}/events?...     the same for one camera, where an
  *     unreachable node is a 502 rather than a partial result.
  *
+ *   DELETE /cameras/{id}/events/{eventId}
+ *     -> 204, the event gone at its source together with its clip, snapshot
+ *     and thumbnail. **Assumed, not yet served** - written down 2026-09-09
+ *     (openspec change `event-permanent-delete`), the same shape stated in
+ *     java-overmind-server's `ai/open-proposals.md`, section F, so the server
+ *     can be built against it rather than against a guess in a diff.
+ *     404 is counted as **success**: deleting what is already gone is the
+ *     state the caller asked for, and a node whose retention dropped the event
+ *     a second earlier must not produce an error. Anything else is a refusal
+ *     and carries the house `reason`.
+ *     It does not touch an archive copy made from the event - whether the
+ *     server cascades is left open, and archiveService.deleteItem() is issued
+ *     either way; see deleteEvent() below.
+ *
  *   event: { eventId, cameraId, label, subLabel, subLabelScore, startTime,
  *            endTime, score, box, zones,
  *            snapshotUrl, thumbnailUrl, clipUrl }
@@ -190,6 +204,29 @@ export class FrigateService {
           sub_label_score: event.subLabelScore === undefined ? null : event.subLabelScore
         }
       }))
+  }
+
+  /**
+   * Deletes one past event at its source, with the clip, snapshot and
+   * thumbnail belonging to it. Resolves on a 204 and on a 404 alike - see the
+   * contract above: an event that is no longer there is what the caller
+   * wanted, and the node's retention can remove one at any moment. Every other
+   * answer rejects, carrying the server's own sentence on `serverMessage`.
+   *
+   * This is only half of a permanent delete. An archive copy made from the
+   * event is removed by `archiveService.deleteItem()`, which the caller issues
+   * afterwards whether or not the server cascaded - a redundant DELETE answers
+   * 404 and costs one round trip, a skipped one costs a copy left behind.
+   */
+  public async deleteEvent (cameraId: number, eventId: string): Promise<void> {
+    try {
+      await axiosUtils.deleteFromPath(this.server, 'cameraEvent', { id: cameraId, eventId })
+    } catch (err) {
+      if (err && err.status === 404) {
+        return
+      }
+      throw err
+    }
   }
 
   /**

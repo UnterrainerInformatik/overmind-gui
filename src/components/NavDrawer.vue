@@ -38,38 +38,32 @@
             dense
             class="ma-0 pa-0"
           ></v-list-item>
-          <div
-            v-if="
-              subItem.role == null || keycloakClientRoles.includes(subItem.role)
-            "
+          <v-tooltip
+            v-if="subItem.link !== 'SPACER'"
+            top
+            :open-delay="openDelay"
+            :disabled="!tooltips"
           >
-            <v-tooltip
-              v-if="subItem.link !== 'SPACER'"
-              top
-              :open-delay="openDelay"
-              :disabled="!tooltips"
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <v-list-item
-                  :to="subItem.link"
-                  @click="setDrawerVisible({ val: false, time: 0 })"
-                  dense
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <v-list-item-icon>
-                    <v-icon v-bind="attrs" v-on="on">{{ subItem.icon }}</v-icon>
-                  </v-list-item-icon>
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      {{ $t(subItem.key) }}
-                    </v-list-item-title>
-                  </v-list-item-content>
-                </v-list-item>
-              </template>
-              <div v-html="$t('tooltip.' + subItem.key)"></div>
-            </v-tooltip>
-          </div>
+            <template v-slot:activator="{ on, attrs }">
+              <v-list-item
+                :to="subItem.link"
+                @click="setDrawerVisible({ val: false, time: 0 })"
+                dense
+                v-bind="attrs"
+                v-on="on"
+              >
+                <v-list-item-icon>
+                  <v-icon v-bind="attrs" v-on="on">{{ subItem.icon }}</v-icon>
+                </v-list-item-icon>
+                <v-list-item-content>
+                  <v-list-item-title>
+                    {{ $t(subItem.key) }}
+                  </v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </template>
+            <div v-html="$t('tooltip.' + subItem.key)"></div>
+          </v-tooltip>
         </div>
       </v-list>
     </div>
@@ -87,37 +81,31 @@ export default {
       {
         icon: 'touch_app',
         key: 'mnu.menu',
-        role: null,
         subs: [
           {
             link: '/app/switches',
             icon: 'play_arrow',
-            key: 'pageTitle.switches',
-            role: null
+            key: 'pageTitle.switches'
           },
           {
             link: '/app/windowContacts',
             icon: 'meeting_room',
-            key: 'pageTitle.windowContacts',
-            role: null
+            key: 'pageTitle.windowContacts'
           },
           {
             link: '/app/appliances',
             icon: 'devices_other',
-            key: 'pageTitle.appliances',
-            role: null
+            key: 'pageTitle.appliances'
           },
           {
             link: '/app/plans',
             icon: 'home',
-            key: 'pageTitle.plans',
-            role: null
+            key: 'pageTitle.plans'
           },
           {
             link: '/app/system',
             icon: 'settings',
-            key: 'pageTitle.system',
-            role: null
+            key: 'pageTitle.system'
           }
         ]
       }
