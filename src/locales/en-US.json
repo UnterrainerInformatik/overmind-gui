@@ -322,6 +322,7 @@
 				}
 			},
 			"personenEvents": {
+				"allCameras": "All cameras",
 				"archiveFailed": "Saving failed",
 				"archiveFailedNote": "The saved copy could not be created: {reason}",
 				"archiveOriginUntil": "Still available on the device until {moment}",
@@ -343,6 +344,7 @@
 				"deletePartialOriginMessage": "The saved copy was deleted, the event on the device is still there.",
 				"empty": "No events yet",
 				"fetchError": "Could not load events",
+				"filterCamera": "Camera",
 				"filterFrom": "From",
 				"filterName": "Person",
 				"filterTo": "To",

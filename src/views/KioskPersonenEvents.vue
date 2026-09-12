@@ -10,6 +10,17 @@
 
         <div class="events-filters d-flex flex-wrap align-center mb-4">
           <v-select
+            v-if="cameras.length > 1"
+            v-model="cameraFilter"
+            :items="cameraItems"
+            :label="$t('page.kiosk.personenEvents.filterCamera')"
+            dense
+            outlined
+            hide-details="auto"
+            class="events-filter-camera mr-4 mb-2"
+          ></v-select>
+
+          <v-select
             v-model="nameFilter"
             :items="people"
             item-text="name"
@@ -297,6 +308,10 @@ export default {
 
     people: [],
 
+    // null is every configured camera, which is what the page opens with;
+    // a camera id narrows every read to that one camera - see
+    // filteredCameraIds().
+    cameraFilter: null,
     nameFilter: null,
     // Seeded here, not in mounted(): Vue fires no watcher for a property's
     // initial value, so mounted()'s single loadEvents(true) stays the only
@@ -335,6 +350,9 @@ export default {
   }),
 
   watch: {
+    cameraFilter () {
+      this.loadEvents(true)
+    },
     nameFilter () {
       this.loadEvents(true)
     },
@@ -347,6 +365,12 @@ export default {
   },
 
   computed: {
+    /** "All cameras" first, then the configured ones in registry order. */
+    cameraItems () {
+      return [{ value: null, text: this.$t('page.kiosk.personenEvents.allCameras') }]
+        .concat(this.cameras.map(camera => ({ value: camera.id, text: camera.displayName })))
+    },
+
     /**
      * The line under the dialog's title: when the event happened, and - where
      * there is more than one camera or any zone - where. The dialog is handed
@@ -466,6 +490,13 @@ export default {
       }
     },
 
+    /** Which cameras to ask about: the chosen one, or all configured ones. */
+    filteredCameraIds () {
+      return this.cameraFilter === null
+        ? this.cameras.map(camera => camera.id)
+        : [this.cameraFilter]
+    },
+
     // datetime-local's value has no timezone suffix, so `new Date(...)` parses
     // it as local wall-clock time - the same moment the picker showed.
     // Its inverse is the module-level localFromDate(), which is what every
@@ -581,7 +612,12 @@ export default {
     },
 
     /**
-     * One page across every configured camera. Overmind merges them itself -
+     * One page across the cameras the filter covers - every configured one
+     * unless a single camera is selected. Narrowing the *request* rather than
+     * the rendered list is what keeps `hasMore`, the paging cursor and the
+     * partial-failure notice describing what is actually on screen: PAGE_SIZE
+     * is applied by the server over the merged stream, so a page filtered
+     * afterwards would arrive nearly empty. Overmind merges them itself -
      * one request per node rather than one per camera - and answers a node it
      * cannot reach with a named gap instead of a failed call, which is what
      * makes partial failure expressible: that camera's events are missing, its
@@ -590,7 +626,7 @@ export default {
      * @param cursor the `startTime` to page back from, or null for the first page
      */
     async fetchPage (cursor) {
-      const ids = this.cameras.map(camera => camera.id)
+      const ids = this.filteredCameraIds()
       try {
         const page = await frigateService.getPastEvents(ids, this.buildFilters(), cursor, PAGE_SIZE)
         return {
@@ -713,7 +749,7 @@ export default {
       if (!this.cameras.length) {
         return
       }
-      const ids = this.cameras.map(camera => camera.id)
+      const ids = this.filteredCameraIds()
       let items
       try {
         items = await archiveService.getItems(ids, this.archiveWindow())
@@ -1136,6 +1172,7 @@ export default {
   padding: 8px 8px 100px 8px;
 }
 
+.events-filter-camera,
 .events-filter-name {
   max-width: 220px;
 }

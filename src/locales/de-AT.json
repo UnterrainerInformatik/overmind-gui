@@ -322,6 +322,7 @@
 				}
 			},
 			"personenEvents": {
+				"allCameras": "Alle Kameras",
 				"archiveFailed": "Sicherung fehlgeschlagen",
 				"archiveFailedNote": "Die gesicherte Kopie konnte nicht erstellt werden: {reason}",
 				"archiveOriginUntil": "Am Gerät noch bis {moment} verfügbar",
@@ -343,6 +344,7 @@
 				"deletePartialOriginMessage": "Die gesicherte Kopie wurde gelöscht, das Ereignis am Gerät ist noch vorhanden.",
 				"empty": "Keine Ereignisse vorhanden",
 				"fetchError": "Ereignisse konnten nicht geladen werden",
+				"filterCamera": "Kamera",
 				"filterFrom": "Von",
 				"filterName": "Person",
 				"filterTo": "Bis",
