@@ -30,6 +30,25 @@ export interface CameraNode extends LastKnownStatus {
    * "not set" reads as "the node's default applies" rather than as unknown.
    */
   defaultRetentionDays: number | null;
+  /**
+   * The recording ring buffer and what fills it (openspec change
+   * `recording-ring-buffer`). **Guessed contract** - design.md D2 of that
+   * change, to be confirmed against java-overmind-server's sibling change
+   * before archive. Every one is null when unknown, so a server that does not
+   * send them yet shows the gauge as unknown rather than as empty.
+   *
+   * `recordingRingBytes` is the effective ring size, null meaning no ring is
+   * configured; `recordingsBytes` is what the recordings occupy;
+   * `recordingRateBytesPerHour` is the current recording rate; and
+   * `storageReportedAt` is overmind's UTC `LocalDateTime` of the reading every
+   * storage figure on this node comes from, `storageTotalBytes` and
+   * `storageUsedBytes` included - those two keep meaning the filesystem the
+   * recordings live on.
+   */
+  recordingRingBytes: number | null;
+  recordingsBytes: number | null;
+  recordingRateBytesPerHour: number | null;
+  storageReportedAt: string | null;
 }
 
 /** The writable fields of a node; the server assigns and owns the rest. */

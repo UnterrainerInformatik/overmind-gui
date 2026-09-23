@@ -33,18 +33,19 @@
             {{ node.frigateVersion || $t('page.kiosk.cameras.nodeDetail.unknown') }}
           </span>
         </div>
-        <div class="node-detail-storage">
-          {{ $t('page.kiosk.cameras.nodeDetail.storage') }}:
-          <span :class="{ 'text--disabled': storageText === null }">
-            {{ storageText === null ? $t('page.kiosk.cameras.nodeDetail.unknown') : storageText }}
-          </span>
-        </div>
         <div class="node-detail-retention">
           {{ $t('page.kiosk.cameras.nodeDetail.defaultRetention') }}:
           <span :class="{ 'text--disabled': retentionText === null }">
             {{ retentionText === null ? $t('page.kiosk.cameras.nodeDetail.unknown') : retentionText }}
           </span>
         </div>
+
+        <!-- The recording ring buffer and the disk under it, in place of a
+             bare "used / total": which of the two runs out first is what
+             decides whether the figure is a danger at all. -->
+        <v-card outlined class="pa-3 mt-3 node-detail-storage">
+          <RecordingStorageGauge :figures="node"></RecordingStorageGauge>
+        </v-card>
 
         <div class="text-subtitle-1 mt-5 mb-1">{{ $t('page.kiosk.cameras.nodeDetail.camerasTitle') }}</div>
 
@@ -96,11 +97,15 @@
 </template>
 
 <script lang="js">
+import RecordingStorageGauge from '@/components/RecordingStorageGauge.vue'
 import { cameraDisplay } from '@/mixins/cameraDisplay'
-import { singleton as cameraUtils } from '@/utils/cameraUtils'
 
 export default {
   name: 'cameraNodeDialog',
+
+  components: {
+    RecordingStorageGauge
+  },
 
   mixins: [cameraDisplay],
 
@@ -113,18 +118,6 @@ export default {
   },
 
   computed: {
-    storageText () {
-      const used = cameraUtils.gigabytes(this.node.storageUsedBytes)
-      const total = cameraUtils.gigabytes(this.node.storageTotalBytes)
-      if (used === null && total === null) {
-        return null
-      }
-      return this.$t('page.kiosk.cameras.nodeDetail.storageValue', {
-        used: used === null ? '?' : used,
-        total: total === null ? '?' : total
-      })
-    },
-
     /**
      * The retention this node applies to a camera that sets none of its own -
      * the fallback the stream settings name under an empty retention field, so

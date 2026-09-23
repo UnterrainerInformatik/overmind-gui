@@ -141,6 +141,10 @@
                 {{ statusText(node) }}
               </v-list-item-subtitle>
 
+              <!-- compact, so a disk running out shows in the list without the
+                   detail view being opened -->
+              <RecordingStorageGauge dense :figures="node" class="cameras-node-storage"></RecordingStorageGauge>
+
               <v-list-item-subtitle
                 v-if="nodeTestResults[node.id]"
                 class="cameras-line"
@@ -395,6 +399,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import CameraSetupAssistant from '@/components/CameraSetupAssistant.vue'
 import CameraStreamSettings from '@/components/CameraStreamSettings.vue'
 import CameraNodeDialog from '@/components/CameraNodeDialog.vue'
+import RecordingStorageGauge from '@/components/RecordingStorageGauge.vue'
 import { cameraDisplay } from '@/mixins/cameraDisplay'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
@@ -444,7 +449,8 @@ export default {
     ConfirmDialog,
     CameraSetupAssistant,
     CameraStreamSettings,
-    CameraNodeDialog
+    CameraNodeDialog,
+    RecordingStorageGauge
   },
 
   data: () => ({

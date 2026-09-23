@@ -744,6 +744,12 @@ export default {
      *
      * Deliberately not awaited by its callers: a slow or hanging archive must
      * not hold up the events list it was read alongside.
+     *
+     * The map is rebuilt from the index on every read rather than added to, so
+     * an entry the archive dropped to make room for newer ones (openspec change
+     * `recording-ring-buffer` - a full archive displaces its oldest entries
+     * instead of refusing a save) simply stops being listed, and its event is
+     * offered for saving again, exactly as after a release.
      */
     async loadArchive () {
       if (!this.cameras.length) {

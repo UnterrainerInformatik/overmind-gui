@@ -143,8 +143,6 @@
 					"defaultRetentionValue": "{days} Tage für Kameras ohne eigene Angabe",
 					"frigateVersion": "Frigate-Version",
 					"noCameras": "Auf diesem Node ist noch keine Kamera eingerichtet.",
-					"storage": "Speicher",
-					"storageValue": "{used} GB von {total} GB belegt",
 					"unknown": "unbekannt"
 				},
 				"nodesEmpty": "Noch kein Node eingerichtet.",
@@ -226,7 +224,36 @@
 				"unknownNode": "unbekannter Node",
 				"usageEvents": "Ereignis-Seite",
 				"usageLive": "Live-Seite",
-				"usageNone": "keine Seite"
+				"usageNone": "keine Seite",
+				"storageGauge": {
+					"days": "{count} Tag | {count} Tage",
+					"denseDisk": "Platte noch etwa {duration}",
+					"denseDiskFree": "Platte {free} GB frei",
+					"denseDiskUnknown": "Platte unbekannt",
+					"denseNoRing": "kein Ringspeicher",
+					"denseRing": "Ring {percent} % voll",
+					"denseRingFull": "Ring voll",
+					"denseRingUnknown": "Ring-Füllstand unbekannt",
+					"diskHeadroom": "{free} GB frei, etwa {duration} Aufnahme",
+					"diskNothingRecorded": "{free} GB frei; es wird nichts aufgenommen",
+					"diskRateUnknown": "{free} GB frei; die Aufnahmerate ist unbekannt",
+					"diskTitle": "Festplatte",
+					"diskUnknown": "Freier Platz unbekannt",
+					"fill": "{percent} % voll, {used} GB von {total} GB",
+					"fillUnknown": "{total} GB, Füllstand unbekannt",
+					"frigateDeletes": "Weniger als eine Stunde Aufnahme übrig: Frigate beginnt von selbst, die ältesten Aufnahmen zu löschen, unabhängig von der eingestellten Aufbewahrung.",
+					"full": "Voll, {used} GB von {total} GB: die ältesten Aufnahmen werden überschrieben",
+					"hours": "{count} Stunde | {count} Stunden",
+					"minutes": "{count} Minute | {count} Minuten",
+					"noRing": "Kein Ringspeicher eingestellt: Aufnahmen sind nur durch ihre Aufbewahrung und die Festplatte begrenzt",
+					"readAt": "Gelesen {at}",
+					"readAtUnknown": "Zeitpunkt der Messung unbekannt",
+					"ringDays": "Fasst beim aktuellen Aufnahmetempo etwa {duration} Aufnahmen",
+					"ringLargerThanDisk": "Der Ringspeicher kann auf dieser Festplatte nicht voll werden: die Festplatte läuft vorher voll.",
+					"ringTitle": "Ringspeicher",
+					"stale": "möglicherweise veraltet",
+					"unknown": "Aufnahmespeicher unbekannt"
+				}
 			},
 			"migrations": {
 				"applianceBattery": "Batterie",
@@ -319,6 +346,16 @@
 					"event": "Ereignis",
 					"recording": "Aufzeichnung",
 					"snapshot": "Standbild"
+				},
+				"usage": {
+					"empty": "Leer, {total} GB verfügbar",
+					"fill": "{percent} % voll, {used} GB von {total} GB",
+					"fillUnknown": "{total} GB, Füllstand unbekannt",
+					"full": "Voll, {used} GB von {total} GB: jeder neue Eintrag verdrängt die ältesten",
+					"reachesBack": "Reicht zurück bis {date}",
+					"ringNote": "Ist das Archiv voll, macht es Platz für neue Einträge, indem es die ältesten entfernt.",
+					"title": "Archivspeicher",
+					"unknown": "Füllstand des Archivs unbekannt"
 				}
 			},
 			"personenEvents": {

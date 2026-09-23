@@ -46,6 +46,19 @@ export interface ArchiveItem {
 export type ArchiveItemState = 'pending' | 'ready' | 'failed'
 
 /**
+ * How full the archive is. The archive is a ring buffer: once `usedBytes`
+ * reaches `capacityBytes`, the server makes room for each new entry by
+ * dropping the oldest ones, so a full archive is its normal state and not an
+ * error. `oldestStartTime` is epoch seconds and null on an empty archive.
+ * Either byte figure is null where the server did not send it.
+ */
+export interface ArchiveUsage {
+  capacityBytes: number | null;
+  usedBytes: number | null;
+  oldestStartTime: number | null;
+}
+
+/**
  * What an entry was made from. `event` is the only value the server produces
  * today; `snapshot` and `recording` are the archive view's.
  */
@@ -194,6 +207,27 @@ export class ArchiveService {
     }
     const response = await axiosUtils.getResponse(this.server, 'archiveItems', params.join('&'))
     return this.itemsOf(response).map(item => this.toItem(item))
+  }
+
+  /**
+   * How full the archive is - openspec change `recording-ring-buffer`,
+   * design.md D4, a **guessed** contract to be confirmed against
+   * java-overmind-server's sibling change:
+   *
+   *   GET /archive/usage -> { capacityBytes, usedBytes, oldestStartTime? }
+   *
+   * `oldestStartTime` is omitted on an empty archive. A failure, an
+   * unconfigured archive included, is thrown as getItems() throws it: the
+   * caller decides what an unreadable fill level means on its page.
+   */
+  public async usage (): Promise<ArchiveUsage> {
+    const response = await axiosUtils.getResponse(this.server, 'archiveUsage')
+    const bytes = (value: any) => typeof value === 'number' && !isNaN(value) ? value : null
+    return {
+      capacityBytes: bytes(response && response.capacityBytes),
+      usedBytes: bytes(response && response.usedBytes),
+      oldestStartTime: this.toEpochSeconds(response && response.oldestStartTime)
+    }
   }
 
   /**

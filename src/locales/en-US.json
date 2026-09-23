@@ -143,8 +143,6 @@
 					"defaultRetentionValue": "{days} days for a camera that sets none of its own",
 					"frigateVersion": "Frigate version",
 					"noCameras": "No camera is configured on this node yet.",
-					"storage": "Storage",
-					"storageValue": "{used} GB of {total} GB used",
 					"unknown": "unknown"
 				},
 				"nodesEmpty": "No node configured yet.",
@@ -226,7 +224,36 @@
 				"unknownNode": "unknown node",
 				"usageEvents": "Events page",
 				"usageLive": "Live page",
-				"usageNone": "no page"
+				"usageNone": "no page",
+				"storageGauge": {
+					"days": "{count} day | {count} days",
+					"denseDisk": "disk about {duration} left",
+					"denseDiskFree": "disk {free} GB free",
+					"denseDiskUnknown": "disk unknown",
+					"denseNoRing": "no ring buffer",
+					"denseRing": "ring {percent} % full",
+					"denseRingFull": "ring full",
+					"denseRingUnknown": "ring fill unknown",
+					"diskHeadroom": "{free} GB free, about {duration} of recording",
+					"diskNothingRecorded": "{free} GB free; nothing is being recorded",
+					"diskRateUnknown": "{free} GB free; the recording rate is unknown",
+					"diskTitle": "Disk",
+					"diskUnknown": "Free space unknown",
+					"fill": "{percent} % full, {used} GB of {total} GB",
+					"fillUnknown": "{total} GB, fill level unknown",
+					"frigateDeletes": "Less than an hour of recording left: Frigate will start deleting the oldest recordings on its own, regardless of the retention set.",
+					"full": "Full, {used} GB of {total} GB: the oldest recordings are overwritten",
+					"hours": "{count} hour | {count} hours",
+					"minutes": "{count} minute | {count} minutes",
+					"noRing": "No ring buffer configured: recordings are bounded only by their retention and by the disk",
+					"readAt": "Read {at}",
+					"readAtUnknown": "Time of reading unknown",
+					"ringDays": "Holds about {duration} of footage at the current rate",
+					"ringLargerThanDisk": "The ring buffer cannot be filled on this disk: the disk runs out first.",
+					"ringTitle": "Ring buffer",
+					"stale": "may be out of date",
+					"unknown": "Recording storage unknown"
+				}
 			},
 			"migrations": {
 				"applianceBattery": "Battery",
@@ -319,6 +346,16 @@
 					"event": "Event",
 					"recording": "Recording",
 					"snapshot": "Snapshot"
+				},
+				"usage": {
+					"empty": "Empty, {total} GB available",
+					"fill": "{percent} % full, {used} GB of {total} GB",
+					"fillUnknown": "{total} GB, fill level unknown",
+					"full": "Full, {used} GB of {total} GB: each new entry displaces the oldest ones",
+					"reachesBack": "Reaches back to {date}",
+					"ringNote": "When the archive is full, it makes room for new entries by dropping its oldest ones.",
+					"title": "Archive storage",
+					"unknown": "Archive fill level unknown"
 				}
 			},
 			"personenEvents": {

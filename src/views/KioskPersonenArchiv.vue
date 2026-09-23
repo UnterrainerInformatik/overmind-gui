@@ -8,6 +8,16 @@
       >
         <div class="text-h5 mb-2">{{ $t('page.kiosk.personenArchiv.title') }}</div>
 
+        <!-- How full the archive ring is. Read on its own, so a usage route
+             that fails leaves the list alone and only this says "unknown". -->
+        <v-card v-if="!usageLoading" outlined class="pa-3 mb-4 archive-usage">
+          <RecordingStorageGauge
+            archive
+            :figures="usageFigures"
+            :oldest-start-time="usage ? usage.oldestStartTime : null"
+          ></RecordingStorageGauge>
+        </v-card>
+
         <div class="archive-filters d-flex flex-wrap align-center mb-4">
           <v-select
             v-if="cameras.length > 1"
@@ -194,6 +204,7 @@ import EventsTimeline from '@/components/EventsTimeline.vue'
 import EventTile from '@/components/EventTile.vue'
 import EventMediaDialog from '@/components/EventMediaDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import RecordingStorageGauge from '@/components/RecordingStorageGauge.vue'
 import { singleton as archiveService } from '@/utils/webservices/archiveService'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
 import { singleton as doubleTakeService } from '@/utils/webservices/doubleTakeService'
@@ -255,7 +266,8 @@ export default {
     EventsTimeline,
     EventTile,
     EventMediaDialog,
-    ConfirmDialog
+    ConfirmDialog,
+    RecordingStorageGauge
   },
 
   data: () => ({
@@ -280,6 +292,10 @@ export default {
     hasMore: false,
 
     people: [],
+
+    // the archive's fill level; null while it could not be read
+    usage: null,
+    usageLoading: true,
 
     cameraFilter: null,
     nameFilter: null,
@@ -337,6 +353,16 @@ export default {
       const kinds = Array.from(new Set(KNOWN_KINDS.concat(seen)))
       return [{ value: ALL_KINDS, text: this.$t('page.kiosk.personenArchiv.kindAll') }]
         .concat(kinds.map(kind => ({ value: kind, text: this.kindLabel(kind) })))
+    },
+
+    /**
+     * The archive ring in the gauge's terms: its capacity is the ring's size.
+     * Null - shown as unknown - while the usage could not be read.
+     */
+    usageFigures () {
+      return this.usage
+        ? { recordingRingBytes: this.usage.capacityBytes, recordingsBytes: this.usage.usedBytes }
+        : null
     },
 
     /** The archive item of the entry whose dialog is open, or null. */
@@ -563,6 +589,20 @@ export default {
         this.cameras = []
       }
       this.camerasLoading = false
+    },
+
+    /**
+     * The fill level, independently of the list: an archive whose usage cannot
+     * be read still lists its entries, and says only that the fill level is
+     * unknown.
+     */
+    async loadUsage () {
+      try {
+        this.usage = await archiveService.usage()
+      } catch (err) {
+        this.usage = null
+      }
+      this.usageLoading = false
     },
 
     async loadPeople () {
@@ -840,6 +880,7 @@ export default {
         }
         this.closeEntry()
         this.syncPolling()
+        this.loadUsage()
       }
     },
 
@@ -861,6 +902,7 @@ export default {
     // "Archiv" button on KioskPersonen, so this view does not call
     // kioskMode(true) itself - same as KioskPersonenEvents.vue.
     this.loadPeople()
+    this.loadUsage()
     this.loadCameras().then(() => this.loadEntries(true))
   },
 

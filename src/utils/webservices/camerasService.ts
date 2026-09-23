@@ -304,7 +304,13 @@ export class CamerasService {
       storageUsedBytes: this.orNull(node.storageUsedBytes),
       // the retention the node applies to a camera that sets none of its own;
       // null is what the page names as unknown rather than as "kept forever"
-      defaultRetentionDays: this.orNull(node.defaultRetentionDays)
+      defaultRetentionDays: this.orNull(node.defaultRetentionDays),
+      // the ring buffer's figures (CameraNode.ts); an absent ring size is
+      // "no ring configured", which the gauge says as such
+      recordingRingBytes: this.orNull(node.recordingRingBytes),
+      recordingsBytes: this.orNull(node.recordingsBytes),
+      recordingRateBytesPerHour: this.orNull(node.recordingRateBytesPerHour),
+      storageReportedAt: node.storageReportedAt || null
     })
   }
 

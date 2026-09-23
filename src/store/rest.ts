@@ -89,6 +89,10 @@ const store = {
         // own, while the two paths that carry placeholders are filled by
         // `axiosUtils.postToPath()` and `axiosUtils.deleteFromPath()`.
         archiveItems: '/archive/items',
+        // How full the archive ring is (openspec change `recording-ring-buffer`,
+        // design.md D4) - **guessed**, like the node's ring figures:
+        //   GET archiveUsage -> { capacityBytes, usedBytes, oldestStartTime? }
+        archiveUsage: '/archive/usage',
         eventArchive: '/cameras/{id}/events/{eventId}/archive',
         // The event itself. `cameraEvents` above is the same path without the
         // event id and is only ever read; this one is only ever deleted.
