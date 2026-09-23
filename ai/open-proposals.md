@@ -7,22 +7,6 @@ As soon as an item is turned into a change (a directory exists under
 keep it as a done marker. OpenSpec is the record from that point on; this file
 stays short and only ever lists work that is still un-proposed.
 
-## Standing open point — the archive has never met a real server
-
-Not a proposal: an acceptance run that no change may carry off into the archive
-with it. Every archive shape this GUI uses was checked on 2026-09-07 against the
-**source** of `java-overmind-server` (change `event-archive`), never against a
-deployed server with a real node behind it. Still to be done, once the routes
-are served: save an event, see it marked, find it in the archive view, play it,
-and delete it again.
-
-It came out of `archive-save-button` (task 7.4 there) and now covers the archive
-view of `kiosk-archive-page` as well. What the server knows about it is in
-`java-overmind-server/ai/draft-archive-from-gui.md`; the customer-facing side is
-`java-overmind-server/docs/video-capabilities.md`.
-
----
-
 ## B — Aufzeichnungs-Auftrag anlegen (nach der Archiv-Ansicht)
 
 Kein Start/Stop-Knopf am Livebild, sondern ein **Auftrag mit Enddatum**: „Kamera 2 ab

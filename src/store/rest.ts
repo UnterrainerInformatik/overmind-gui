@@ -71,12 +71,10 @@ const store = {
         // and the permanent delete of a recording (openspec change
         // `event-permanent-delete`). One comment, because they are one story:
         // a saved event lives in two places and the delete has to reach both.
-        // **Assumed shapes**: java-overmind-server serves none of these routes
-        // yet - the archive ones are what `ai/open-proposals.md` section A
-        // states, which mirror that repository's own primer, the delete is what
-        // its section F states, and both are re-checked once it does. Until
-        // then every call answers 404, which the events page swallows for the
-        // archive (see archiveService.ts) and reports for the delete.
+        // The archive routes were verified 2026-09-23 on a deployed server
+        // (see archiveService.ts). A server without the archive configured
+        // answers 404, which the events page swallows for the archive and
+        // reports for the delete.
         //   POST   eventArchive  -> { archiveId }
         //   GET    archiveItems  -> { items: [...] }
         //   DELETE archiveItems/{archiveId} -> 204

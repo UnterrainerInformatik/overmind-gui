@@ -110,10 +110,10 @@ export const ORIGIN_GRACE_HOURS = 24
  * is gone *or* the retention is unknown, no media on a `pending` entry, and the
  * exclusive `after`/`before` on `startTime`.
  *
- * What is still open is the run against a **deployed** server with a real node
- * behind it: saving, marking, playing and releasing one actual event end to end
- * (`ai/open-proposals.md`, section A). Until then a failing index read is
- * swallowed, which is also what makes the deploy order not matter.
+ * Verified 2026-09-23 on a deployed server with a real node behind it: one
+ * event saved, shown as saved, found in the archive view, played and deleted
+ * again, end to end. A failing index read is still swallowed, so a server
+ * without the archive configured leaves the events page as it was.
  *
  *   POST /cameras/{id}/events/{eventId}/archive
  *     -> { archiveId }
@@ -126,9 +126,9 @@ export const ORIGIN_GRACE_HOURS = 24
  *     `after` / `before` bound the item's start time and are assumed to be
  *     exclusive, as the events route's are (design.md, Open Questions).
  *     `label` / `subLabel` are the primer's own filters and are read here as
- *     exact matches; whether the deployed route honours them is the second
- *     thing the run below has to establish - unhonoured, they would silently
- *     answer an unfiltered list.
+ *     exact matches; the 2026-09-23 run did not single out whether the
+ *     deployed route honours them - unhonoured, they would silently answer an
+ *     unfiltered list.
  *
  *   DELETE /archive/items/{archiveId}
  *     -> 204
