@@ -261,6 +261,24 @@ class DateUtils {
     return `${('00' + s.getHours()).slice(-2)}:${('00' + s.getMinutes()).slice(-2)}`
   }
 
+  /**
+   * Epoch seconds, as this GUI's pages count time, out of overmind's UTC
+   * `LocalDateTime` - a timestamp without a zone that means UTC. Null for an
+   * absent or unreadable value.
+   */
+  public utcLocalDateTimeToEpochSeconds (value: any): number | null {
+    if (value === null || value === undefined) {
+      return null
+    }
+    const ms = Date.parse(`${value}Z`)
+    return Number.isFinite(ms) ? ms / 1000 : null
+  }
+
+  /** The inverse: `2026-09-01T19:54:23.224`, UTC without a zone suffix. */
+  public epochSecondsToUtcLocalDateTime (epochSeconds: number): string {
+    return new Date(epochSeconds * 1000).toISOString().slice(0, 23)
+  }
+
   public roundTimeToQuater (time, down = true) {
     const roundTo = 15 // minutes
     const roundDownTime = roundTo * 60 * 1000

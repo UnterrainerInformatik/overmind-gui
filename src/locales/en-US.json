@@ -253,6 +253,42 @@
 					"ringTitle": "Ring buffer",
 					"stale": "may be out of date",
 					"unknown": "Recording storage unknown"
+				},
+				"recordingJob": {
+					"title": "Recording job: {name}",
+					"action": "Recording job",
+					"endLabel": "Record until",
+					"quick": {
+						"hour": "1 hour",
+						"day": "1 day",
+						"week": "1 week"
+					},
+					"endMissing": "Please choose until when to record.",
+					"endInPast": "The end must lie in the future.",
+					"storage": "Storage",
+					"local": "on site",
+					"localNote": "The footage stays on the node on site and is kept there at least until the job ends. If the node is lost, the footage is lost with it.",
+					"central": "central",
+					"centralNote": "While the job runs, the footage is also copied into the central archive. It stays on site as well, for as long as the node keeps it.",
+					"estimate": "Estimated volume: about {gb} GB",
+					"ruleOfThumb": "(rule of thumb: about 30 GB per camera and day, because the camera reports no bitrate)",
+					"uplink": "These about {gb} GB travel over the site's internet uplink - for each camera with a central job.",
+					"start": "Start job",
+					"end": "End job",
+					"endConfirm": "End the recording job for \"{name}\" now? The camera returns to its previous recording settings.",
+					"close": "Close",
+					"endsAt": "Ends at",
+					"remaining": "Remaining",
+					"ending": "ending now",
+					"oneAtATime": "While this job runs, no other job can be started for this camera.",
+					"unknown": "Whether a recording job is running for this camera could not be read.",
+					"retry": "Try again",
+					"failed": "The action failed.",
+					"rowRecording": "Recording · {duration} left",
+					"rowUnknown": "Recording job: state unknown",
+					"listTitle": "Running recording jobs",
+					"listUntil": "until {end}",
+					"listRemaining": "{duration} left"
 				}
 			},
 			"migrations": {

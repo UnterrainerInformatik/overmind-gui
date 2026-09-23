@@ -253,6 +253,42 @@
 					"ringTitle": "Ringspeicher",
 					"stale": "möglicherweise veraltet",
 					"unknown": "Aufnahmespeicher unbekannt"
+				},
+				"recordingJob": {
+					"title": "Aufzeichnungs-Auftrag: {name}",
+					"action": "Aufzeichnungs-Auftrag",
+					"endLabel": "Aufzeichnen bis",
+					"quick": {
+						"hour": "1 Stunde",
+						"day": "1 Tag",
+						"week": "1 Woche"
+					},
+					"endMissing": "Bitte wählen Sie, bis wann aufgezeichnet werden soll.",
+					"endInPast": "Das Ende muss in der Zukunft liegen.",
+					"storage": "Aufbewahrung",
+					"local": "am Standort",
+					"localNote": "Die Aufnahmen bleiben auf dem Node vor Ort und werden dort mindestens bis zum Ende des Auftrags aufbewahrt. Geht der Node verloren, sind auch die Aufnahmen verloren.",
+					"central": "zentral",
+					"centralNote": "Die Aufnahmen werden während des Auftrags zusätzlich ins zentrale Archiv kopiert. Vor Ort bleiben sie ebenfalls, so lange wie der Node sie aufbewahrt.",
+					"estimate": "Geschätzte Datenmenge: etwa {gb} GB",
+					"ruleOfThumb": "(Richtwert: rund 30 GB pro Kamera und Tag, weil die Kamera keine Bitrate meldet)",
+					"uplink": "Diese etwa {gb} GB gehen über die Internetverbindung des Standorts - für jede Kamera mit einem zentralen Auftrag.",
+					"start": "Auftrag starten",
+					"end": "Auftrag beenden",
+					"endConfirm": "Den Aufzeichnungs-Auftrag für \"{name}\" jetzt beenden? Die Kamera kehrt zu ihren vorherigen Aufnahme-Einstellungen zurück.",
+					"close": "Schließen",
+					"endsAt": "Endet am",
+					"remaining": "Verbleibend",
+					"ending": "endet gerade",
+					"oneAtATime": "Solange dieser Auftrag läuft, kann für diese Kamera kein weiterer gestartet werden.",
+					"unknown": "Ob für diese Kamera ein Aufzeichnungs-Auftrag läuft, konnte nicht gelesen werden.",
+					"retry": "Erneut versuchen",
+					"failed": "Die Aktion ist fehlgeschlagen.",
+					"rowRecording": "Zeichnet auf · noch {duration}",
+					"rowUnknown": "Aufzeichnungs-Auftrag: Zustand unbekannt",
+					"listTitle": "Laufende Aufzeichnungs-Aufträge",
+					"listUntil": "bis {end}",
+					"listRemaining": "noch {duration}"
 				}
 			},
 			"migrations": {

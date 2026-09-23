@@ -95,6 +95,14 @@ const store = {
         // The event itself. `cameraEvents` above is the same path without the
         // event id and is only ever read; this one is only ever deleted.
         cameraEvent: '/cameras/{id}/events/{eventId}',
+        // A camera's recording jobs (openspec change `camera-recording-jobs`).
+        // The server calls a job a *window*; this contract is known, not
+        // guessed - see recordingJobsService.ts. A refusal carries `{ reason }`.
+        //   POST cameraRecordingJobs, body { endTime, storageChoice } -> window
+        //   GET  cameraRecordingJobs  -> { windows: [...] }, past and present
+        //   POST cameraRecordingJobEnd -> the ended window
+        cameraRecordingJobs: '/cameras/{id}/continuousRecording',
+        cameraRecordingJobEnd: '/cameras/{id}/continuousRecording/{windowId}/end',
         // Path + shape confirmed 2026-08-22 against java-overmind-server's
         // deployed reconciliation endpoints (top-level, not /setup/... —
         // matches the /usedswitches precedent for computed/status endpoints).

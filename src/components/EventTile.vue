@@ -22,7 +22,7 @@
     </div>
     <v-card-text class="pa-2">
       <div class="events-card-name text-truncate">
-        {{ entry.subLabel || $t('component.events.unknown') }}
+        {{ entry.title || entry.subLabel || $t('component.events.unknown') }}
       </div>
       <div class="events-card-time">{{ dateUtils.dateToShortDateTime(startedAt, $i18n.locale) }}</div>
       <div v-if="cameraName" class="events-card-camera text-truncate">{{ cameraName }}</div>
@@ -37,7 +37,8 @@ import { singleton as dateUtils } from '@/utils/dateUtils'
 /**
  * One tile in a grid of recordings, used by the events page for a Frigate event
  * and by the archive page for an archive entry mapped onto the same listing
- * shape: `{ id, startTime, subLabel, zones, thumbnailUrl }`.
+ * shape: `{ id, startTime, subLabel, zones, thumbnailUrl }`, plus an optional
+ * `title` that names an entry which is not a person event - "Aufzeichnung".
  *
  * The root class is `events-card` and stays that: both pages find a tile by
  * that class and by the entry's index in their list when the timeline reveals
@@ -53,7 +54,7 @@ export default {
   name: 'EventTile',
 
   props: {
-    /** the listing entry: `{ id, startTime, subLabel, zones, thumbnailUrl }` */
+    /** the listing entry: `{ id, startTime, subLabel, zones, thumbnailUrl, title? }` */
     entry: {
       type: Object,
       required: true

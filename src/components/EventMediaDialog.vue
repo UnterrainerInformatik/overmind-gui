@@ -8,7 +8,7 @@
   >
     <v-card v-if="entry" outlined class="events-detail-card">
       <v-card-title>
-        <span class="text-truncate">{{ entry.subLabel || $t('component.events.unknown') }}</span>
+        <span class="text-truncate">{{ entry.title || entry.subLabel || $t('component.events.unknown') }}</span>
         <v-spacer></v-spacer>
         <v-btn
           icon
@@ -94,7 +94,7 @@ export default {
       type: Boolean,
       default: false
     },
-    /** the entry being shown: `{ id, subLabel }` is all this component reads */
+    /** the entry being shown: `{ id, subLabel, title? }` is all this component reads */
     entry: {
       type: Object,
       default: null

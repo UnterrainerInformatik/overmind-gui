@@ -25,6 +25,19 @@ export const STORAGE_STALE_HOURS = 1
 export type StorageFigures = Partial<Pick<CameraNode,
   'storageTotalBytes' | 'storageUsedBytes' | 'recordingRingBytes' | 'recordingsBytes' | 'recordingRateBytesPerHour'>>
 
+/**
+ * What a camera records per day when its recording stream reports no bitrate:
+ * a **rule of thumb** for a typical 1080p/4MP camera recording continuously,
+ * not a measured figure. Every caller that falls back to it says so on screen.
+ */
+export const RULE_OF_THUMB_GB_PER_DAY = 30
+
+/** A footage volume estimate, and whether it rests on the rule of thumb. */
+export interface VolumeEstimate {
+  bytes: number;
+  ruleOfThumb: boolean;
+}
+
 /** How the disk headroom is coloured: a Vuetify theme name, or neutral. */
 export type HeadroomColour = 'error' | 'warning' | 'neutral'
 
@@ -166,6 +179,43 @@ export class CameraUtils {
   public isStale (reportedAt: string | null | undefined, now: number = Date.now()): boolean {
     const age = this.readingAgeHours(reportedAt, now)
     return age !== null && age > STORAGE_STALE_HOURS
+  }
+
+  /**
+   * How much footage continuous recording produces over `hours`: the recording
+   * stream's bitrate times the duration where the bitrate is known, otherwise
+   * RULE_OF_THUMB_GB_PER_DAY per day (openspec change `camera-recording-jobs`,
+   * design.md D6). Shared by the recording job form and the stream settings'
+   * per-day figure, so the two cannot drift apart.
+   */
+  public recordingVolumeBytes (bitrateKbps: number | null | undefined, hours: number): VolumeEstimate {
+    const seconds = Math.max(0, hours) * 3600
+    if (known(bitrateKbps) && bitrateKbps > 0) {
+      // kbit as 1024 bits, the reading the stream settings' estimate always had
+      return { bytes: (bitrateKbps * 1024 / 8) * seconds, ruleOfThumb: false }
+    }
+    return { bytes: RULE_OF_THUMB_GB_PER_DAY * 1024 * 1024 * 1024 * (seconds / 86400), ruleOfThumb: true }
+  }
+
+  /**
+   * The bitrate the camera's recording stream reports - `roles.record` looked
+   * up in `streams` - or null where it reports none.
+   */
+  public recordBitrateKbps (camera: Camera | null | undefined): number | null {
+    if (!camera || !camera.roles || !camera.streams) {
+      return null
+    }
+    const stream = camera.streams.find(candidate => candidate.name === camera.roles.record)
+    return stream && known(stream.bitrateKbps) ? stream.bitrateKbps : null
+  }
+
+  /**
+   * A volume as a person reads it: whole GB, or one decimal below 10 GB, where
+   * the difference between 1.4 and 1 still matters.
+   */
+  public volumeGigabytes (bytes: number): number {
+    const gb = bytes / 1024 / 1024 / 1024
+    return gb < 10 ? Math.round(gb * 10) / 10 : Math.round(gb)
   }
 
   /** A byte figure as GB with one decimal; null stays null so it can be shown as unknown. */

@@ -289,6 +289,7 @@
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { cameraDisplay } from '@/mixins/cameraDisplay'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
+import { singleton as cameraUtils } from '@/utils/cameraUtils'
 
 // Frigate's own guidance, and the two numbers most often got wrong: anything
 // above these loads the node for nothing, because detection downscales anyway.
@@ -447,8 +448,7 @@ export default {
       if (!stream || stream.bitrateKbps === null) {
         return null
       }
-      const gigabytesPerDay = (stream.bitrateKbps / 8 / 1024 / 1024) * 86400
-      return Math.round(gigabytesPerDay * 10) / 10
+      return cameraUtils.gigabytes(cameraUtils.recordingVolumeBytes(stream.bitrateKbps, 24).bytes)
     },
 
     // v-slider cannot hold a null, but "never reported" is exactly what null

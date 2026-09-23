@@ -26,10 +26,17 @@ NOT be reachable from the kiosk overview.
 ### Requirement: The kept entries are listed
 
 The archive page SHALL load and display the archive's entries for the cameras
-configured for the events page, most recent first, each shown with its
-thumbnail, the person name it carries (or an "unknown" indicator when it names
-nobody), its timestamp, its zone(s) where it has any, and — when more than one
-camera is configured — which camera it was kept from.
+configured for the events page, most recent first. Each entry SHALL be shown
+with:
+- its thumbnail;
+- the person name it carries, or an "unknown" indicator when it names nobody;
+- its timestamp;
+- its zone(s), where it has any;
+- which camera it was kept from, when more than one camera is configured.
+
+An entry that is not an event, such as a recording kept by a recording job,
+SHALL be named by its kind instead ("Aufzeichnung" for a recording). It SHALL
+NOT be shown as an unknown person.
 
 An entry SHALL be listed whether or not its original still exists at its source.
 An entry whose original has expired SHALL be listed exactly like any other, and
@@ -44,6 +51,11 @@ current filters.
 - **WHEN** the archive holds entries for a configured camera
 - **THEN** they are shown from most recent to oldest, each with its thumbnail,
   name (or "unknown"), timestamp and zone(s) where present
+
+#### Scenario: A recording among the entries
+- **WHEN** the archive holds an entry of kind recording, which carries no person
+- **THEN** it is listed named "Aufzeichnung" with its thumbnail, start time and
+  camera, not as an unknown person
 
 #### Scenario: An entry whose original is gone
 - **WHEN** the archive holds an entry whose original has expired at its source

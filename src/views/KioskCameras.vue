@@ -8,6 +8,38 @@
           {{ $t('page.kiosk.cameras.addCamera') }}
         </v-btn>
 
+        <!-- Above the cameras: a running job is state the user must not
+             overlook, and the list is usually empty and then absent. -->
+        <div v-if="activeJobs.length" class="recording-jobs-running mb-4">
+          <div class="text-subtitle-1 mb-1">{{ $t('page.kiosk.cameras.recordingJob.listTitle') }}</div>
+          <v-list outlined dense class="py-0">
+            <v-list-item
+              v-for="job in activeJobs"
+              :key="job.camera.id"
+              class="recording-jobs-running-row"
+              @click="openRecordingJob(job.camera)"
+            >
+              <v-list-item-icon class="mr-3">
+                <v-icon :color="RECORDING_COLOUR">fiber_manual_record</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title class="d-flex align-center flex-wrap">
+                  <span class="recording-jobs-running-name mr-2">{{ job.camera.displayName }}</span>
+                  <v-chip x-small outlined class="recording-jobs-running-storage">
+                    {{ job.window.storageChoice === 'central'
+                      ? $t('page.kiosk.cameras.recordingJob.central')
+                      : $t('page.kiosk.cameras.recordingJob.local') }}
+                  </v-chip>
+                </v-list-item-title>
+                <v-list-item-subtitle class="recording-jobs-running-when">
+                  {{ $t('page.kiosk.cameras.recordingJob.listUntil', { end: jobEndText(job.window) }) }}
+                  · {{ jobRemainingText(job.window, 'listRemaining') }}
+                </v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </div>
+
         <v-card v-if="camerasFetchError" outlined color="error" class="pa-4 mb-4">
           <v-icon left color="white">warning</v-icon>
           {{ $t('page.kiosk.cameras.fetchError') }}
@@ -47,6 +79,21 @@
                 {{ assignmentText(camera) }}
               </v-list-item-subtitle>
 
+              <v-list-item-subtitle
+                v-if="recordingJobs[camera.id]"
+                class="cameras-line cameras-recording-job"
+              >
+                <!-- the dot carries the signal, not the text colour -->
+                <v-icon x-small :color="RECORDING_COLOUR" class="mr-1">fiber_manual_record</v-icon>{{
+                  jobRemainingText(recordingJobs[camera.id], 'rowRecording') }}
+              </v-list-item-subtitle>
+              <v-list-item-subtitle
+                v-else-if="recordingJobUnknown(camera)"
+                class="cameras-line cameras-recording-job cameras-recording-job--unknown text--disabled"
+              >
+                {{ $t('page.kiosk.cameras.recordingJob.rowUnknown') }}
+              </v-list-item-subtitle>
+
               <v-list-item-subtitle class="cameras-line" :class="statusClass(camera)">
                 {{ statusText(camera) }}
               </v-list-item-subtitle>
@@ -76,6 +123,14 @@
                 @click.stop="testCamera(camera)"
               >
                 <v-icon>network_check</v-icon>
+              </v-btn>
+              <v-btn
+                icon
+                class="cameras-recording-job-btn"
+                :title="$t('page.kiosk.cameras.recordingJob.action')"
+                @click.stop="openRecordingJob(camera)"
+              >
+                <v-icon :color="recordingJobs[camera.id] ? RECORDING_COLOUR : undefined">fiber_manual_record</v-icon>
               </v-btn>
               <v-btn
                 icon
@@ -372,6 +427,14 @@
       @saved="loadCameras"
     ></CameraStreamSettings>
 
+    <CameraRecordingJobDialog
+      v-model="recordingJobDialog"
+      :camera="recordingJobCamera"
+      :window="recordingJobCamera ? recordingJobs[recordingJobCamera.id] : undefined"
+      :reading="recordingJobCamera ? !!recordingJobsReading[recordingJobCamera.id] : false"
+      @changed="readRecordingJob"
+    ></CameraRecordingJobDialog>
+
     <CameraNodeDialog
       v-model="nodeDetailDialog"
       :node="nodeDetailNode"
@@ -400,9 +463,32 @@ import CameraSetupAssistant from '@/components/CameraSetupAssistant.vue'
 import CameraStreamSettings from '@/components/CameraStreamSettings.vue'
 import CameraNodeDialog from '@/components/CameraNodeDialog.vue'
 import RecordingStorageGauge from '@/components/RecordingStorageGauge.vue'
+import CameraRecordingJobDialog from '@/components/CameraRecordingJobDialog.vue'
 import { cameraDisplay } from '@/mixins/cameraDisplay'
+import { durationText } from '@/mixins/durationText'
 import { singleton as camerasService } from '@/utils/webservices/camerasService'
+import { singleton as recordingJobsService } from '@/utils/webservices/recordingJobsService'
 import { singleton as dateUtils } from '@/utils/dateUtils'
+
+/**
+ * The "REC" red of a running recording job. Not the theme's `error`: on a dark
+ * card this installation's is a dark red that reads *less* prominent than the
+ * white icons of the idle cameras beside it - the opposite of the signal.
+ */
+const RECORDING_COLOUR = 'red accent-2'
+
+/**
+ * How often the countdown of running recording jobs moves on. A job counts in
+ * minutes at its finest, so anything faster would redraw the same text.
+ */
+const JOB_TICK_MS = 30000
+
+/**
+ * How often a job whose end has passed is re-read before the page stops asking
+ * and waits for the next action or page load (design.md D3): once at the end,
+ * once more on the next tick if the server still called it active.
+ */
+const JOB_END_REREADS = 2
 
 const emptyCameraForm = () => ({
   id: null,
@@ -442,7 +528,7 @@ const emptyNodeForm = () => ({
 export default {
   name: 'kioskCameras',
 
-  mixins: [cameraDisplay],
+  mixins: [cameraDisplay, durationText],
 
   components: {
     KioskLinkPanel,
@@ -450,7 +536,8 @@ export default {
     CameraSetupAssistant,
     CameraStreamSettings,
     CameraNodeDialog,
-    RecordingStorageGauge
+    RecordingStorageGauge,
+    CameraRecordingJobDialog
   },
 
   data: () => ({
@@ -479,6 +566,22 @@ export default {
 
     nodeDetailDialog: false,
     nodeDetailNode: null,
+
+    // Recording jobs, per camera id (openspec change `camera-recording-jobs`,
+    // design.md D2): the active window, null for no job, or undefined for a
+    // camera whose jobs could not be read - "unknown", never "none".
+    // `recordingJobsLoaded` tells a camera not read yet from an unreadable one.
+    recordingJobs: {},
+    recordingJobsReading: {},
+    recordingJobsLoaded: false,
+    // how often a window past its end has been re-read, by window id
+    recordingJobEndRereads: {},
+    recordingJobDialog: false,
+    recordingJobCamera: null,
+    // epoch seconds; moved on by the tick while a job runs
+    now: Date.now() / 1000,
+    jobTimer: null,
+    RECORDING_COLOUR,
 
     nodeDialog: false,
     nodeForm: emptyNodeForm(),
@@ -529,6 +632,25 @@ export default {
 
     nodeFormValid () {
       return !!(this.nodeForm.name && this.isAbsoluteUrl(this.nodeForm.frigateBaseUrl))
+    },
+
+    /** Every running job across the cameras, the soonest to end first. */
+    activeJobs () {
+      return this.cameras
+        .filter(camera => this.recordingJobs[camera.id])
+        .map(camera => ({ camera, window: this.recordingJobs[camera.id] }))
+        .sort((a, b) => (a.window.endTime || 0) - (b.window.endTime || 0))
+    }
+  },
+
+  watch: {
+    // the tick runs only while there is something to count down
+    'activeJobs.length' (count) {
+      if (count > 0) {
+        this.startJobTick()
+      } else {
+        this.stopJobTick()
+      }
     }
   },
 
@@ -559,6 +681,95 @@ export default {
         this.camerasFetchError = true
       }
       this.camerasLoading = false
+      if (!this.camerasFetchError) {
+        await this.loadRecordingJobs()
+      }
+    },
+
+    /**
+     * Every camera's recording jobs, one request per camera in parallel - the
+     * server has no route across cameras. One failing read leaves the others
+     * as they are.
+     */
+    async loadRecordingJobs () {
+      await Promise.all(this.cameras.map(camera => this.readRecordingJob(camera.id)))
+      this.recordingJobsLoaded = true
+    },
+
+    /**
+     * Re-reads one camera's jobs: after a start, an end or a refusal on it, on
+     * a retry, and when its running job's end has passed.
+     */
+    async readRecordingJob (cameraId) {
+      this.$set(this.recordingJobsReading, cameraId, true)
+      let active
+      try {
+        const windows = await recordingJobsService.getWindows(cameraId)
+        active = windows.find(window => window.state === 'active') || null
+      } catch (err) {
+        active = undefined
+      }
+      this.$set(this.recordingJobs, cameraId, active)
+      this.$set(this.recordingJobsReading, cameraId, false)
+      this.now = Date.now() / 1000
+    },
+
+    recordingJobUnknown (camera) {
+      return this.recordingJobsLoaded && this.recordingJobs[camera.id] === undefined &&
+        !this.recordingJobsReading[camera.id]
+    },
+
+    openRecordingJob (camera) {
+      this.recordingJobCamera = camera
+      this.recordingJobDialog = true
+    },
+
+    jobEndText (window) {
+      return window.endTime === null
+        ? ''
+        : dateUtils.dateToShortDateTime(new Date(window.endTime * 1000), this.$i18n.locale)
+    },
+
+    /** The time remaining, worded by `key`; a job past its end reads as ending. */
+    jobRemainingText (window, key) {
+      const hours = window.endTime === null ? 0 : (window.endTime - this.now) / 3600
+      return hours <= 0
+        ? this.$t('page.kiosk.cameras.recordingJob.ending')
+        : this.$t(`page.kiosk.cameras.recordingJob.${key}`, { duration: this.duration(hours) })
+    },
+
+    startJobTick () {
+      if (!this.jobTimer) {
+        this.now = Date.now() / 1000
+        this.jobTimer = setInterval(() => this.jobTick(), JOB_TICK_MS)
+      }
+    },
+
+    stopJobTick () {
+      if (this.jobTimer) {
+        clearInterval(this.jobTimer)
+        this.jobTimer = null
+      }
+    },
+
+    /**
+     * Moves the countdown on and re-reads a camera whose job has reached its
+     * end. The server's own timer ends the window at that moment; a window it
+     * still calls active is asked about once more, then left to the next
+     * action or page load rather than polled.
+     */
+    jobTick () {
+      this.now = Date.now() / 1000
+      this.activeJobs.forEach(({ camera, window }) => {
+        if (window.endTime === null || window.endTime > this.now || this.recordingJobsReading[camera.id]) {
+          return
+        }
+        const done = this.recordingJobEndRereads[window.id] || 0
+        if (done < JOB_END_REREADS) {
+          this.$set(this.recordingJobEndRereads, window.id, done + 1)
+          this.readRecordingJob(camera.id)
+        }
+      })
     },
 
     async loadNodes () {
@@ -826,6 +1037,10 @@ export default {
     // per-row action, so opening the page never waits on an unreachable node.
     this.loadNodes()
     this.loadCameras()
+  },
+
+  beforeDestroy () {
+    this.stopJobTick()
   }
 }
 </script>
@@ -867,5 +1082,23 @@ export default {
   align-items: center;
   align-self: flex-start;
   margin: 0;
+}
+
+/* Five actions beside the text leave a phone about 90px for everything a
+   camera row says, so there they move onto a line of their own below it. */
+@media (max-width: 599px) {
+  .cameras-camera-row {
+    flex-wrap: wrap;
+  }
+
+  .cameras-camera-row .v-list-item__content {
+    flex-basis: 100%;
+  }
+
+  .cameras-camera-row .cameras-actions {
+    width: 100%;
+    justify-content: flex-end;
+    align-self: auto;
+  }
 }
 </style>

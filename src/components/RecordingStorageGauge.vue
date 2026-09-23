@@ -114,6 +114,7 @@
 <script lang="js">
 import { singleton as cameraUtils } from '@/utils/cameraUtils'
 import { singleton as dateUtils } from '@/utils/dateUtils'
+import { durationText } from '@/mixins/durationText'
 
 /**
  * The ring's colour, the same at every fill level. Not the theme's `primary`:
@@ -139,6 +140,8 @@ const RING_COLOUR = 'blue-grey lighten-1'
  */
 export default {
   name: 'recordingStorageGauge',
+
+  mixins: [durationText],
 
   props: {
     figures: { type: Object, default: null },
@@ -310,27 +313,6 @@ export default {
 
     stale () {
       return cameraUtils.isStale(this.reportedAt)
-    }
-  },
-
-  methods: {
-    /**
-     * Hours of recording as the unit a person would say it in, rounded - the
-     * rate fluctuates with motion and night, so anything finer would be false
-     * precision.
-     */
-    duration (hours) {
-      const scope = 'page.kiosk.cameras.storageGauge'
-      if (hours < 1) {
-        const minutes = Math.max(1, Math.round(hours * 60))
-        return this.$tc(`${scope}.minutes`, minutes, { count: minutes })
-      }
-      if (hours < 48) {
-        const rounded = Math.round(hours)
-        return this.$tc(`${scope}.hours`, rounded, { count: rounded })
-      }
-      const days = Math.round(hours / 24)
-      return this.$tc(`${scope}.days`, days, { count: days })
     }
   }
 }

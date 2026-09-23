@@ -542,6 +542,10 @@ export default {
         id: item.archiveId,
         startTime: item.startTime,
         subLabel: item.subLabel,
+        // An entry that is not an event - a recording kept by a recording job -
+        // names nobody, and is named by its kind rather than shown as an
+        // unknown person (openspec change `camera-recording-jobs`, D7).
+        title: item.kind && item.kind !== 'event' ? this.kindLabel(item.kind) : null,
         zones: item.zones,
         camera: item.cameraId,
         thumbnailUrl: item.thumbnailUrl,
@@ -556,7 +560,7 @@ export default {
      */
     signatureOf (item) {
       return [item.state, item.failureReason, item.thumbnailUrl, item.snapshotUrl, item.clipUrl,
-        item.subLabel, item.startTime, item.zones.join(',')].join('|')
+        item.subLabel, item.kind, item.startTime, item.zones.join(',')].join('|')
     },
 
     /** What an entry's state draws over its thumbnail, or null for `ready`. */

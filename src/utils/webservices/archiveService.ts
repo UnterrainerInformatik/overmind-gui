@@ -1,4 +1,5 @@
 import { singleton as axiosUtils } from '@/utils/axiosUtils'
+import { singleton as dateUtils } from '@/utils/dateUtils'
 
 /**
  * One entry in the long-term archive. `startTime`, `endTime` and
@@ -154,9 +155,10 @@ export const ORIGIN_GRACE_HOURS = 24
  *
  * A service of its own rather than a corner of `frigateService`: the archive is
  * a second media store with its own routes, and the archive view grows this
- * considerably. The three conversions below are deliberately duplicated from
- * `frigateService` rather than shared - they are four lines each, and a common
- * "conversion utils" module would be a third place to look.
+ * considerably. The URL and envelope helpers below are deliberately duplicated
+ * from `frigateService` rather than shared - they are four lines each. The time
+ * conversion is the exception: `recordingJobsService` needs the same pair, so it
+ * moved into `dateUtils` rather than being copied a third time.
  */
 export class ArchiveService {
   private static instanceField: ArchiveService
@@ -322,21 +324,17 @@ export class ArchiveService {
   }
 
   /**
-   * Epoch seconds, as this GUI's pages count time, out of overmind's UTC
-   * `LocalDateTime` - the same reading dateUtils applies to every other
-   * timestamp from this server.
+   * Epoch seconds out of overmind's UTC `LocalDateTime`. The pair lives in
+   * dateUtils since openspec change `camera-recording-jobs` gave it a second
+   * caller.
    */
   private toEpochSeconds (value: any): number | null {
-    if (value === null || value === undefined) {
-      return null
-    }
-    const ms = Date.parse(`${value}Z`)
-    return Number.isFinite(ms) ? ms / 1000 : null
+    return dateUtils.utcLocalDateTimeToEpochSeconds(value)
   }
 
   /** The inverse, for `after` and `before`: `2026-09-01T19:54:23.224`. */
   private toLocalDateTime (epochSeconds: number): string {
-    return new Date(epochSeconds * 1000).toISOString().slice(0, 23)
+    return dateUtils.epochSecondsToUtcLocalDateTime(epochSeconds)
   }
 
   /** Overmind's item envelope, tolerating a bare array. */

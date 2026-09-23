@@ -124,6 +124,10 @@ export class AxiosUtils {
       // 'Internal Error.', so callers that only read that are unaffected.
       const error: any = new Error('Internal Error.')
       error.serverMessage = msg
+      // The same sentence, but null where the body carried none - a bare 500
+      // leaves `serverMessage` holding axios' own "Request failed with status
+      // code 500", which a caller that words that case itself must not show.
+      error.serverReason = data != null ? (data.reason != null ? data.reason : (data.message != null ? data.message : null)) : null
       error.status = status
       throw error
     })
