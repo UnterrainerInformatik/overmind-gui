@@ -4,4 +4,4 @@
 
 ## 2. Verification
 
-- [ ] 2.1 After pushing, confirm with `gh run list --workflow=pipeline.yml` that the push containing the workflow change itself started a run (it touches `.github/`), and that a later push touching only `openspec/` or `ai/` did not
+- [x] 2.1 After pushing, confirm with `gh run list --workflow=pipeline.yml` that the push containing the workflow change itself started a run (it touches `.github/`), and that a later push touching only `openspec/` or `ai/` did not
