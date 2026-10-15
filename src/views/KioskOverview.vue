@@ -73,7 +73,7 @@
                     from: [255, 255, 0, 0.3],
                     to: [255, 255, 0, 0.6]
                   },
-                  batteryMax: 10,
+                  batteryMax: 100,
                   batteryGradient: {
                     from: [255, 255, 120, 0.6],
                     to: [255, 255, 0, 1]
