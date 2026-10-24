@@ -1,5 +1,5 @@
 // Runtime configuration, loaded by index.html before the app.
-// Production replaces this file with a volume mount that carries the real token;
+// Production overwrites this file on container start from deploy/overmind-config.js.template;
 // never commit a token here - the repo and the Docker image are public.
 window.overmindConfig = {
   musicAssistant: {

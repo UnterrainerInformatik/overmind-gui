@@ -1,0 +1,9 @@
+// Runtime configuration for production. The nginx image renders this template into
+// /usr/share/nginx/html/overmind-config.js on container start (envsubst); the token
+// comes from the MUSIC_ASSISTANT_TOKEN secret via the deploy's .env file.
+window.overmindConfig = {
+  musicAssistant: {
+    url: 'https://music.unterrainer.info',
+    token: '${MUSIC_ASSISTANT_TOKEN}'
+  }
+}

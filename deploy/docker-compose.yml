@@ -9,9 +9,11 @@ services:
     environment:
       - HTTP_PORT=80
       - HTTP_HOST=0.0.0.0
+      - NGINX_ENVSUBST_OUTPUT_DIR=/usr/share/nginx/html
+      - MUSIC_ASSISTANT_TOKEN=${MUSIC_ASSISTANT_TOKEN:-}
     volumes:
       - "/app/deploy/overmind-gui/nginx.conf:/etc/nginx/nginx.conf"
-      - "/app/deploy/overmind-gui/overmind-config.js:/usr/share/nginx/html/overmind-config.js"
+      - "/app/deploy/overmind-gui/overmind-config.js.template:/etc/nginx/templates/overmind-config.js.template"
     command: ["nginx", "-g", "daemon off;"]
     labels:
       - traefik.enable=true
