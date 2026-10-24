@@ -54,6 +54,11 @@ const routes: Array<RouteConfig> = [
     component: () => import('../views/KioskCameras.vue')
   },
   {
+    path: '/app/kioskaudio',
+    name: 'kioskAudio',
+    component: () => import('../views/KioskAudio.vue')
+  },
+  {
     path: '/app/kioskpersonen',
     name: 'kioskPersonen',
     component: () => import('../views/KioskPersonen.vue')

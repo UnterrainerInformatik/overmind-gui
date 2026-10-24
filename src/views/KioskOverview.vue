@@ -383,6 +383,10 @@
             :text="$t('page.kiosk.linkCameras')"
             route="/app/kioskcameras"
           ></KioskLinkPanel>
+          <KioskLinkPanel
+            :text="$t('page.kiosk.linkAudio')"
+            route="/app/kioskaudio"
+          ></KioskLinkPanel>
         </v-col>
       </v-row>
     </v-container>

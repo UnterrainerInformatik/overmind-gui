@@ -60,6 +60,8 @@
 			"undefined": "Nicht verfügbar"
 		},
 		"kiosk": {
+			"audioNotConfigured": "Audio ist nicht konfiguriert.",
+			"linkAudio": "Audio",
 			"linkBack": "zurück",
 			"linkBatteries": "Batterien",
 			"linkCamera": "Kamera",
