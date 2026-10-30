@@ -195,6 +195,8 @@
           </span>
         </span>
       </span>
+      <!-- a page's own elements, placed in image pixels times `scale` -->
+      <slot :scale="scale" :loaded="loaded"></slot>
       <img
         :width="imgWidth"
         :height="imgHeight"

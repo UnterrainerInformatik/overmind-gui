@@ -121,6 +121,7 @@ const store = {
         audioState: '/audio/state',
         audioRoomGrouped: '/audio/rooms/{roomId}/grouped',
         audioRoomVolume: '/audio/rooms/{roomId}/volume',
+        audioRoomLightLinked: '/audio/rooms/{roomId}/lightLinked',
         audioTargetCommand: '/audio/targets/{targetId}/{command}',
         audioTargetSeek: '/audio/targets/{targetId}/seek',
         audioTargetVolume: '/audio/targets/{targetId}/volume',

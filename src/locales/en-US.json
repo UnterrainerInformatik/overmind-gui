@@ -80,6 +80,14 @@
 				"loadFailed": "Could not be loaded.",
 				"commandFailed": "Audio command failed",
 				"close": "Close",
+				"map": {
+					"leaveGroup": "{room}: take out of the group",
+					"joinGroup": "{room}: put back into the group",
+					"pinnedRoom": "{room}: always in the group",
+					"lightLinkOn": "{room}: linked to the lights - unlink",
+					"lightLinkOff": "{room}: not linked to the lights - link",
+					"roomUnavailableNamed": "{room}: speaker not reachable"
+				},
 				"tooltip": {
 					"target": "Choose where to play",
 					"title": "Queue and playlists",
@@ -100,7 +108,7 @@
 			"linkCamera": "Camera",
 			"linkCameras": "Cameras",
 			"linkContact": "Windows / Air",
-			"linkLights": "Lights",
+			"linkLights": "Lights & Sound",
 			"linkMovement": "Motion Sensors",
 			"linkPersonen": "Persons",
 			"linkPersonenArchiv": "Archive",

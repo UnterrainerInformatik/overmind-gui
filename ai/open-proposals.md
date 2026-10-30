@@ -9,7 +9,7 @@ stays short and only ever lists work that is still un-proposed.
 
 ---
 
-## Audio — integrated kiosk controls (remaining two changes)
+## Audio — integrated kiosk controls (remaining change)
 
 Frontend half. The server change's specs in
 `java-overmind-server/openspec/changes/audio-music-assistant-bridge/specs/`
@@ -21,20 +21,7 @@ stays as it is — that is the hidden route for basic setup.
 
 Suggested order: backend first, then A → B → C. Each is its own change.
 A (`kiosk-audio-bar`) is done — see `openspec/changes/archive/2026-10-30-kiosk-audio-bar/`.
-
-### B — `kiosk-light-and-sound`: map integration
-
-- The overview tile "Licht" becomes **"Licht & Sound"** (`linkLights`), same route.
-- Every room with a speaker gets two extra buttons on the map:
-  - **group toggle** — takes the room out of the main group; tapping again puts it
-    back. Esszimmer: shown as pinned, not tappable.
-  - **light link** (`Licht verknüpft`) — on: the speaker follows the room light
-    (light on → unmuted, light off → muted). Logic runs on the server.
-- Rooms, their speakers and the **button coordinates come from the server's new
-  room table** (`AudioState.rooms[].buttonX/buttonY`; rooms are m:n with
-  appliances, speakers are Sendspin dummy appliances — several per room act as
-  one, the room is always the unit) — nothing hard-coded in
-  the view. Gerald fills rooms and memberships once the devices are built.
+B (`kiosk-light-and-sound`) is done — see `openspec/changes/archive/2026-10-30-kiosk-light-and-sound/`.
 
 ### C — `kiosk-playlist-editor`: full-screen playlist editing
 

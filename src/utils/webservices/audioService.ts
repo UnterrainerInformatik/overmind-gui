@@ -1,7 +1,8 @@
 import { singleton as axiosUtils } from '@/utils/axiosUtils'
 
 /*
- * The house audio routes (openspec change `kiosk-audio-bar`). The contract is
+ * The house audio routes (openspec changes `kiosk-audio-bar` and
+ * `kiosk-light-and-sound`). The contract is
  * java-overmind-server's change `audio-music-assistant-bridge`: its specs
  * `audio-music-assistant-bridge` (state, SSE, target commands),
  * `audio-rooms-and-grouping` (rooms, group toggle, room volume) and
@@ -10,6 +11,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   GET  audioState                -> AudioState (also pushed as SSE `audio-state`)
  *   PUT  audioRoomGrouped    {grouped}
  *   PUT  audioRoomVolume     {level}  0..100
+ *   PUT  audioRoomLightLinked {linked}
  *   POST audioTargetCommand           play|pause|next|previous
  *   POST audioTargetSeek     {position} seconds
  *   PUT  audioTargetVolume   {level}  0..100
@@ -27,9 +29,21 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  * - A room's colour is `color` (any CSS colour). The server's room table has no
  *   such column yet; without it a room gets a fixed colour from ROOM_PALETTE by
  *   its id, so it is stable across reloads and devices.
+ * - The pin is `pinned`, else the room table's `pinnedToMainGroup`.
  * - Enums may arrive uppercase (`PLAYING`) and are lowered here.
  * - Lists are `{items: [...]}` or a bare array.
  * - `imageUrl` is a server path (`/audio/image?path=...`) and is made absolute.
+ * - A room's place on the lights floor plan (`kiosk-light-and-sound`, design
+ *   D5). The server's room has no position yet; the GUI assumes
+ *
+ *     AudioState.rooms[] += {
+ *       buttonX: number | null,   // floor-plan image pixels, same system as iconPos
+ *       buttonY: number | null
+ *     }
+ *     audioRoom += buttonX INT NULL, buttonY INT NULL   // editable through the audiorooms CRUD
+ *
+ *   and also reads a nested `button: {x, y}`. Anything that is not a finite
+ *   number is null, and a room without both is not drawn.
  */
 
 export type AudioPlaybackStatus = 'playing' | 'paused' | 'idle'
@@ -77,6 +91,9 @@ export interface AudioRoom {
   /** only meaningful while the room is solo */
   playback: AudioPlayback | null;
   color: string;
+  /** floor-plan image pixels; null when the room has no place on the plan */
+  buttonX: number | null;
+  buttonY: number | null;
 }
 
 export interface AudioState {
@@ -135,6 +152,10 @@ export class AudioService {
 
   public async setRoomGrouped (roomId: string | number, grouped: boolean): Promise<void> {
     return axiosUtils.putToPath(this.server, 'audioRoomGrouped', { roomId }, () => ({ grouped }))
+  }
+
+  public async setRoomLightLinked (roomId: string | number, linked: boolean): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioRoomLightLinked', { roomId }, () => ({ linked }))
   }
 
   public async setRoomVolume (roomId: string | number, level: number): Promise<void> {
@@ -225,18 +246,21 @@ export class AudioService {
 
   private normalizeRoom (r: Raw): AudioRoom {
     const targetId = r.targetId || r.maPlayerId || r.playerId
+    const button = r.button && typeof r.button === 'object' ? r.button : {}
     return {
       id: r.id,
       name: `${r.name || r.id}`,
       targetId: targetId ? `${targetId}` : null,
       available: r.available !== false,
       grouped: !!r.grouped,
-      pinned: !!r.pinned,
+      pinned: !!(r.pinned || r.pinnedToMainGroup),
       lightLinked: !!r.lightLinked,
       muted: !!r.muted,
       volume: this.numberOrNull(r.volume),
       playback: this.normalizePlayback(r.playback),
-      color: typeof r.color === 'string' && r.color.trim() !== '' ? r.color : this.paletteColor(r.id)
+      color: typeof r.color === 'string' && r.color.trim() !== '' ? r.color : this.paletteColor(r.id),
+      buttonX: this.numberOrNull(r.buttonX != null ? r.buttonX : button.x),
+      buttonY: this.numberOrNull(r.buttonY != null ? r.buttonY : button.y)
     }
   }
 

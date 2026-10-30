@@ -80,6 +80,14 @@
 				"loadFailed": "Konnte nicht geladen werden.",
 				"commandFailed": "Audio-Befehl fehlgeschlagen",
 				"close": "Schließen",
+				"map": {
+					"leaveGroup": "{room}: aus der Gruppe nehmen",
+					"joinGroup": "{room}: wieder in die Gruppe",
+					"pinnedRoom": "{room}: immer in der Gruppe",
+					"lightLinkOn": "{room}: Licht verknüpft - Verknüpfung lösen",
+					"lightLinkOff": "{room}: Licht nicht verknüpft - verknüpfen",
+					"roomUnavailableNamed": "{room}: Lautsprecher nicht erreichbar"
+				},
 				"tooltip": {
 					"target": "Wiedergabeziel wählen",
 					"title": "Warteschlange und Playlists",
@@ -100,7 +108,7 @@
 			"linkCamera": "Kamera",
 			"linkCameras": "Kameras",
 			"linkContact": "Fenster / Klima",
-			"linkLights": "Licht",
+			"linkLights": "Licht & Sound",
 			"linkMovement": "Bewegungsmelder",
 			"linkPersonen": "Personen",
 			"linkPersonenArchiv": "Archiv",
