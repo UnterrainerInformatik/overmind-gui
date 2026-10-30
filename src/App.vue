@@ -1,6 +1,6 @@
 <template>
   <div id="main">
-    <v-app :class="{ 'sse-disconnected': !sseConnected }">
+    <v-app :class="{ 'sse-disconnected': !sseConnected, 'kiosk-audio-bar-shown': showAudioBar }">
       <v-navigation-drawer
         v-if="!kioskMode"
         v-cloak
@@ -81,6 +81,8 @@
         </template>
         <div v-html="$t('tooltip.mnu.migrations')"></div>
       </v-tooltip>
+
+      <KioskAudioBar v-if="showAudioBar"></KioskAudioBar>
     </v-app>
     <input type="hidden" id="hiddenCopyField" />
   </div>
@@ -92,6 +94,7 @@ import NavDrawer from '@/components/NavDrawer.vue'
 import AppBarMenu from '@/components/AppBarMenu.vue'
 import Snackbar from '@/components/Snackbar.vue'
 import ModalLoading from '@/components/ModalLoading.vue'
+import KioskAudioBar from '@/components/audio/KioskAudioBar.vue'
 import { SseClient } from '@/utils/sseClient'
 
 export default {
@@ -101,7 +104,8 @@ export default {
     NavDrawer,
     AppBarMenu,
     ModalLoading,
-    Snackbar
+    Snackbar,
+    KioskAudioBar
   },
 
   data: () => ({
@@ -126,6 +130,12 @@ export default {
       set (value) {
         this.localeBackingField = value
       }
+    },
+    // Every kiosk page carries the audio bar, except the audio page, which
+    // shows the full Music Assistant UI instead (openspec change
+    // `kiosk-audio-bar`).
+    showAudioBar () {
+      return this.kioskMode && this.$route.name !== 'kioskAudio'
     },
     twoWayDrawerVisible: {
       get () {
@@ -231,6 +241,10 @@ export default {
 }
 </script>
 
+<style lang="scss">
+@import 'styles/kiosk.scss';
+</style>
+
 <style lang="scss" scoped>
 @import 'styles/index.scss';
 
@@ -257,7 +271,7 @@ export default {
 .kiosk-migrations-btn {
   position: fixed;
   right: 8px;
-  bottom: 8px;
+  bottom: calc(var(--kiosk-bottom-inset, 0px) + 8px);
   z-index: 20;
   background-color: transparent !important;
   box-shadow: none !important;

@@ -1,5 +1,6 @@
 import {
   Handle,
+  NamedEventHandler,
   SelectionShape,
   SseClientConfig,
   Subscription,
@@ -90,6 +91,8 @@ export class SseClient {
   private subscriptions: Set<SubscriptionRecord> = new Set()
   private _connected = false
   private lastActivityTs = 0
+  private listeners: Map<string, Set<NamedEventHandler>> = new Map()
+  private nativeListeners: Map<string, (e: MessageEvent) => void> = new Map()
 
   constructor (config: SseClientConfig) {
     this.config = {
@@ -117,7 +120,7 @@ export class SseClient {
    * untouched; anything else is torn down and reopened right away.
    */
   public reconnectNow (): void {
-    if (this.handles.size === 0) {
+    if (!this.hasConsumers()) {
       return
     }
     const open = !!this.eventSource && this.eventSource.readyState === EventSource.OPEN
@@ -139,6 +142,10 @@ export class SseClient {
     }
     this.destroyConnection()
     this.ensureConnection()
+  }
+
+  private hasConsumers (): boolean {
+    return this.handles.size > 0 || this.listeners.size > 0
   }
 
   private authHeader (): Record<string, string> {
@@ -168,6 +175,9 @@ export class SseClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.eventSource.addEventListener('transport-update', (e: any) => {
       this.onTransportUpdate(e)
+    })
+    this.listeners.forEach((_handlers, name) => {
+      this.attachNativeListener(name)
     })
     this.eventSource.onmessage = (e: MessageEvent) => {
       if (this.config.debug) {
@@ -208,6 +218,88 @@ export class SseClient {
       this.eventSource.close()
       this.eventSource = null
     }
+    this.nativeListeners.clear()
+  }
+
+  private attachNativeListener (name: string): void {
+    if (!this.eventSource || this.nativeListeners.has(name)) {
+      return
+    }
+    const native = (e: MessageEvent) => {
+      this.onNamedEvent(name, e)
+    }
+    this.nativeListeners.set(name, native)
+    this.eventSource.addEventListener(name, native as EventListener)
+  }
+
+  private detachNativeListener (name: string): void {
+    const native = this.nativeListeners.get(name)
+    if (!native) {
+      return
+    }
+    this.nativeListeners.delete(name)
+    if (this.eventSource) {
+      this.eventSource.removeEventListener(name, native as EventListener)
+    }
+  }
+
+  private onNamedEvent (name: string, e: MessageEvent): void {
+    const handlers = this.listeners.get(name)
+    if (!handlers || handlers.size === 0) {
+      return
+    }
+    this.lastActivityTs = Date.now()
+    let payload: unknown
+    try {
+      payload = JSON.parse(e.data)
+    } catch (err) {
+      if (this.config.debug) {
+        // eslint-disable-next-line no-console
+        console.debug('[SSE] dropping named event with invalid JSON', { name, data: e.data })
+      }
+      return
+    }
+    // Copy so a handler removing itself does not disturb the iteration.
+    Array.from(handlers).forEach(handler => {
+      try {
+        handler(payload)
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('SseClient: named event handler failed', name, err)
+      }
+    })
+  }
+
+  /**
+   * Listen to a named server event (e.g. `audio-state`) that is not tied to a
+   * transport. The handler receives the parsed JSON payload and stays attached
+   * across reconnects. Registering the first listener opens the connection the
+   * same way the first `registerTransport()` does.
+   *
+   * `connected` is allowed as a name; the client's own handling of that event
+   * runs before any listener.
+   */
+  public addEventListener (name: string, handler: NamedEventHandler): void {
+    let handlers = this.listeners.get(name)
+    if (!handlers) {
+      handlers = new Set()
+      this.listeners.set(name, handlers)
+    }
+    handlers.add(handler)
+    this.attachNativeListener(name)
+    this.ensureConnection()
+  }
+
+  public removeEventListener (name: string, handler: NamedEventHandler): void {
+    const handlers = this.listeners.get(name)
+    if (!handlers) {
+      return
+    }
+    handlers.delete(handler)
+    if (handlers.size === 0) {
+      this.listeners.delete(name)
+      this.detachNativeListener(name)
+    }
   }
 
   private scheduleReconnect (): void {
@@ -217,7 +309,7 @@ export class SseClient {
     this.destroyConnection()
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null
-      if (this.handles.size > 0) {
+      if (this.hasConsumers()) {
         this.ensureConnection()
       }
     }, this.config.reconnectDelayMs)

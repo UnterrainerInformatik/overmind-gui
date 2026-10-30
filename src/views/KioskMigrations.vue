@@ -266,11 +266,12 @@ export default {
     // the page title block, one 48px header per entry, the table head and the
     // strip the fixed back button covers (see .migrations-list padding).
     // Computed from entries.length instead of guessed in pure CSS so the
-    // collapsed headers are accounted for; calibrated on 1024x600. The floor
+    // collapsed headers are accounted for; calibrated on 1024x600, and the
+    // audio bar's height comes off where it is shown. The floor
     // keeps the list readable if enough migrations run at once to eat the
     // whole budget - the page scrolls then, which beats an unreadable list.
     nodeListStyle () {
-      return { maxHeight: `max(120px, calc(100vh - ${204 + this.entries.length * 48}px))` }
+      return { maxHeight: `max(120px, calc(100vh - var(--kiosk-bottom-inset, 0px) - ${204 + this.entries.length * 48}px))` }
     },
     // The time a done node was migrated. It does not exist in today's
     // backend - it arrives with the companion change
@@ -590,7 +591,7 @@ export default {
 .migrations-back-btn {
   position: fixed;
   left: 8px;
-  bottom: 8px;
+  bottom: calc(var(--kiosk-bottom-inset, 0px) + 8px);
   z-index: 20;
 }
 

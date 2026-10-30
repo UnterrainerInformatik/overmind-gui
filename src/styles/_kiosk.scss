@@ -1,0 +1,17 @@
+// Global kiosk chrome sizes, emitted once from App.vue.
+//
+// The audio bar is exactly as high as one kiosk link tile, and the link tile
+// was halved to make room for it (openspec change `kiosk-audio-bar`): the tile
+// measured 82 px before, so both are 41 px. KioskLinkPanel and KioskAudioBar
+// read this variable, so the two cannot drift apart.
+:root {
+  --kiosk-audio-bar-height: 41px;
+}
+
+// What fixed kiosk chrome has to stay clear of at the bottom edge: the audio
+// bar while App.vue shows it, nothing otherwise. Every `position: fixed` part
+// anchored to the bottom (the settings gear, the pages' back buttons, the
+// events timeline) adds this, so it sits above the bar instead of under it.
+.kiosk-audio-bar-shown {
+  --kiosk-bottom-inset: var(--kiosk-audio-bar-height);
+}

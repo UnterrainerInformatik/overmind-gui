@@ -15,6 +15,7 @@ export type {
   AggregatePayload,
   TransportUpdate,
   TransportCallback,
+  NamedEventHandler,
   Handle,
   SubscriptionSpec,
   SubscriptionAggregate,

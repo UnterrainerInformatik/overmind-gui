@@ -1,21 +1,24 @@
 <template>
   <KioskPanel
-    class="noFocus"
+    class="noFocus kiosk-link-panel"
     borderColor="disabled"
     bgColor="disabled darken-4"
     pa="1"
+    :renderTitle="false"
+    maxWidth="220px"
     :to="route"
   >
-    <template v-slot:title>
-      <v-avatar
-        color="disabled darken-2"
-        size="38"
-      >
-        <v-icon>link</v-icon>
-      </v-avatar>
-    </template>
     <template>
-      {{ text }}
+      <div class="kiosk-link-panel-row">
+        <v-avatar
+          color="disabled darken-2"
+          size="24"
+          class="mr-2"
+        >
+          <v-icon small>link</v-icon>
+        </v-avatar>
+        <span class="kiosk-link-panel-text">{{ text }}</span>
+      </div>
     </template>
   </KioskPanel>
 </template>
@@ -58,5 +61,28 @@ export default {
 
 .noFocus:focus::before {
   opacity: 0 !important;
+}
+
+// Half the height the tile had with its icon above the text, and the height of
+// the audio bar - see styles/_kiosk.scss.
+.kiosk-link-panel {
+  height: var(--kiosk-audio-bar-height);
+}
+
+.kiosk-link-panel .normal-text {
+  height: 100%;
+}
+
+.kiosk-link-panel-row {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.kiosk-link-panel-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

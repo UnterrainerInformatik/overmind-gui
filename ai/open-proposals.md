@@ -9,41 +9,18 @@ stays short and only ever lists work that is still un-proposed.
 
 ---
 
-## Audio — integrated kiosk controls (three changes)
+## Audio — integrated kiosk controls (remaining two changes)
 
-Frontend half. The backend primer in `java-overmind-server/ai/open-proposals.md`
-→ "Audio" is **authoritative** for the REST/SSE contract, the room model and the
+Frontend half. The server change's specs in
+`java-overmind-server/openspec/changes/audio-music-assistant-bridge/specs/`
+(after archive: `java-overmind-server/openspec/specs/`) are **authoritative** for the REST/SSE contract, the room model and the
 behaviour rules (main group, Esszimmer pin, no auto-regrouping, light link =
 mute/unmute only, radio = first 8 of MA playlist `Radio`). Planned 2026-10-30
 with Gerald. The existing `KioskAudio.vue` (MA iframe behind the "Audio" tile)
 stays as it is — that is the hidden route for basic setup.
 
 Suggested order: backend first, then A → B → C. Each is its own change.
-
-### A — `kiosk-audio-bar`: player bar on every kiosk page
-
-- A bar fixed at the bottom of **every kiosk page**. Height = half of today's
-  `KioskLinkPanel` height; to make room, all link tiles become half as high too.
-  The audio page itself (iframe) does not show the bar.
-- Contents, left to right roughly: **target selector** · title/artist · prev
-  track · −10 s · play/pause · +10 s · next track · **draggable progress
-  slider** (seek; anything beyond ±10 s goes through the slider) · volume · radio
-  button.
-- **Target selector** opens a popup with the sinks: main group plus every solo
-  room. Each sink has its **own fixed colour** (`color` from the server's room
-  table, the main group distinct); the bar shows the colour of the sink it controls so it is
-  obvious at a glance. The popup also shows per-room volume sliders and the
-  in/out-of-group toggle per room (Esszimmer's disabled).
-- Selection is remembered **per device** (localStorage, guarded). Default and
-  fallback: the main group — also when the remembered room has rejoined the group
-  or is gone.
-- **Tap on the title** → popup with the current queue/playlist: jump to another
-  track, or switch to another playlist (`playMedia`). Entry point to C.
-- **Radio button** → popup with the 8 quick-select stations (`GET /audio/radio`);
-  a tap plays the station on the current target.
-- Position is interpolated locally from `elapsed` + `elapsedAt`; while dragging,
-  incoming updates do not move the knob.
-- State from the `audio-state` SSE event, `GET /audio/state` as fallback.
+A (`kiosk-audio-bar`) is done — see `openspec/changes/archive/2026-10-30-kiosk-audio-bar/`.
 
 ### B — `kiosk-light-and-sound`: map integration
 

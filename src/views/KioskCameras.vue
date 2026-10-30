@@ -1058,7 +1058,7 @@ export default {
 .cameras-back-btn {
   position: fixed;
   left: 8px;
-  bottom: 8px;
+  bottom: calc(var(--kiosk-bottom-inset, 0px) + 8px);
   z-index: 20;
 }
 

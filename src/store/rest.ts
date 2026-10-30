@@ -113,6 +113,22 @@ const store = {
         migrations: '/reconciliation',
         migrationsRetry: '/reconciliation/retry',
         migrationsRetryErrors: '/reconciliation/retry/errors',
+        // House audio through Music Assistant (openspec change `kiosk-audio-bar`).
+        // The contract is java-overmind-server's change
+        // `audio-music-assistant-bridge` - its specs are authoritative; see
+        // audioService.ts for the shapes and the fields read tolerantly.
+        // Commands answer 204; `{command}` is play|pause|next|previous.
+        audioState: '/audio/state',
+        audioRoomGrouped: '/audio/rooms/{roomId}/grouped',
+        audioRoomVolume: '/audio/rooms/{roomId}/volume',
+        audioTargetCommand: '/audio/targets/{targetId}/{command}',
+        audioTargetSeek: '/audio/targets/{targetId}/seek',
+        audioTargetVolume: '/audio/targets/{targetId}/volume',
+        audioTargetQueue: '/audio/targets/{targetId}/queue',
+        audioTargetQueuePlay: '/audio/targets/{targetId}/queue/play',
+        audioTargetPlayMedia: '/audio/targets/{targetId}/playMedia',
+        audioRadio: '/audio/radio',
+        audioPlaylists: '/audio/playlists',
         sseAppliances: '/sse/appliances',
         sseTransportsRegister: '/sse/transports/register',
         sseTransportsDeregister: '/sse/transports/deregister'

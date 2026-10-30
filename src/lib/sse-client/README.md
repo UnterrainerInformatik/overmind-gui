@@ -25,6 +25,7 @@ The library is framework-agnostic. You wire it to your project by passing a `Sse
   - [Plain JS / no framework](#plain-js--no-framework-example)
   - [Aggregate subscription](#aggregate-subscription)
   - [Close-before-register is safe](#close-before-register-is-safe)
+  - [Named server events](#named-server-events)
 - [Choosing between `registerTransport` and `subscribe`](#choosing-between-registertransport-and-subscribe)
 
 ## What's in the box
@@ -61,6 +62,7 @@ If your host project has stricter TS settings than the library was written again
 - **Subscription** — a higher-level wrapper around a transport. Returns a reactive object (`sub.values`, `sub.aggregate`, `sub.ts`, `sub.connected`, `sub.stale`, `sub.error`) and a single `sub.close()` teardown method. No callbacks; you bind the fields.
 - **Aggregate** — if your spec includes `aggregate: { op: 'sum' | 'avg' }`, the server delivers one aggregated scalar per tick instead of per-path values. The Subscription exposes it as `sub.aggregate` (`{ value, sampleCount, totalCount }`).
 - **Wildcard paths** — a path of `'**'` tells the server "send every path of this appliance". The library adds keys to `sub.values` reactively as they arrive.
+- **Named event** — a server event other than `transport-update` that every connection receives without registering anything (e.g. `audio-state`). `addEventListener(name, handler)` delivers its parsed JSON payload; `removeEventListener(name, handler)` stops it. Listeners survive reconnects, and a registered listener keeps the connection alive just like a transport handle.
 - **`representsGroups`** — if the server sends a triple with a `representsGroups: number[]` field (meaning "this value should mirror onto each of these member appliances"), the library also writes the value under each member's key, provided that member is in your subscription's selection.
 
 ## Configuration
@@ -461,6 +463,18 @@ const sub = sse.subscribe(spec)
 sub.close()  // safe even before the server registration completes;
              // library will deregister the transportId once it lands.
 ```
+
+### Named server events
+
+```ts
+const onAudio = (payload: unknown) => { /* full state, already JSON-parsed */ }
+sse.addEventListener('audio-state', onAudio)   // opens the connection if needed
+sse.addEventListener('connected', reload)      // runs after the client's own handling
+// later
+sse.removeEventListener('audio-state', onAudio)
+```
+
+A payload that is not valid JSON is dropped; a throwing handler does not affect other handlers.
 
 ## Choosing between `registerTransport` and `subscribe`
 

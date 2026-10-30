@@ -336,8 +336,9 @@ $events-timeline-foot: 40px;
      strip's foot was bare rail - but it now holds the label naming where the
      axis starts, and a mark landing at axisStart was never clickable there
      either. The axis stops above the button instead of running under it; the
-     timeline measures its own height, so the graduation follows. */
-  height: calc(100vh - #{$events-timeline-foot});
+     timeline measures its own height, so the graduation follows. The audio
+     bar, where shown, comes off the bottom as well (styles/_kiosk.scss). */
+  height: calc(100vh - #{$events-timeline-foot} - var(--kiosk-bottom-inset, 0px));
   z-index: 20;
   /* `fixed` is also what makes this the containing block every absolutely
      positioned part below - the rail, the scale, the marks - is measured

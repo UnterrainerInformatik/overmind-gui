@@ -42,6 +42,8 @@ export type TransportUpdate = ValuesPayload | AggregatePayload
 
 export type TransportCallback = (payload: TransportUpdate) => void
 
+export type NamedEventHandler = (payload: unknown) => void
+
 export interface Handle {
   id: string;
 }

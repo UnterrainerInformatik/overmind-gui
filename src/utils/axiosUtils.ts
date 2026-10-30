@@ -237,6 +237,19 @@ export class AxiosUtils {
   }
 
   /**
+   * Sends a PUT to an endpoint whose path carries IDs inside it. `put()` above
+   * only appends an id to a collection path; the audio routes set one field of
+   * a room or target ('/audio/rooms/{roomId}/grouped').
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param params values for the path's `{...}` placeholders
+   * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
+   */
+  public async putToPath (server: string, endpointPath: string, params: object, dataProvider: () => object): Promise<any> {
+    return this.internalRestCall(this.internalPut(server, this.resolveEndpoint(endpointPath, params), dataProvider))
+  }
+
+  /**
    * Sends a GET to an endpoint whose path carries IDs inside it.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
