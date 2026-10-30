@@ -56,12 +56,11 @@ export class AxiosUtils {
       })
   }
 
-  private async internalDelete (server: string, endpointPath: string): Promise<any> {
+  private async internalDelete (server: string, endpointPath: string, dataProvider: () => object = () => ({})): Promise<any> {
     // console.log(buildBaseUrl(server) + endpointPath)
     return Vue.axios
       .delete(this.buildBaseUrl(server) + endpointPath, {
-        data: {
-        },
+        data: this.provideData(dataProvider),
         headers: Object.assign({}, this.getAuthorizationHeader())
       })
       .then(response => {
@@ -73,6 +72,20 @@ export class AxiosUtils {
     // console.log(buildBaseUrl(server) + endpointPath)
     return Vue.axios
       .put(this.buildBaseUrl(server) + endpointPath, this.provideData(dataProvider), {
+        headers: Object.assign({}, this.getAuthorizationHeader())
+      })
+      .then(response => {
+        if (response === undefined || response == null) {
+          throw new Error('Response was null or undefined.')
+        }
+        return response.data
+      })
+  }
+
+  private async internalPatch (server: string, endpointPath: string, dataProvider): Promise<any> {
+    // console.log(buildBaseUrl(server) + endpointPath)
+    return Vue.axios
+      .patch(this.buildBaseUrl(server) + endpointPath, this.provideData(dataProvider), {
         headers: Object.assign({}, this.getAuthorizationHeader())
       })
       .then(response => {
@@ -250,6 +263,19 @@ export class AxiosUtils {
   }
 
   /**
+   * Sends a PATCH to an endpoint whose path carries IDs inside it. The audio
+   * library renames a playlist with a PATCH ('/audio/playlists/{playlistId}'),
+   * the first route in this codebase to use that verb.
+   * @param server name of the rest/config/servers property to use
+   * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
+   * @param params values for the path's `{...}` placeholders
+   * @param dataProvider path to a vuex-getter or function that will be called in order to get the body for the call
+   */
+  public async patchToPath (server: string, endpointPath: string, params: object, dataProvider: () => object): Promise<any> {
+    return this.internalRestCall(this.internalPatch(server, this.resolveEndpoint(endpointPath, params), dataProvider))
+  }
+
+  /**
    * Sends a GET to an endpoint whose path carries IDs inside it.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
@@ -269,12 +295,16 @@ export class AxiosUtils {
    * place in this codebase where a service assembles a path by hand.
    * `void` rather than the `any` its siblings answer with, because a DELETE on
    * this contract answers 204 and there is no body to hand on.
+   * A body is rare on a DELETE but the audio library's track removal needs one
+   * ('/audio/playlists/{playlistId}/tracks' with `{positions}`); without a
+   * `dataProvider` the body stays the empty object every caller sent before.
    * @param server name of the rest/config/servers property to use
    * @param endpointPath path to the correct endpoint-definition starting from rest/config/endpoint/
    * @param params values for the path's `{...}` placeholders
+   * @param dataProvider function that will be called in order to get the body for the call; `{}` when omitted
    */
-  public async deleteFromPath (server: string, endpointPath: string, params: object): Promise<void> {
-    return this.internalRestCall(this.internalDelete(server, this.resolveEndpoint(endpointPath, params)))
+  public async deleteFromPath (server: string, endpointPath: string, params: object, dataProvider?: () => object): Promise<void> {
+    return this.internalRestCall(this.internalDelete(server, this.resolveEndpoint(endpointPath, params), dataProvider))
   }
 
   /**

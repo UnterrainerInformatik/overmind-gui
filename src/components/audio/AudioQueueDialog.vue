@@ -38,7 +38,13 @@
           <v-icon v-if="index === currentIndex" class="ml-2">equalizer</v-icon>
         </div>
 
-        <div class="audio-queue-section text-overline px-4 pt-4">{{ $t('page.kiosk.audio.playlists') }}</div>
+        <div class="audio-queue-section audio-queue-playlists-head px-4 pt-2">
+          <span class="text-overline">{{ $t('page.kiosk.audio.playlists') }}</span>
+          <v-spacer></v-spacer>
+          <v-btn text class="audio-queue-edit-playlists" @click="editorOpen = true">
+            <v-icon left>edit</v-icon>{{ $t('page.kiosk.audio.editor.editPlaylists') }}
+          </v-btn>
+        </div>
         <div v-if="playlistsFailed" class="px-4 pb-4 audio-queue-message">{{ $t('page.kiosk.audio.loadFailed') }}</div>
         <div v-else-if="!loadingPlaylists && playlists.length === 0" class="px-4 pb-4 audio-queue-message">{{ $t('page.kiosk.audio.noPlaylists') }}</div>
         <div
@@ -58,6 +64,8 @@
         </div>
       </v-card-text>
     </v-card>
+
+    <AudioPlaylistEditor v-if="editorMounted" v-model="editorOpen"></AudioPlaylistEditor>
   </v-dialog>
 </template>
 
@@ -65,14 +73,20 @@
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
 
+// Lazy, so vuedraggable and the editor only load when someone edits.
+const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor.vue')
+
 /**
  * The current target's queue and the playlists to replace it with (openspec
- * change `kiosk-audio-bar`). Opened from the bar's title; later also the way
- * into the playlist editor. While open it reloads the queue whenever the
+ * change `kiosk-audio-bar`). Opened from the bar's title, and the way into the
+ * playlist editor (change `kiosk-playlist-editor`), after which the playlists
+ * are reloaded. While open it reloads the queue whenever the
  * target's track or playlist changes, so the highlight follows the music.
  */
 export default {
   name: 'AudioQueueDialog',
+
+  components: { AudioPlaylistEditor },
 
   mixins: [audioCommand],
 
@@ -88,7 +102,9 @@ export default {
     queueFailed: false,
     playlists: [],
     loadingPlaylists: false,
-    playlistsFailed: false
+    playlistsFailed: false,
+    editorOpen: false,
+    editorMounted: false
   }),
 
   computed: {
@@ -113,6 +129,13 @@ export default {
     value (open) {
       if (open) {
         this.loadQueue()
+        this.loadPlaylists()
+      }
+    },
+    editorOpen (open) {
+      if (open) {
+        this.editorMounted = true
+      } else if (this.value) {
         this.loadPlaylists()
       }
     },
@@ -195,7 +218,15 @@ export default {
   }
 }
 
-.audio-queue-cover {
+.audio-queue-playlists-head {
+  display: flex;
+  align-items: center;
+}
+
+.audio-queue-cover,
+.audio-queue-cover.v-image {
+  // `.v-image` alone would win with Vuetify's `.v-responsive { flex: 1 0 auto }`
+  // and push the text to the middle of the row.
   flex: 0 0 40px;
   width: 40px;
   height: 40px;

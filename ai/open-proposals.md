@@ -9,28 +9,16 @@ stays short and only ever lists work that is still un-proposed.
 
 ---
 
-## Audio — integrated kiosk controls (remaining change)
+## Audio — quick filter in the queue popup's playlist list
 
-Frontend half. The server change's specs in
-`java-overmind-server/openspec/changes/audio-music-assistant-bridge/specs/`
-(after archive: `java-overmind-server/openspec/specs/`) are **authoritative** for the REST/SSE contract, the room model and the
-behaviour rules (main group, Esszimmer pin, no auto-regrouping, light link =
-mute/unmute only, radio = first 8 of MA playlist `Radio`). Planned 2026-10-30
-with Gerald. The existing `KioskAudio.vue` (MA iframe behind the "Audio" tile)
-stays as it is — that is the hidden route for basic setup.
-
-Suggested order: backend first, then A → B → C. Each is its own change.
-A (`kiosk-audio-bar`) is done — see `openspec/changes/archive/2026-10-30-kiosk-audio-bar/`.
-B (`kiosk-light-and-sound`) is done — see `openspec/changes/archive/2026-10-30-kiosk-light-and-sound/`.
-
-### C — `kiosk-playlist-editor`: full-screen playlist editing
-
-- Full-screen popup, opened from the queue popup in A.
-- Playlist list: open, **create**, **rename**, **delete** (with confirm).
-- Inside a playlist: track list, **remove** tracks, **reorder** (drag), and a
-  **search** (tracks/albums/artists) to pick tracks and **add** them.
-- **No save button** — every action is written immediately and the list reflects
-  the server answer; errors are shown and the list reloads.
-- Playlists MA marks as not editable (e.g. provider playlists) are shown
-  read-only.
-- Touch-first: large targets, works on tablet/mobile/PC widths.
+- The playlist section of the audio bar's queue popup
+  (`AudioQueueDialog.vue`, spec `kiosk-audio-bar` → "Queue and playlist popup")
+  gets a text field above the list that narrows the playlists to those whose
+  name contains the typed text (case-insensitive, client-side, like the
+  editor's filter in `AudioPlaylistList.vue`).
+- Meant as a quick search: people type at most two or three letters, so no
+  debounce, no server search, no minimum length. Clearable; empty shows all.
+- The filter is reset when the popup opens again. A "no match" text when
+  nothing is left; the queue section stays unaffected.
+- Touch-first: the field must not pop the on-screen keyboard by itself when
+  the popup opens (no autofocus).

@@ -130,6 +130,12 @@ const store = {
         audioTargetPlayMedia: '/audio/targets/{targetId}/playMedia',
         audioRadio: '/audio/radio',
         audioPlaylists: '/audio/playlists',
+        // The playlist editor (openspec change `kiosk-playlist-editor`), same
+        // contract (`audio-library`). Edits answer 204; positions are 0-based.
+        audioPlaylist: '/audio/playlists/{playlistId}',
+        audioPlaylistTracks: '/audio/playlists/{playlistId}/tracks',
+        audioPlaylistTracksMove: '/audio/playlists/{playlistId}/tracks/move',
+        audioSearch: '/audio/search',
         sseAppliances: '/sse/appliances',
         sseTransportsRegister: '/sse/transports/register',
         sseTransportsDeregister: '/sse/transports/deregister'

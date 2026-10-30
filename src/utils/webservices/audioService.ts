@@ -21,6 +21,25 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   GET  audioRadio                -> {items: [Station]}, at most 8
  *   GET  audioPlaylists            -> {items: [Playlist]}
  *
+ * The playlist editor (openspec change `kiosk-playlist-editor`), all from
+ * `audio-library`. Edits answer 204, positions are 0-based, and the server
+ * answers 404 unknown, 409 read-only, 502 with a `reason` from MA:
+ *
+ *   POST   audioPlaylists           {name}           -> Playlist
+ *   PATCH  audioPlaylist            {name}
+ *   DELETE audioPlaylist
+ *   GET    audioPlaylistTracks                       -> {items: [Track]}
+ *   POST   audioPlaylistTracks      {uris}           appended; MA silently skips a track already in it
+ *   DELETE audioPlaylistTracks      {positions}
+ *   POST   audioPlaylistTracksMove  {from, to}
+ *   GET    audioSearch ?q=&types=track,album,artist
+ *          -> {tracks: [Track], albums: [Item], artists: [Item]}, Item = {name, artist, uri, imageUrl}
+ *
+ * The search shape is what the built server sends (`AudioSearchJson`, a type
+ * not asked for is null). Also read: the singular keys `track`/`album`/`artist`
+ * and lists wrapped as `{items}`. Adding an album by its URI is **guessed** to
+ * work: the server hands the URIs to MA's `add_playlist_tracks` unchanged.
+ *
  * The server specs name the fields but not every spelling, and were written
  * before the server was built, so this is the one seam that reads them
  * tolerantly - **guessed**, where noted:
@@ -115,6 +134,24 @@ export interface AudioPlaylist {
   imageUrl: string | null;
 }
 
+export interface AudioSearchItem {
+  name: string;
+  artist: string | null;
+  uri: string;
+  imageUrl: string | null;
+}
+
+export interface AudioSearchResult {
+  tracks: AudioTrack[];
+  albums: AudioSearchItem[];
+  artists: AudioSearchItem[];
+}
+
+export type AudioSearchType = 'track' | 'album' | 'artist'
+
+/** At most this many results are shown per group. */
+const SEARCH_GROUP_LIMIT = 25
+
 export interface AudioStation {
   name: string;
   uri: string;
@@ -204,14 +241,55 @@ export class AudioService {
     const response = await axiosUtils.getResponse(this.server, 'audioPlaylists')
     return this.listOf(response)
       .filter(p => p && p.id != null)
-      .map(p => ({
-        id: p.id,
-        uri: p.uri || null,
-        name: `${p.name || p.id}`,
-        trackCount: this.numberOrNull(p.trackCount),
-        editable: !!p.editable,
-        imageUrl: this.absoluteUrl(p.imageUrl)
-      }))
+      .map(p => this.normalizePlaylist(p))
+  }
+
+  public async getPlaylistTracks (playlistId: string | number): Promise<AudioTrack[]> {
+    const response = await axiosUtils.getFromPath(this.server, 'audioPlaylistTracks', { playlistId })
+    return this.listOf(response).map(t => this.normalizeTrack(t)).filter((t): t is AudioTrack => t !== null)
+  }
+
+  /** The new playlist, or null when the answer carries no id. */
+  public async createPlaylist (name: string): Promise<AudioPlaylist | null> {
+    const response = await axiosUtils.post(this.server, 'audioPlaylists', () => ({ name: name.trim() }))
+    return response && response.id != null ? this.normalizePlaylist(response) : null
+  }
+
+  public async renamePlaylist (playlistId: string | number, name: string): Promise<void> {
+    return axiosUtils.patchToPath(this.server, 'audioPlaylist', { playlistId }, () => ({ name: name.trim() }))
+  }
+
+  public async deletePlaylist (playlistId: string | number): Promise<void> {
+    return axiosUtils.deleteFromPath(this.server, 'audioPlaylist', { playlistId })
+  }
+
+  /** Appends; the GUI never inserts at a position (design D4 of `kiosk-playlist-editor`). */
+  public async addPlaylistTracks (playlistId: string | number, uris: string[]): Promise<void> {
+    return axiosUtils.postToPath(this.server, 'audioPlaylistTracks', { playlistId }, () => ({ uris }))
+  }
+
+  public async removePlaylistTracks (playlistId: string | number, positions: number[]): Promise<void> {
+    return axiosUtils.deleteFromPath(this.server, 'audioPlaylistTracks', { playlistId }, () => ({ positions }))
+  }
+
+  public async movePlaylistTrack (playlistId: string | number, from: number, to: number): Promise<void> {
+    return axiosUtils.postToPath(this.server, 'audioPlaylistTracksMove', { playlistId }, () => ({ from, to }))
+  }
+
+  /** Results without a `uri` are dropped, and each group is cut to 25. */
+  public async search (query: string, types: AudioSearchType[]): Promise<AudioSearchResult> {
+    const params = `q=${encodeURIComponent(query.trim())}&types=${types.join(',')}`
+    const response = await axiosUtils.getResponse(this.server, 'audioSearch', params) || {}
+    const group = (plural: string, singular: string): Raw[] =>
+      this.listOf(response[plural] != null ? response[plural] : response[singular]).filter(i => i && i.uri)
+    return {
+      tracks: group('tracks', 'track')
+        .map(t => this.normalizeTrack(t))
+        .filter((t): t is AudioTrack => t !== null)
+        .slice(0, SEARCH_GROUP_LIMIT),
+      albums: group('albums', 'album').slice(0, SEARCH_GROUP_LIMIT).map(i => this.normalizeSearchItem(i)),
+      artists: group('artists', 'artist').slice(0, SEARCH_GROUP_LIMIT).map(i => this.normalizeSearchItem(i))
+    }
   }
 
   /**
@@ -277,6 +355,27 @@ export class AudioService {
       duration: this.numberOrNull(p.duration),
       playlistId: p.playlistId != null ? p.playlistId : null,
       queueIndex: this.numberOrNull(p.queueIndex)
+    }
+  }
+
+  private normalizePlaylist (p: Raw): AudioPlaylist {
+    return {
+      id: p.id,
+      uri: p.uri || null,
+      name: `${p.name || p.id}`,
+      trackCount: this.numberOrNull(p.trackCount),
+      editable: !!p.editable,
+      imageUrl: this.absoluteUrl(p.imageUrl)
+    }
+  }
+
+  private normalizeSearchItem (i: Raw): AudioSearchItem {
+    const artist = i.artist || (Array.isArray(i.artists) ? i.artists.join(', ') : null)
+    return {
+      name: `${i.name || i.title || i.uri}`,
+      artist: artist || null,
+      uri: `${i.uri}`,
+      imageUrl: this.absoluteUrl(i.imageUrl)
     }
   }
 
