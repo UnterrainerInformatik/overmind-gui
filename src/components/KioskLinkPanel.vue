@@ -63,10 +63,10 @@ export default {
   opacity: 0 !important;
 }
 
-// Half the height the tile had with its icon above the text, and the height of
-// the audio bar - see styles/_kiosk.scss.
+// Lower than the tile with its icon above the text, to make room for the
+// audio bar - see styles/_kiosk.scss.
 .kiosk-link-panel {
-  height: var(--kiosk-audio-bar-height);
+  height: var(--kiosk-link-tile-height);
 }
 
 .kiosk-link-panel .normal-text {

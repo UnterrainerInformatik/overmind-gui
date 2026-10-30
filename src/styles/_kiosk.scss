@@ -1,11 +1,12 @@
 // Global kiosk chrome sizes, emitted once from App.vue.
 //
-// The audio bar is exactly as high as one kiosk link tile, and the link tile
-// was halved to make room for it (openspec change `kiosk-audio-bar`): the tile
-// measured 82 px before, so both are 41 px. KioskLinkPanel and KioskAudioBar
-// read this variable, so the two cannot drift apart.
+// The link tile was halved to make room for the audio bar (openspec change
+// `kiosk-audio-bar`): it measured 82 px before, so the bar is 41 px. The
+// halved tile was too small to tap and left nearly a whole row empty, so the
+// tile got some of its height back; the bar keeps its 41 px.
 :root {
   --kiosk-audio-bar-height: 41px;
+  --kiosk-link-tile-height: 60px;
 }
 
 // What fixed kiosk chrome has to stay clear of at the bottom edge: the audio

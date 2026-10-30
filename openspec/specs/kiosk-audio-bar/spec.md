@@ -33,16 +33,16 @@ kiosk settings gear SHALL sit above the bar, still tappable.
 - **THEN** its last element is fully visible above the bar
 - **AND** the settings gear is visible and tappable above the bar
 
-### Requirement: Half-height link tiles and bar height
+### Requirement: Lower link tiles and bar height
 
-Every kiosk link tile SHALL be half as high as before this change, with its icon placed beside
-the text instead of above it, and its text still readable on one line where it fit before. The
-audio bar SHALL have the same height as one halved link tile.
+Every kiosk link tile SHALL be 60 px high (it was 82 px before this change), with its icon placed
+beside the text instead of above it, and its text still readable on one line where it fit before.
+The audio bar SHALL be 41 px high, half the old link tile height.
 
-#### Scenario: Link tile height halved
+#### Scenario: Link tile height lowered
 - **WHEN** any kiosk page with link tiles is shown at the same width as before
-- **THEN** each link tile is half its previous height (±2 px)
-- **AND** the audio bar is as high as a link tile (±2 px)
+- **THEN** each link tile is 60 px high (±2 px)
+- **AND** the audio bar is 41 px high (±2 px)
 
 ### Requirement: Bar controls
 
