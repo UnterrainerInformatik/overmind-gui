@@ -45,10 +45,24 @@
             <v-icon left>edit</v-icon>{{ $t('page.kiosk.audio.editor.editPlaylists') }}
           </v-btn>
         </div>
+        <div v-if="!playlistsFailed && playlists.length > 0" class="px-4 pb-2">
+          <v-text-field
+            :value="playlistFilter"
+            class="audio-queue-playlist-filter"
+            :label="$t('page.kiosk.audio.editor.filter')"
+            prepend-inner-icon="search"
+            clearable
+            hide-details
+            dense
+            outlined
+            @input="playlistFilter = $event || ''"
+          ></v-text-field>
+        </div>
         <div v-if="playlistsFailed" class="px-4 pb-4 audio-queue-message">{{ $t('page.kiosk.audio.loadFailed') }}</div>
         <div v-else-if="!loadingPlaylists && playlists.length === 0" class="px-4 pb-4 audio-queue-message">{{ $t('page.kiosk.audio.noPlaylists') }}</div>
+        <div v-else-if="playlists.length > 0 && shownPlaylists.length === 0" class="px-4 pb-4 audio-queue-message audio-queue-no-match">{{ $t('page.kiosk.audio.editor.noPlaylists') }}</div>
         <div
-          v-for="playlist in playlists"
+          v-for="playlist in shownPlaylists"
           :key="`p-${playlist.id}`"
           class="audio-playlist-entry"
           :class="{ 'audio-playlist-entry--current': isCurrentPlaylist(playlist) }"
@@ -104,7 +118,8 @@ export default {
     loadingPlaylists: false,
     playlistsFailed: false,
     editorOpen: false,
-    editorMounted: false
+    editorMounted: false,
+    playlistFilter: ''
   }),
 
   computed: {
@@ -122,12 +137,18 @@ export default {
         return this.queueIndex
       }
       return this.target && this.target.playback ? this.target.playback.queueIndex : null
+    },
+    /** Same rule as the editor's filter, so both lists match alike. */
+    shownPlaylists () {
+      const q = this.playlistFilter.trim().toLowerCase()
+      return q === '' ? this.playlists : this.playlists.filter(p => p.name.toLowerCase().includes(q))
     }
   },
 
   watch: {
     value (open) {
       if (open) {
+        this.playlistFilter = ''
         this.loadQueue()
         this.loadPlaylists()
       }
