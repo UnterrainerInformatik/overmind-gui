@@ -19,7 +19,7 @@
         <v-progress-linear v-if="loading && stations.length === 0" indeterminate></v-progress-linear>
         <div v-else-if="failed" class="audio-radio-message">{{ $t('page.kiosk.audio.loadFailed') }}</div>
         <div v-else-if="stations.length === 0" class="audio-radio-message audio-radio-empty">{{ $t('page.kiosk.audio.noStations') }}</div>
-        <div v-else class="audio-radio-grid">
+        <div v-else class="audio-radio-grid" :class="{ 'audio-radio-grid--xs': $vuetify.breakpoint.xsOnly }">
           <button
             v-for="(station, index) in stations"
             :key="`s-${index}`"
@@ -43,8 +43,9 @@ import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
 
 /**
- * The radio quick select (openspec change `kiosk-audio-bar`): up to eight
- * stations in the order the server sends them. A tap plays the station on the
+ * The radio quick select (openspec changes `kiosk-audio-bar` and
+ * `radio-quick-select-twelve-tiles`): up to twelve stations in the order the
+ * server sends them, laid out so all twelve fit without scrolling. A tap plays the station on the
  * bar's target and closes the dialog.
  */
 export default {
@@ -100,6 +101,11 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 8px;
+
+  // Three columns instead of two on a phone, so twelve stations are 4 rows.
+  &.audio-radio-grid--xs {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
 }
 
 .audio-radio-tile {

@@ -18,7 +18,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   GET  audioTargetQueue          -> {items: [Track], currentIndex}
  *   POST audioTargetQueuePlay {index}
  *   POST audioTargetPlayMedia {uri}
- *   GET  audioRadio                -> {items: [Station]}, at most 8
+ *   GET  audioRadio                -> {items: [Station]}, at most RADIO_STATIONS
  *   GET  audioPlaylists            -> {items: [Playlist]}
  *
  * The playlist editor (openspec change `kiosk-playlist-editor`), all from
@@ -152,6 +152,13 @@ export type AudioSearchType = 'track' | 'album' | 'artist'
 /** At most this many results are shown per group. */
 const SEARCH_GROUP_LIMIT = 25
 
+/**
+ * At most this many radio stations are shown (mirrors the server's
+ * `AudioLibrary.RADIO_STATIONS`). The client keeps its own cap so an older or
+ * misconfigured server cannot flood the popup.
+ */
+export const RADIO_STATIONS = 12
+
 export interface AudioStation {
   name: string;
   uri: string;
@@ -233,7 +240,7 @@ export class AudioService {
     const response = await axiosUtils.getResponse(this.server, 'audioRadio')
     return this.listOf(response)
       .filter(s => s && s.uri)
-      .slice(0, 8)
+      .slice(0, RADIO_STATIONS)
       .map(s => ({ name: `${s.name || s.title || s.uri}`, uri: `${s.uri}`, imageUrl: this.absoluteUrl(s.imageUrl) }))
   }
 
