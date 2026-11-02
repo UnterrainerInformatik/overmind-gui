@@ -41,6 +41,8 @@
             :failed="tracksFailed"
             :busy="busy"
             :show-add-button="!wide"
+            :can-play="!!playTarget"
+            :shuffle="shuffle"
             @back="backToList"
             @rename="promptRename"
             @delete="confirmDelete = true"
@@ -48,6 +50,10 @@
             @move="moveTrack"
             @add="view = 'search'"
             @retry="loadTracks"
+            @play="play"
+            @shuffle="setShuffle"
+            @drag-start="onDragStart"
+            @drag-end="onDragEnd"
           ></AudioPlaylistTracks>
           <AudioLibrarySearch
             v-if="openPlaylist.editable"
@@ -86,6 +92,11 @@
 
 <script lang="js">
 import { singleton as audioService } from '@/utils/webservices/audioService'
+import { SseClient } from '@/utils/sseClient'
+import { acquire, release } from '@/utils/audioState'
+import { readStoredTarget, resolveTarget } from '@/utils/audioTarget'
+import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
+import { audioCommand } from '@/mixins/audioCommand'
 import AudioPlaylistList from '@/components/audio/AudioPlaylistList.vue'
 import AudioPlaylistTracks from '@/components/audio/AudioPlaylistTracks.vue'
 import AudioLibrarySearch from '@/components/audio/AudioLibrarySearch.vue'
@@ -103,14 +114,30 @@ import AudioNamePrompt from '@/components/audio/AudioNamePrompt.vue'
  * `persistent`, because a full-screen dialog has no overlay and Vuetify then
  * counts any click outside its content as a click outside - including the
  * close button of the snackbar an edit put up. Escape still closes it.
+ *
+ * Change `kiosk-playlist-editor-extras`: the open playlist can be played on
+ * the device's audio target (the `target` prop from the queue popup, else the
+ * stored target resolved against the shared audio state, design D3) with the
+ * device's shuffle choice (D2). While open, the server's
+ * `audio-playlist-changed` event and every SSE reconnect reload the list and,
+ * when it concerns them, the open playlist's tracks (D5). Such a reload is
+ * held back while a drag or an edit runs, flags collapse a burst into one
+ * reload, and a short trailing debounce merges events that arrive while idle.
  */
+// Merges a burst of playlist events into one reload.
+const LIVE_RELOAD_DEBOUNCE_MS = 300
+
 export default {
   name: 'AudioPlaylistEditor',
 
   components: { AudioPlaylistList, AudioPlaylistTracks, AudioLibrarySearch, AudioNamePrompt },
 
+  mixins: [audioCommand],
+
   props: {
-    value: { type: Boolean, default: false }
+    value: { type: Boolean, default: false },
+    /** The audio bar's resolved target; without it the editor resolves the stored one. */
+    target: { type: Object, default: null }
   },
 
   data: () => ({
@@ -126,7 +153,16 @@ export default {
     tracksFailed: false,
     busy: false,
     prompt: { open: false, mode: 'create' },
-    confirmDelete: false
+    confirmDelete: false,
+    shuffleStore: audioShuffle,
+    audioStore: null,
+    selection: 'main',
+    dragging: false,
+    pending: { list: false, tracks: false },
+    // Counts live events, so a reload started after one also covers it.
+    liveSeq: 0,
+    flushTimer: null,
+    listening: false
   }),
 
   computed: {
@@ -135,6 +171,17 @@ export default {
     },
     trackUris () {
       return this.tracks.map(t => t.uri).filter(uri => !!uri)
+    },
+    shuffle () {
+      return this.shuffleStore.on
+    },
+    /** Where play sends the playlist: the target the audio bar would control on this device. */
+    playTarget () {
+      if (this.target) {
+        return this.target
+      }
+      const state = this.audioStore ? this.audioStore.state : null
+      return resolveTarget(state, this.selection, this.$t('page.kiosk.audio.mainGroup'))
     }
   },
 
@@ -146,10 +193,17 @@ export default {
           this.filter = ''
           this.showReadOnly = false
           this.backToList()
+          this.startLive()
           this.loadPlaylists()
+        } else {
+          this.stopLive()
         }
       }
     }
+  },
+
+  beforeDestroy () {
+    this.stopLive()
   },
 
   methods: {
@@ -158,30 +212,48 @@ export default {
         this.$emit('input', false)
       }
     },
-    async loadPlaylists () {
+    /** `quiet`: a background reload, which keeps the shown list when it fails. */
+    async loadPlaylists (quiet = false) {
+      const seq = this.liveSeq
       this.loadingPlaylists = true
       try {
         this.playlists = await audioService.getPlaylists()
         this.playlistsFailed = false
+        if (this.liveSeq === seq) {
+          this.pending.list = false
+        }
+        return true
       } catch (err) {
-        this.playlistsFailed = true
+        if (!quiet) {
+          this.playlistsFailed = true
+        }
+        return false
       } finally {
         this.loadingPlaylists = false
       }
     },
-    async loadTracks () {
+    async loadTracks (quiet = false) {
       const playlist = this.openPlaylist
       if (!playlist) {
         return
       }
+      const seq = this.liveSeq
       this.loadingTracks = true
       try {
         const tracks = await audioService.getPlaylistTracks(playlist.id)
         if (this.openPlaylist !== playlist) {
           return
         }
+        if (this.dragging) {
+          // Never replace the rows under SortableJS; load again after the drop.
+          this.pending.tracks = true
+          return
+        }
         this.tracks = tracks
         this.tracksFailed = false
+        if (this.liveSeq === seq) {
+          this.pending.tracks = false
+        }
       } catch (err) {
         if (this.openPlaylist !== playlist) {
           return
@@ -192,8 +264,10 @@ export default {
           await this.loadPlaylists()
           return
         }
-        this.tracks = []
-        this.tracksFailed = true
+        if (!quiet) {
+          this.tracks = []
+          this.tracksFailed = true
+        }
       } finally {
         this.loadingTracks = false
       }
@@ -248,6 +322,8 @@ export default {
         return ok
       } finally {
         this.busy = false
+        // After the caller has seen the result (it may leave the playlist).
+        this.$nextTick(() => this.flushPending())
       }
     },
     notify (color, descriptionTKey, message) {
@@ -258,6 +334,114 @@ export default {
         status: null,
         message
       })
+    },
+
+    setShuffle (on) {
+      setShuffle(on)
+    },
+    play () {
+      const target = this.playTarget
+      const playlist = this.openPlaylist
+      if (!target || !playlist) {
+        return
+      }
+      const targetId = target.targetId
+      const uri = audioService.playlistUri(playlist)
+      const shuffle = this.shuffle
+      this.runAudioCommand(() => audioService.playMedia(targetId, uri, shuffle), 'page.kiosk.audio.editor.playFailed')
+    },
+
+    startLive () {
+      if (!this.target && this.audioStore === null) {
+        this.selection = readStoredTarget()
+        this.audioStore = acquire()
+      }
+      if (!this.listening) {
+        const sse = SseClient.getInstance()
+        sse.addEventListener('audio-playlist-changed', this.onPlaylistChanged)
+        sse.addEventListener('connected', this.onReconnected)
+        this.listening = true
+      }
+    },
+    stopLive () {
+      if (this.audioStore !== null) {
+        release()
+        this.audioStore = null
+      }
+      if (this.listening) {
+        const sse = SseClient.getInstance()
+        sse.removeEventListener('audio-playlist-changed', this.onPlaylistChanged)
+        sse.removeEventListener('connected', this.onReconnected)
+        this.listening = false
+      }
+      this.clearFlushTimer()
+      this.pending = { list: false, tracks: false }
+      this.dragging = false
+    },
+    onPlaylistChanged (payload) {
+      const id = payload && payload.playlistId != null ? `${payload.playlistId}` : null
+      const known = id !== null && this.playlists.some(p => `${p.id}` === id)
+      this.liveSeq++
+      this.pending.list = true
+      if (this.openPlaylist && (!known || `${this.openPlaylist.id}` === id)) {
+        this.pending.tracks = true
+      }
+      this.scheduleFlush()
+    },
+    onReconnected () {
+      // Events may have been missed while the connection was down.
+      this.liveSeq++
+      this.pending.list = true
+      this.pending.tracks = !!this.openPlaylist
+      this.scheduleFlush()
+    },
+    onDragStart () {
+      this.dragging = true
+    },
+    onDragEnd () {
+      this.dragging = false
+      // The drop's move (if any) has already made the editor busy; then runEdit flushes.
+      this.$nextTick(() => this.flushPending())
+    },
+    scheduleFlush () {
+      this.clearFlushTimer()
+      this.flushTimer = setTimeout(() => {
+        this.flushTimer = null
+        this.flushPending()
+      }, LIVE_RELOAD_DEBOUNCE_MS)
+    },
+    clearFlushTimer () {
+      if (this.flushTimer !== null) {
+        clearTimeout(this.flushTimer)
+        this.flushTimer = null
+      }
+    },
+    /** Runs the held-back reloads once nothing is in the way. */
+    async flushPending () {
+      if (!this.value || this.busy || this.dragging || this.flushTimer !== null) {
+        return
+      }
+      const { list, tracks } = this.pending
+      if (!list && !tracks) {
+        return
+      }
+      this.pending = { list: false, tracks: false }
+      if (list && await this.loadPlaylists(true) && this.openPlaylist) {
+        const id = `${this.openPlaylist.id}`
+        const fresh = this.playlists.find(p => `${p.id}` === id)
+        if (!fresh) {
+          this.notify('warning', 'page.kiosk.audio.editor.removedElsewhere', '')
+          this.backToList()
+          return
+        }
+        const open = this.openPlaylist
+        if (fresh.name !== open.name || fresh.editable !== open.editable || fresh.uri !== open.uri) {
+          this.openPlaylist = fresh
+        }
+      }
+      if (tracks && this.openPlaylist) {
+        await this.loadTracks(true)
+      }
     },
 
     promptCreate () {

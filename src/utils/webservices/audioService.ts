@@ -17,7 +17,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioTargetVolume   {level}  0..100
  *   GET  audioTargetQueue          -> {items: [Track], currentIndex}
  *   POST audioTargetQueuePlay {index}
- *   POST audioTargetPlayMedia {uri}
+ *   POST audioTargetPlayMedia {uri, shuffle?}
  *   GET  audioRadio                -> {items: [Station]}, at most RADIO_STATIONS
  *   GET  audioPlaylists            -> {items: [Playlist]}
  *
@@ -34,6 +34,19 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   POST   audioPlaylistTracksMove  {from, to}
  *   GET    audioSearch ?q=&types=track,album,artist
  *          -> {tracks: [Track], albums: [Item], artists: [Item]}, Item = {name, artist, uri, imageUrl}
+ *
+ * Backend contract, not yet built (openspec change
+ * `kiosk-playlist-editor-extras`, design D1; to be added in
+ * java-overmind-server):
+ * - `playMedia` takes an optional `shuffle` boolean. `true` turns the target
+ *   queue's shuffle on before replacing the queue (MA `player_queues/shuffle`,
+ *   then `player_queues/play_media` with `option: replace`), `false` turns it
+ *   off, no field leaves it as it is. The GUI sends it for playlists only, so
+ *   radio still sends `{uri}`. A server that does not know it ignores it.
+ * - SSE event `audio-playlist-changed` `{playlistId}` (the id as in
+ *   `audioPlaylists`) on every change to a playlist, whoever made it: tracks
+ *   added, removed or moved, renamed, created, deleted. Coalesced per playlist
+ *   (~500 ms). The playlist editor reloads on it; without it nothing reloads.
  *
  * The search shape is what the built server sends (`AudioSearchJson`, a type
  * not asked for is null). Also read: the singular keys `track`/`album`/`artist`
@@ -231,9 +244,13 @@ export class AudioService {
     return axiosUtils.postToPath(this.server, 'audioTargetQueuePlay', { targetId }, () => ({ index }))
   }
 
-  /** Replaces the target's queue with a playlist or a radio station. */
-  public async playMedia (targetId: string, uri: string): Promise<void> {
-    return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId }, () => ({ uri }))
+  /**
+   * Replaces the target's queue with a playlist or a radio station. `shuffle`
+   * is sent only when given (playlists), see the contract above.
+   */
+  public async playMedia (targetId: string, uri: string, shuffle?: boolean): Promise<void> {
+    return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId },
+      () => (shuffle === undefined ? { uri } : { uri, shuffle }))
   }
 
   public async getRadio (): Promise<AudioStation[]> {

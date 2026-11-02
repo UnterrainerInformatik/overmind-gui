@@ -169,37 +169,14 @@
 import { mapGetters } from 'vuex'
 import { acquire, release } from '@/utils/audioState'
 import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices/audioService'
+import { readStoredTarget, writeStoredTarget, resolveTarget, selectedRoomOf } from '@/utils/audioTarget'
 import { audioCommand } from '@/mixins/audioCommand'
 import AudioTargetDialog from '@/components/audio/AudioTargetDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
 
-// The device's chosen target: 'main' or 'room:<roomId>'. The room id rather
-// than the target id is stored, because the id a solo room is addressed by is
-// MA's and is not ours to keep (design.md D5).
-const STORAGE_KEY = 'kioskAudioTarget'
 // How long a released slider keeps its value while no newer state arrives.
 const HOLD_MS = 3000
-
-function readStoredTarget () {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw === 'main' || (raw && raw.startsWith('room:'))) {
-      return raw
-    }
-  } catch {
-    // storage blocked - the main group it is
-  }
-  return 'main'
-}
-
-function writeStoredTarget (value) {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, value)
-  } catch {
-    // ignore - the choice then lasts for this page session only
-  }
-}
 
 /**
  * The music player bar along the bottom of every kiosk page (openspec change
@@ -254,42 +231,11 @@ export default {
       return this.$vuetify.breakpoint.xsOnly
     },
     selectedRoom () {
-      if (!this.state || !this.selection.startsWith('room:')) {
-        return null
-      }
-      const id = this.selection.substring('room:'.length)
-      const room = this.state.rooms.find(r => `${r.id}` === id)
-      return room && room.available && !room.grouped && room.targetId ? room : null
+      return selectedRoomOf(this.state, this.selection)
     },
     /** The selection resolved against the state: the room while it may be one, else the main group. */
     target () {
-      if (!this.state) {
-        return null
-      }
-      const room = this.selectedRoom
-      if (room) {
-        return {
-          key: `room:${room.id}`,
-          kind: 'room',
-          targetId: room.targetId,
-          roomId: room.id,
-          name: room.name,
-          color: room.color,
-          playback: room.playback,
-          volume: room.volume
-        }
-      }
-      const group = this.state.mainGroup
-      return {
-        key: 'main',
-        kind: 'main',
-        targetId: group.targetId,
-        roomId: null,
-        name: group.name || this.$t('page.kiosk.audio.mainGroup'),
-        color: MAIN_GROUP_COLOR,
-        playback: group.playback,
-        volume: group.volume
-      }
+      return resolveTarget(this.state, this.selection, this.$t('page.kiosk.audio.mainGroup'))
     },
     /** True once a loaded state has made a remembered room fall back to the main group. */
     selectionFellBack () {

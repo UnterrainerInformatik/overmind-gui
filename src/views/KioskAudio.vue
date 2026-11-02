@@ -5,6 +5,22 @@
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
       ></KioskLinkPanel>
+      <KioskPanel
+        class="noFocus kiosk-link-panel kiosk-audio-playlists"
+        borderColor="disabled"
+        bgColor="disabled darken-4"
+        pa="1"
+        :renderTitle="false"
+        maxWidth="220px"
+        @click="openEditor"
+      >
+        <div class="kiosk-link-panel-row">
+          <v-avatar color="disabled darken-2" size="24" class="mr-2">
+            <v-icon small>queue_music</v-icon>
+          </v-avatar>
+          <span class="kiosk-link-panel-text">{{ $t('page.kiosk.audioPlaylists') }}</span>
+        </div>
+      </KioskPanel>
     </div>
     <iframe
       v-if="src"
@@ -15,6 +31,7 @@
     <div v-else class="kiosk-audio-notice pa-4">
       {{ $t('page.kiosk.audioNotConfigured') }}
     </div>
+    <AudioPlaylistEditor v-if="editorMounted" v-model="editorOpen"></AudioPlaylistEditor>
   </div>
 </template>
 
@@ -22,19 +39,37 @@
 // @ is an alias to /src
 import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
+import KioskPanel from '@/components/KioskPanel.vue'
 
+// Lazy, so vuedraggable and the editor only load when someone edits.
+const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor.vue')
+
+/**
+ * Music Assistant's own UI, embedded, and a way into the playlist editor
+ * (openspec change `kiosk-playlist-editor-extras`, design D7). The editor opens
+ * on top without a `target`: it resolves the device's stored one itself. The
+ * iframe stays mounted, so Music Assistant keeps its page.
+ */
 export default {
   name: 'kioskAudio',
 
   components: {
-    KioskLinkPanel
+    KioskLinkPanel,
+    KioskPanel,
+    AudioPlaylistEditor
   },
 
   data: () => ({
-    src: null
+    src: null,
+    editorOpen: false,
+    editorMounted: false
   }),
 
   methods: {
+    openEditor () {
+      this.editorMounted = true
+      this.editorOpen = true
+    },
     ...mapActions('gui', {
       kioskMode: 'kioskMode'
     }),

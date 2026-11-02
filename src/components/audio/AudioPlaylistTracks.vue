@@ -8,10 +8,46 @@
       <v-chip v-if="!playlist.editable" small class="audio-tracks-readonly ml-2">
         <v-icon x-small left>lock</v-icon>{{ $t('page.kiosk.audio.editor.readOnlyMark') }}
       </v-chip>
-      <template v-else>
+    </div>
+    <div class="audio-tracks-actions" :class="{ 'audio-tracks-actions--compact': compact }">
+      <v-btn
+        :text="!compact"
+        :icon="compact"
+        class="audio-tracks-action audio-tracks-play"
+        :disabled="!canPlay"
+        :aria-label="$t('page.kiosk.audio.editor.play')"
+        @click="$emit('play')"
+      >
+        <v-icon :left="!compact">play_arrow</v-icon><span v-if="!compact">{{ $t('page.kiosk.audio.editor.play') }}</span>
+      </v-btn>
+      <v-btn
+        :text="!compact"
+        :icon="compact"
+        :color="shuffle ? 'light-blue lighten-2' : null"
+        class="audio-tracks-action audio-tracks-shuffle"
+        :class="{ 'audio-tracks-shuffle--on': shuffle }"
+        :input-value="shuffle"
+        :aria-pressed="shuffle ? 'true' : 'false'"
+        :aria-label="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
+        @click="$emit('shuffle', !shuffle)"
+      >
+        <v-icon :left="!compact">{{ shuffle ? 'shuffle_on' : 'shuffle' }}</v-icon><span v-if="!compact">{{ $t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff') }}</span>
+      </v-btn>
+      <v-spacer></v-spacer>
+      <template v-if="playlist.editable">
+        <v-btn
+          v-if="showAddButton"
+          :text="!compact"
+          :icon="compact"
+          class="audio-tracks-action audio-tracks-add-btn"
+          :aria-label="$t('page.kiosk.audio.editor.addTracks')"
+          @click="$emit('add')"
+        >
+          <v-icon :left="!compact">playlist_add</v-icon><span v-if="!compact">{{ $t('page.kiosk.audio.editor.addTracks') }}</span>
+        </v-btn>
         <v-btn
           icon
-          class="audio-editor-icon audio-tracks-rename"
+          class="audio-tracks-action audio-tracks-rename"
           :disabled="busy"
           :aria-label="$t('page.kiosk.audio.editor.rename')"
           @click="$emit('rename')"
@@ -20,7 +56,7 @@
         </v-btn>
         <v-btn
           icon
-          class="audio-editor-icon audio-tracks-delete"
+          class="audio-tracks-action audio-tracks-delete"
           :disabled="busy"
           :aria-label="$t('page.kiosk.audio.editor.delete')"
           @click="$emit('delete')"
@@ -36,7 +72,7 @@
       height="4"
     ></v-progress-linear>
 
-    <div class="audio-tracks-scroll">
+    <div ref="scroll" class="audio-tracks-scroll">
       <div v-if="failed" class="pa-4 audio-editor-message audio-tracks-failed">
         <div>{{ $t('page.kiosk.audio.editor.loadFailed') }}</div>
         <v-btn text color="primary" class="audio-tracks-retry mt-2" @click="$emit('retry')">{{ $t('page.kiosk.audio.editor.retry') }}</v-btn>
@@ -52,6 +88,12 @@
         :animation="150"
         :disabled="busy || !playlist.editable"
         ghost-class="audio-track--ghost"
+        fallback-class="audio-track--fallback"
+        :scroll="false"
+        :force-fallback="true"
+        :fallback-on-body="true"
+        :fallback-tolerance="3"
+        @start="onStart"
         @end="onEnd"
       >
         <div
@@ -87,22 +129,25 @@
       </draggable>
     </div>
 
-    <div v-if="showAddButton && playlist.editable" class="audio-tracks-add pa-3">
-      <v-btn block large color="primary" class="audio-tracks-add-btn" @click="$emit('add')">
-        <v-icon left>playlist_add</v-icon>{{ $t('page.kiosk.audio.editor.addTracks') }}
-      </v-btn>
-    </div>
   </div>
 </template>
 
 <script lang="js">
 import draggable from 'vuedraggable'
+import { createAutoScroller } from '@/utils/dragAutoScroll'
 
 /**
  * The tracks of the open playlist (openspec change `kiosk-playlist-editor`,
  * design D3). Dragging starts only from the handle, so swiping a row still
  * scrolls. SortableJS moves the row locally on drop; the editor then writes the
  * move and reloads, which replaces the local order with the server's.
+ *
+ * The actions sit in a bar between the header and the list, which is the only
+ * part that scrolls, so they stay in view (change
+ * `kiosk-playlist-editor-extras`, design D4). Sortable runs in fallback mode
+ * with its own auto-scroll off; `dragAutoScroll` scrolls the list instead, at a
+ * speed that does not depend on the frame rate (design D6). `drag-start` and
+ * `drag-end` let the editor hold back reloads while a row is under the finger.
  */
 export default {
   name: 'AudioPlaylistTracks',
@@ -115,13 +160,22 @@ export default {
     loading: { type: Boolean, default: false },
     failed: { type: Boolean, default: false },
     busy: { type: Boolean, default: false },
-    showAddButton: { type: Boolean, default: false }
+    showAddButton: { type: Boolean, default: false },
+    canPlay: { type: Boolean, default: false },
+    shuffle: { type: Boolean, default: false }
   },
 
   data: () => ({
     rows: [],
-    generation: 0
+    generation: 0,
+    dragging: false
   }),
+
+  computed: {
+    compact () {
+      return this.$vuetify.breakpoint.xsOnly
+    }
+  },
 
   watch: {
     tracks: {
@@ -135,10 +189,39 @@ export default {
   },
 
   methods: {
+    onStart (event) {
+      this.dragging = true
+      this.$emit('drag-start')
+      if (!this.scroller && this.$refs.scroll) {
+        this.scroller = createAutoScroller(this.$refs.scroll)
+      }
+      const original = event && event.originalEvent
+      const point = original && original.touches && original.touches.length > 0 ? original.touches[0] : original
+      if (this.scroller) {
+        this.scroller.start(point ? point.clientX : undefined, point ? point.clientY : undefined)
+      }
+    },
     onEnd (event) {
+      this.stopScroller()
+      // The move first, so the editor is busy with it before the drag counts as over.
       if (event.oldIndex !== event.newIndex) {
         this.$emit('move', event.oldIndex, event.newIndex)
       }
+      this.dragging = false
+      this.$emit('drag-end')
+    },
+    stopScroller () {
+      if (this.scroller) {
+        this.scroller.stop()
+      }
+    }
+  },
+
+  beforeDestroy () {
+    this.stopScroller()
+    if (this.dragging) {
+      this.dragging = false
+      this.$emit('drag-end')
     }
   }
 }
@@ -171,6 +254,29 @@ export default {
 .audio-editor-icon.v-btn.v-btn--icon {
   width: 48px;
   height: 48px;
+}
+
+.audio-tracks-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  padding: 0 8px 4px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+
+  .v-btn.audio-tracks-action {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  .v-btn.v-btn--icon.audio-tracks-action {
+    width: 48px;
+    height: 48px;
+  }
+
+  .v-btn:not(.v-btn--icon).audio-tracks-action {
+    height: 48px;
+  }
 }
 
 .audio-tracks-scroll {
@@ -209,5 +315,12 @@ export default {
 
 .audio-track--ghost {
   opacity: 0.4;
+}
+
+// The row that follows the finger in fallback mode; SortableJS puts it on <body>.
+.audio-track.audio-track--fallback {
+  opacity: 0.9 !important;
+  background-color: var(--v-background-base, #121212);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 </style>

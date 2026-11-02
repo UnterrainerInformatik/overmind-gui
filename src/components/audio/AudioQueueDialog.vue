@@ -41,6 +41,19 @@
         <div class="audio-queue-section audio-queue-playlists-head px-4 pt-2">
           <span class="text-overline">{{ $t('page.kiosk.audio.playlists') }}</span>
           <v-spacer></v-spacer>
+          <v-btn
+            icon
+            class="audio-queue-shuffle"
+            :class="{ 'audio-queue-shuffle--on': shuffle }"
+            :color="shuffle ? 'light-blue lighten-2' : null"
+            :input-value="shuffle"
+            :aria-pressed="shuffle ? 'true' : 'false'"
+            :aria-label="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
+            :title="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
+            @click="toggleShuffle"
+          >
+            <v-icon>{{ shuffle ? 'shuffle_on' : 'shuffle' }}</v-icon>
+          </v-btn>
           <v-btn text class="audio-queue-edit-playlists" @click="editorOpen = true">
             <v-icon left>edit</v-icon>{{ $t('page.kiosk.audio.editor.editPlaylists') }}
           </v-btn>
@@ -79,13 +92,14 @@
       </v-card-text>
     </v-card>
 
-    <AudioPlaylistEditor v-if="editorMounted" v-model="editorOpen"></AudioPlaylistEditor>
+    <AudioPlaylistEditor v-if="editorMounted" v-model="editorOpen" :target="target"></AudioPlaylistEditor>
   </v-dialog>
 </template>
 
 <script lang="js">
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
+import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
 
 // Lazy, so vuedraggable and the editor only load when someone edits.
 const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor.vue')
@@ -96,6 +110,8 @@ const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor
  * playlist editor (change `kiosk-playlist-editor`), after which the playlists
  * are reloaded. While open it reloads the queue whenever the
  * target's track or playlist changes, so the highlight follows the music.
+ * A playlist is played with the device's shuffle choice, the same one the
+ * editor shows (change `kiosk-playlist-editor-extras`, design D2).
  */
 export default {
   name: 'AudioQueueDialog',
@@ -119,10 +135,14 @@ export default {
     playlistsFailed: false,
     editorOpen: false,
     editorMounted: false,
-    playlistFilter: ''
+    playlistFilter: '',
+    shuffleStore: audioShuffle
   }),
 
   computed: {
+    shuffle () {
+      return this.shuffleStore.on
+    },
     /** Changes whenever the queue the server holds for the target may have changed. */
     queueSignature () {
       if (!this.target) {
@@ -217,7 +237,11 @@ export default {
         return
       }
       const targetId = this.target.targetId
-      this.runAudioCommand(() => audioService.playMedia(targetId, audioService.playlistUri(playlist)))
+      const shuffle = this.shuffle
+      this.runAudioCommand(() => audioService.playMedia(targetId, audioService.playlistUri(playlist), shuffle))
+    },
+    toggleShuffle () {
+      setShuffle(!this.shuffle)
     }
   }
 }
@@ -242,6 +266,11 @@ export default {
 .audio-queue-playlists-head {
   display: flex;
   align-items: center;
+
+  .v-btn.v-btn--icon.audio-queue-shuffle {
+    width: 48px;
+    height: 48px;
+  }
 }
 
 .audio-queue-cover,

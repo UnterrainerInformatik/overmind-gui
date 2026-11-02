@@ -61,6 +61,7 @@
 		},
 		"kiosk": {
 			"audioNotConfigured": "Audio is not configured.",
+			"audioPlaylists": "Playlists",
 			"audio": {
 				"nothingPlaying": "Nothing playing",
 				"unavailable": "Audio unavailable",
@@ -114,7 +115,12 @@
 					"notFound": "The playlist no longer exists.",
 					"editFailed": "Change failed",
 					"loadFailed": "Could not be loaded.",
-					"retry": "Retry"
+					"retry": "Retry",
+					"play": "Play",
+					"shuffleOn": "Shuffle: on",
+					"shuffleOff": "Shuffle: off",
+					"playFailed": "Playing failed",
+					"removedElsewhere": "The open playlist was deleted elsewhere."
 				},
 				"map": {
 					"leaveGroup": "{room}: take out of the group",
