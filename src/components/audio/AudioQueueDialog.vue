@@ -10,6 +10,19 @@
       <v-card-title class="audio-dialog-title">
         <span>{{ $t('page.kiosk.audio.queue') }}</span>
         <v-spacer></v-spacer>
+        <v-btn
+          v-if="$vuetify.breakpoint.xsOnly"
+          icon
+          class="audio-queue-edit-playlists"
+          :aria-label="$t('page.kiosk.audio.editor.editPlaylists')"
+          :title="$t('page.kiosk.audio.editor.editPlaylists')"
+          @click="editorOpen = true"
+        >
+          <v-icon>edit</v-icon>
+        </v-btn>
+        <v-btn v-else text class="audio-queue-edit-playlists" @click="editorOpen = true">
+          <v-icon left>edit</v-icon>{{ $t('page.kiosk.audio.editor.editPlaylists') }}
+        </v-btn>
         <v-btn icon class="audio-dialog-close" :aria-label="$t('page.kiosk.audio.close')" @click="$emit('input', false)">
           <v-icon>close</v-icon>
         </v-btn>
@@ -53,9 +66,6 @@
             @click="toggleShuffle"
           >
             <v-icon>{{ shuffle ? 'shuffle_on' : 'shuffle' }}</v-icon>
-          </v-btn>
-          <v-btn text class="audio-queue-edit-playlists" @click="editorOpen = true">
-            <v-icon left>edit</v-icon>{{ $t('page.kiosk.audio.editor.editPlaylists') }}
           </v-btn>
         </div>
         <div v-if="!playlistsFailed && playlists.length > 0" class="px-4 pb-2">
