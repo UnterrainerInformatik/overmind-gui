@@ -34,6 +34,7 @@
     <div v-else-if="!loading && shown.length === 0" class="pa-4 audio-editor-message audio-playlist-none">{{ $t('page.kiosk.audio.editor.noPlaylists') }}</div>
     <v-virtual-scroll
       v-else
+      ref="scroll"
       class="audio-playlist-scroll"
       :items="shown"
       :item-height="56"
@@ -75,6 +76,12 @@ import { VVirtualScroll } from 'vuetify/lib'
  * D2). MA holds about 1450, almost all read-only m3u files, so only editable
  * ones are listed until the toggle is on; filtering is on the client and the
  * rows are virtual at a fixed 56 px.
+ *
+ * Vuetify 2's `v-virtual-scroll` measures how many rows fit only when it
+ * mounts and on scroll. The editor mounts it inside a dialog that is not yet
+ * visible (height 0), so it rendered only its `bench` rows - a playlist past
+ * them (a new one, or simply the fifth) never showed up. It is measured again
+ * whenever its size or the shown list changes.
  */
 export default {
   name: 'AudioPlaylistList',
@@ -89,6 +96,60 @@ export default {
     // Held by the editor, so they survive opening a playlist and coming back.
     filter: { type: String, default: '' },
     showReadOnly: { type: Boolean, default: false }
+  },
+
+  data: () => ({
+    resizeObserver: null
+  }),
+
+  watch: {
+    shown () {
+      this.$nextTick(() => this.measure())
+    }
+  },
+
+  mounted () {
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.measure())
+      this.observeScroll()
+    }
+    window.addEventListener('resize', this.measure)
+    this.$nextTick(() => this.measure())
+  },
+
+  updated () {
+    // The scroll is behind v-if/v-else and may have been replaced.
+    this.observeScroll()
+  },
+
+  beforeDestroy () {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+      this.resizeObserver = null
+    }
+    window.removeEventListener('resize', this.measure)
+  },
+
+  methods: {
+    observeScroll () {
+      const scroll = this.$refs.scroll
+      const el = scroll ? scroll.$el : null
+      if (!this.resizeObserver || el === this.observedEl) {
+        return
+      }
+      this.resizeObserver.disconnect()
+      this.observedEl = el
+      if (el) {
+        this.resizeObserver.observe(el)
+        this.measure()
+      }
+    },
+    measure () {
+      const scroll = this.$refs.scroll
+      if (scroll && typeof scroll.onScroll === 'function') {
+        scroll.onScroll()
+      }
+    }
   },
 
   computed: {
