@@ -131,8 +131,8 @@
           hide-details
           @start="volumeStart"
           @input="volumeInput"
-          @end="volumeEnd"
-          @change="volumeChange"
+          @end="finishVolume"
+          @change="finishVolume"
         ></v-slider>
         <div class="text-center text-caption kiosk-audio-player-volume-value">{{ shownVolume }}</div>
       </v-card>
@@ -171,6 +171,7 @@ import { acquire, release } from '@/utils/audioState'
 import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices/audioService'
 import { readStoredTarget, writeStoredTarget, resolveTarget, selectedRoomOf } from '@/utils/audioTarget'
 import { audioCommand } from '@/mixins/audioCommand'
+import { createLiveSender } from '@/utils/liveSender'
 import AudioTargetDialog from '@/components/audio/AudioTargetDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
@@ -184,7 +185,8 @@ const HOLD_MS = 3000
  * plays on its own - and shows that target's colour. Everything it shows comes
  * from the shared audio state; commands are sent and the next state shows
  * their effect, except for the two sliders, which hold the released value
- * until that state arrives (design.md D7).
+ * until that state arrives (design.md D7). The volume slider sends its level
+ * live while dragged (openspec change `kiosk-live-volume`).
  */
 export default {
   name: 'KioskAudioBar',
@@ -329,12 +331,17 @@ export default {
         this.clearSeekHold()
       }
     },
-    'target.volume' () {
-      this.clearVolumeHold()
+    'target.volume' (volume) {
+      // Echoes of levels sent during the drag must not move the slider back;
+      // only the released level itself (or HOLD_MS) ends the hold.
+      if (this.volumeHeld !== null && volume === this.volumeHeld) {
+        this.clearVolumeHold()
+      }
     },
     'target.key' () {
       this.clearSeekHold()
       this.clearVolumeHold()
+      this.cancelVolumeSender()
     }
   },
 
@@ -413,33 +420,60 @@ export default {
       this.volumeHeld = level
       this.volumeHoldTimer = setTimeout(() => this.clearVolumeHold(), HOLD_MS)
     },
+    cancelVolumeSender () {
+      if (this.volumeSender !== null) {
+        this.volumeSender.cancel()
+        this.volumeSender = null
+        this.volumeSenderKey = null
+      }
+    },
+    /**
+     * The live sender for the current target, bound to that target as it is
+     * now, so a target switch mid-drag cannot send to the new target.
+     */
+    ensureVolumeSender () {
+      const target = this.target
+      if (!target) {
+        return null
+      }
+      if (this.volumeSender === null || this.volumeSenderKey !== target.key) {
+        this.cancelVolumeSender()
+        // A solo room is turned up through its room, which the server maps to
+        // the room's own player; the main group through its target.
+        const { kind, roomId, targetId } = target
+        this.volumeSender = createLiveSender(level => kind === 'room'
+          ? audioService.setRoomVolume(roomId, level)
+          : audioService.setTargetVolume(targetId, level))
+        this.volumeSenderKey = target.key
+      }
+      return this.volumeSender
+    },
     volumeStart (value) {
       this.volumeDragging = true
       this.volumeDrag = value
+      this.ensureVolumeSender()
     },
     volumeInput (value) {
       if (this.volumeDragging) {
         this.volumeDrag = value
+        if (this.volumeSender !== null) {
+          this.volumeSender.push(value)
+        }
       }
     },
-    volumeEnd (value) {
-      this.volumeDragging = false
-      this.volumeDrag = null
-      this.holdVolume(value)
-    },
-    volumeChange (level) {
+    /**
+     * Release (`end`) and `change` both land here; a release fires both, a
+     * key press or click only `change`. The sender does not resend a level it
+     * already sent, so the second call sends nothing.
+     */
+    finishVolume (level) {
       this.volumeDragging = false
       this.volumeDrag = null
       this.holdVolume(level)
-      if (!this.target) {
-        return
+      const sender = this.ensureVolumeSender()
+      if (sender !== null) {
+        sender.flush(level, call => this.runAudioCommand(call))
       }
-      // A solo room is turned up through its room, which the server maps to
-      // the room's own player; the main group through its target.
-      const target = this.target
-      this.runAudioCommand(() => target.kind === 'room'
-        ? audioService.setRoomVolume(target.roomId, level)
-        : audioService.setTargetVolume(target.targetId, level))
     },
     timeText (seconds) {
       const s = Math.max(0, Math.floor(seconds || 0))
@@ -448,6 +482,9 @@ export default {
   },
 
   created () {
+    // not reactive: the live volume sender of the current drag target
+    this.volumeSender = null
+    this.volumeSenderKey = null
     this.selection = readStoredTarget()
     this.store = acquire()
   },
@@ -459,6 +496,7 @@ export default {
     }
     this.clearSeekHold()
     this.clearVolumeHold()
+    this.cancelVolumeSender()
   }
 }
 </script>

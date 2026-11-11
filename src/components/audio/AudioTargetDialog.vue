@@ -59,7 +59,10 @@
               step="1"
               hide-details
               dense
-              @change="setVolume(room, $event)"
+              @start="volumeStart(room, $event)"
+              @input="volumeInput(room, $event)"
+              @end="finishVolume(room, $event)"
+              @change="finishVolume(room, $event)"
             ></v-slider>
             <span class="audio-target-volume-value text-caption">{{ volumeOf(room) }}</span>
             <v-switch
@@ -82,6 +85,7 @@
 <script lang="js">
 import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
+import { createLiveSender } from '@/utils/liveSender'
 
 const HOLD_MS = 3000
 
@@ -89,7 +93,9 @@ const HOLD_MS = 3000
  * Where the kiosk audio bar plays: the main group or a room playing on its own
  * (openspec change `kiosk-audio-bar`). Every room also gets its volume and its
  * in/out-of-group switch here; the pinned room's switch stays in the group and
- * cannot be touched, and a room whose speaker is offline is dimmed.
+ * cannot be touched, and a room whose speaker is offline is dimmed. The room
+ * sliders send their level live while dragged (openspec change
+ * `kiosk-live-volume`).
  */
 export default {
   name: 'AudioTargetDialog',
@@ -104,8 +110,10 @@ export default {
 
   data: () => ({
     mainGroupColor: MAIN_GROUP_COLOR,
-    // room id -> { level, from }: a released slider keeps its value until the
-    // state reports a different volume for that room, or HOLD_MS pass
+    // room id -> level under the finger while that room's slider is dragged
+    draggedVolumes: {},
+    // room id -> { level, timer }: a released slider keeps its value until the
+    // state reports that level for the room, or HOLD_MS pass (design.md D3)
     heldVolumes: {},
     switchGeneration: 0
   }),
@@ -117,8 +125,8 @@ export default {
       }
       state.rooms.forEach(room => {
         const held = this.heldVolumes[room.id]
-        if (held && room.volume !== held.from) {
-          this.$delete(this.heldVolumes, room.id)
+        if (held && room.volume === held.level) {
+          this.clearHold(room.id)
         }
       })
     }
@@ -142,21 +150,52 @@ export default {
       return this.$t(room.grouped ? 'page.kiosk.audio.inGroup' : 'page.kiosk.audio.outOfGroup')
     },
     volumeOf (room) {
+      if (this.draggedVolumes[room.id] !== undefined) {
+        return this.draggedVolumes[room.id]
+      }
       const held = this.heldVolumes[room.id]
       if (held) {
         return held.level
       }
       return room.volume !== null ? room.volume : 0
     },
-    setVolume (room, level) {
-      this.$set(this.heldVolumes, room.id, { level, from: room.volume })
-      setTimeout(() => {
-        const held = this.heldVolumes[room.id]
-        if (held && held.level === level) {
-          this.$delete(this.heldVolumes, room.id)
-        }
-      }, HOLD_MS)
-      this.runAudioCommand(() => audioService.setRoomVolume(room.id, level))
+    clearHold (roomId) {
+      const held = this.heldVolumes[roomId]
+      if (held) {
+        clearTimeout(held.timer)
+        this.$delete(this.heldVolumes, roomId)
+      }
+    },
+    /** One live sender per room, created on first use. */
+    senderOf (roomId) {
+      if (!this.senders[roomId]) {
+        this.senders[roomId] = createLiveSender(level => audioService.setRoomVolume(roomId, level))
+      }
+      return this.senders[roomId]
+    },
+    volumeStart (room, level) {
+      this.$set(this.draggedVolumes, room.id, level)
+    },
+    volumeInput (room, level) {
+      if (this.draggedVolumes[room.id] !== undefined) {
+        this.$set(this.draggedVolumes, room.id, level)
+        this.senderOf(room.id).push(level)
+      }
+    },
+    /**
+     * Release (`end`) and `change` both land here; a release fires both, a
+     * key press or click only `change`. The sender does not resend a level it
+     * already sent, so the second call sends nothing.
+     */
+    finishVolume (room, level) {
+      const roomId = room.id
+      this.$delete(this.draggedVolumes, roomId)
+      this.clearHold(roomId)
+      this.$set(this.heldVolumes, roomId, {
+        level,
+        timer: setTimeout(() => this.clearHold(roomId), HOLD_MS)
+      })
+      this.senderOf(roomId).flush(level, call => this.runAudioCommand(call))
     },
     async setGrouped (room, grouped) {
       const ok = await this.runAudioCommand(() => audioService.setRoomGrouped(room.id, !!grouped))
@@ -165,6 +204,16 @@ export default {
         this.switchGeneration++
       }
     }
+  },
+
+  created () {
+    // not reactive: room id -> live volume sender
+    this.senders = {}
+  },
+
+  beforeDestroy () {
+    Object.values(this.senders).forEach(sender => sender.cancel())
+    Object.keys(this.heldVolumes).forEach(roomId => this.clearHold(roomId))
   }
 }
 </script>
