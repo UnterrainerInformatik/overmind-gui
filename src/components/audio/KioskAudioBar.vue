@@ -628,8 +628,30 @@ export default {
   font-variant-numeric: tabular-nums;
 }
 
-.kiosk-audio-player-volume-menu .kiosk-audio-player-volume-slider {
-  height: 160px;
+// Twice Vuetify's 150px long and 1.5 times as wide (track, thumb, touch area)
+// as the default vertical slider (openspec change `kiosk-queue-live-updates`).
+// Shorter on low screens, so the menu stays above the bar in phone landscape.
+.kiosk-audio-player-volume-menu .kiosk-audio-player-volume-slider .v-slider--vertical {
+  width: 36px;
+  min-height: 0;
+  height: #{'min(300px, calc(100vh - 110px))'};
+
+  .v-slider__track-container {
+    width: 3px;
+  }
+
+  .v-slider__thumb {
+    width: 18px;
+    height: 18px;
+    left: -9px;
+
+    &:before {
+      width: 54px;
+      height: 54px;
+      left: -18px;
+      top: -18px;
+    }
+  }
 }
 
 .kiosk-audio-player--narrow {

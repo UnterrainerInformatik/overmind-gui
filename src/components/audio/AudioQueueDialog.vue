@@ -110,16 +110,23 @@
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
 import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
+import { SseClient } from '@/utils/sseClient'
 
 // Lazy, so vuedraggable and the editor only load when someone edits.
 const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor.vue')
+
+/** Events within this window lead to one reload, like the editor's. */
+const LIVE_RELOAD_DEBOUNCE_MS = 300
 
 /**
  * The current target's queue and the playlists to replace it with (openspec
  * change `kiosk-audio-bar`). Opened from the bar's title, and the way into the
  * playlist editor (change `kiosk-playlist-editor`), after which the playlists
- * are reloaded. While open it reloads the queue whenever the
+ * and the queue are reloaded. While open it reloads the queue whenever the
  * target's track or playlist changes, so the highlight follows the music.
+ * It also reloads in the background, also behind the editor, on the SSE
+ * events `audio-queue-changed` (this target only), `audio-playlist-changed`
+ * and after a reconnect (change `kiosk-queue-live-updates`).
  * A playlist is played with the device's shuffle choice, the same one the
  * editor shows (change `kiosk-playlist-editor-extras`, design D2).
  */
@@ -146,7 +153,10 @@ export default {
     editorOpen: false,
     editorMounted: false,
     playlistFilter: '',
-    shuffleStore: audioShuffle
+    shuffleStore: audioShuffle,
+    listening: false,
+    pending: { queue: false, playlists: false },
+    flushTimer: null
   }),
 
   computed: {
@@ -179,14 +189,18 @@ export default {
     value (open) {
       if (open) {
         this.playlistFilter = ''
+        this.startLive()
         this.loadQueue()
         this.loadPlaylists()
+      } else {
+        this.stopLive()
       }
     },
     editorOpen (open) {
       if (open) {
         this.editorMounted = true
       } else if (this.value) {
+        this.loadQueue()
         this.loadPlaylists()
       }
     },
@@ -197,13 +211,23 @@ export default {
     }
   },
 
+  beforeDestroy () {
+    this.stopLive()
+  },
+
   methods: {
-    async loadQueue () {
+    /**
+     * `quiet`: a background reload, which neither shows the loading
+     * placeholder nor clears the shown queue or sets the failed flag on error.
+     */
+    async loadQueue (quiet = false) {
       if (!this.target) {
         return
       }
       const targetId = this.target.targetId
-      this.loadingQueue = true
+      if (!quiet) {
+        this.loadingQueue = true
+      }
       try {
         const answer = await audioService.getQueue(targetId)
         if (!this.target || this.target.targetId !== targetId) {
@@ -213,22 +237,98 @@ export default {
         this.queueIndex = answer.currentIndex
         this.queueFailed = false
       } catch (err) {
-        this.queue = []
-        this.queueIndex = null
-        this.queueFailed = true
+        if (!quiet && this.target && this.target.targetId === targetId) {
+          this.queue = []
+          this.queueIndex = null
+          this.queueFailed = true
+        }
       } finally {
-        this.loadingQueue = false
+        if (!quiet) {
+          this.loadingQueue = false
+        }
       }
     },
-    async loadPlaylists () {
-      this.loadingPlaylists = true
+    async loadPlaylists (quiet = false) {
+      if (!quiet) {
+        this.loadingPlaylists = true
+      }
       try {
         this.playlists = await audioService.getPlaylists()
         this.playlistsFailed = false
       } catch (err) {
-        this.playlistsFailed = true
+        if (!quiet) {
+          this.playlistsFailed = true
+        }
       } finally {
-        this.loadingPlaylists = false
+        if (!quiet) {
+          this.loadingPlaylists = false
+        }
+      }
+    },
+
+    startLive () {
+      if (!this.listening) {
+        const sse = SseClient.getInstance()
+        sse.addEventListener('audio-queue-changed', this.onQueueChanged)
+        sse.addEventListener('audio-playlist-changed', this.onPlaylistChanged)
+        sse.addEventListener('connected', this.onReconnected)
+        this.listening = true
+      }
+    },
+    stopLive () {
+      if (this.listening) {
+        const sse = SseClient.getInstance()
+        sse.removeEventListener('audio-queue-changed', this.onQueueChanged)
+        sse.removeEventListener('audio-playlist-changed', this.onPlaylistChanged)
+        sse.removeEventListener('connected', this.onReconnected)
+        this.listening = false
+      }
+      this.clearFlushTimer()
+      this.pending = { queue: false, playlists: false }
+    },
+    onQueueChanged (payload) {
+      const targetId = payload && payload.targetId != null ? `${payload.targetId}` : null
+      if (this.target && targetId === `${this.target.targetId}`) {
+        this.pending.queue = true
+        this.scheduleFlush()
+      }
+    },
+    onPlaylistChanged () {
+      // The GUI cannot tell which playlist plays, so any edit may be the queue's (design D2).
+      this.pending.queue = true
+      this.pending.playlists = true
+      this.scheduleFlush()
+    },
+    onReconnected () {
+      // Events may have been missed while the connection was down.
+      this.pending.queue = true
+      this.pending.playlists = true
+      this.scheduleFlush()
+    },
+    scheduleFlush () {
+      this.clearFlushTimer()
+      this.flushTimer = setTimeout(() => {
+        this.flushTimer = null
+        this.flushPending()
+      }, LIVE_RELOAD_DEBOUNCE_MS)
+    },
+    clearFlushTimer () {
+      if (this.flushTimer !== null) {
+        clearTimeout(this.flushTimer)
+        this.flushTimer = null
+      }
+    },
+    flushPending () {
+      if (!this.value) {
+        return
+      }
+      const { queue, playlists } = this.pending
+      this.pending = { queue: false, playlists: false }
+      if (queue) {
+        this.loadQueue(true)
+      }
+      if (playlists) {
+        this.loadPlaylists(true)
       }
     },
     isCurrentPlaylist (playlist) {

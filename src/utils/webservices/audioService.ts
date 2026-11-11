@@ -47,6 +47,10 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   `audioPlaylists`) on every change to a playlist, whoever made it: tracks
  *   added, removed or moved, renamed, created, deleted. Coalesced per playlist
  *   (~500 ms). The playlist editor reloads on it; without it nothing reloads.
+ * - SSE event `audio-queue-changed` `{targetId}` when the server changed a
+ *   target's queue in MA because the playlist it plays was edited (server
+ *   change `audio-queue-follows-playlist-edits`; `audio-playlist-changed`
+ *   follows it). The queue popup reloads the queue on it for its own target.
  *
  * The search shape is what the built server sends (`AudioSearchJson`, a type
  * not asked for is null). Also read: the singular keys `track`/`album`/`artist`
