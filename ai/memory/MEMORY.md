@@ -13,7 +13,7 @@ load the specific file(s) relevant to the task at hand.
 
 ## Files
 
-- [conventions](conventions.md) — Hard rules: English-only identifiers/comments; tests welcome but no framework yet.
+- [conventions](conventions.md) — Hard rules: English-only identifiers/comments; tests welcome but no framework yet; always delete test playlists in Music Assistant after a test.
 - [deployment-and-environment](deployment-and-environment.md) — Posture: private home LAN, VPN, no staging, commit-to-master auto-deploys, backend is java-overmind-server, locked on Vue 2 / Vuetify 2 / Vuex.
 - [overview](overview.md) — High-level "what is this project": purpose, tech stack, backend, deployment target. Load first when working on unfamiliar parts.
 - [architecture](architecture.md) — Source-tree layout and how the pieces fit together: main.ts, App.vue, router, views, components, store, utils, plugins.

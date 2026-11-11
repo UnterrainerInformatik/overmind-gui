@@ -42,3 +42,26 @@ plug into.
   `package.json`.
 - If a test framework gets added later, this memory should be updated
   to point at it.
+
+## Tests against production: always clean up Music Assistant playlists
+
+There is no staging; `npm run serve` and every live check hit the real
+backend and the family's real Music Assistant library.
+
+**Rule**: every playlist created for a test MUST be deleted again right
+after the test — also when the test failed or was aborted — and the
+editable playlist list (`GET /audio/playlists`) checked afterwards so
+nothing of yours is left over.
+
+Real editable playlists (as of 2026-11-11): Alexander, Gerald, Radio,
+Sarah, Stefan, Weihnachten. Never touch those or MA's non-editable smart
+playlists. Every other editable playlist is test debris.
+
+**Why**: the user had to ask for cleanups on 2026-11-04 and again on
+2026-11-11 (23 leftovers, several with identical names, which made later
+tests open an old playlist instead of the new one). The
+java-overmind-server repo carries the same rule.
+
+**How to apply**: give each test playlist a unique name (e.g.
+`zz-claude-<timestamp>`), address it by id, delete it in a `finally`
+block (`DELETE /audio/playlists/{id}`), then verify via the list.
