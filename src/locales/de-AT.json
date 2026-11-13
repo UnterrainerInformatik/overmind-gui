@@ -122,14 +122,6 @@
 					"playFailed": "Abspielen fehlgeschlagen",
 					"removedElsewhere": "Die offene Playlist wurde woanders gelöscht."
 				},
-				"map": {
-					"leaveGroup": "{room}: aus der Gruppe nehmen",
-					"joinGroup": "{room}: wieder in die Gruppe",
-					"pinnedRoom": "{room}: immer in der Gruppe",
-					"lightLinkOn": "{room}: Licht verknüpft - Verknüpfung lösen",
-					"lightLinkOff": "{room}: Licht nicht verknüpft - verknüpfen",
-					"roomUnavailableNamed": "{room}: Lautsprecher nicht erreichbar"
-				},
 				"tooltip": {
 					"target": "Wiedergabeziel wählen",
 					"title": "Warteschlange und Playlists",
@@ -142,6 +134,19 @@
 					"seek": "Position",
 					"volume": "Lautstärke",
 					"radio": "Radiosender"
+				},
+				"plan": {
+					"title": "Audio im Haus",
+					"tools": {
+						"overview": "Übersicht",
+						"mute": "Stumm",
+						"group": "Gruppe",
+						"light": "Licht",
+						"volume": "Lautstärke"
+					},
+					"startFromBar": "Über die Leiste eine Auswahl starten",
+					"selected": "Gewählt",
+					"noPlan": "Plan nicht verfügbar - alle Räume als Liste"
 				}
 			},
 			"linkAudio": "Audio",
@@ -150,7 +155,7 @@
 			"linkCamera": "Kamera",
 			"linkCameras": "Kameras",
 			"linkContact": "Fenster / Klima",
-			"linkLights": "Licht & Sound",
+			"linkLights": "Licht",
 			"linkMovement": "Bewegungsmelder",
 			"linkPersonen": "Personen",
 			"linkPersonenArchiv": "Archiv",

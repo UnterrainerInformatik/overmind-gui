@@ -12,6 +12,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioRoomGrouped    {grouped}
  *   PUT  audioRoomVolume     {level}  0..100
  *   PUT  audioRoomLightLinked {linked}
+ *   PUT  audioRoomManualMuted {muted}   (guessed, see below)
  *   POST audioTargetCommand           play|pause|next|previous
  *   POST audioTargetSeek     {position} seconds
  *   PUT  audioTargetVolume   {level}  0..100
@@ -69,17 +70,26 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  * - Enums may arrive uppercase (`PLAYING`) and are lowered here.
  * - Lists are `{items: [...]}` or a bare array.
  * - `imageUrl` is a server path (`/audio/image?path=...`) and is made absolute.
- * - A room's place on the lights floor plan (`kiosk-light-and-sound`, design
- *   D5). The server's room has no position yet; the GUI assumes
+ * - A room's mute and lights (openspec change `kiosk-audio-plan-popup`,
+ *   design D1; built by java-overmind-server change
+ *   `audio-desired-state-and-manual-mute`). **Guessed**:
  *
  *     AudioState.rooms[] += {
- *       buttonX: number | null,   // floor-plan image pixels, same system as iconPos
- *       buttonY: number | null
+ *       manualMuted: boolean,                 // set by hand; the lights never touch it
+ *       lightMuted:  boolean,                 // set by the light link only
+ *       lights: [{ applianceId: number, channel: number | null }]   // as configured, groups not expanded
  *     }
- *     audioRoom += buttonX INT NULL, buttonY INT NULL   // editable through the audiorooms CRUD
+ *     muted (unchanged) = manualMuted || lightMuted
  *
- *   and also reads a nested `button: {x, y}`. Anything that is not a finite
- *   number is null, and a room without both is not drawn.
+ *     PUT audioRoomManualMuted {muted}  -> 204, 404 unknown room, 409 speaker unavailable
+ *
+ *   `lights` is also read as `lightApplianceIds`, an array or the CRUD's JSON
+ *   text, with entries `12`, `"12"`, `"12:1"` or `{applianceId, channel}`; a
+ *   channel is the 0-based relay index, none means the whole appliance. When
+ *   neither `manualMuted` nor `lightMuted` is sent, `manualMuted = muted` and
+ *   `lightMuted = false`, so an older server's mute is drawn as manual.
+ *   The former guessed `buttonX`/`buttonY` (change `kiosk-light-and-sound`)
+ *   were never built and are no longer read.
  */
 
 export type AudioPlaybackStatus = 'playing' | 'paused' | 'idle'
@@ -114,6 +124,12 @@ export interface AudioMainGroup {
   volume: number | null;
 }
 
+/** One light configured for a room; `channel` null means the whole appliance. */
+export interface AudioLightRef {
+  applianceId: number;
+  channel: number | null;
+}
+
 export interface AudioRoom {
   id: string | number;
   name: string;
@@ -122,14 +138,16 @@ export interface AudioRoom {
   grouped: boolean;
   pinned: boolean;
   lightLinked: boolean;
+  /** `manualMuted || lightMuted` */
   muted: boolean;
+  manualMuted: boolean;
+  lightMuted: boolean;
   volume: number | null;
   /** only meaningful while the room is solo */
   playback: AudioPlayback | null;
   color: string;
-  /** floor-plan image pixels; null when the room has no place on the plan */
-  buttonX: number | null;
-  buttonY: number | null;
+  /** the room's lights as configured, groups not expanded; empty when unknown */
+  lights: AudioLightRef[];
 }
 
 export interface AudioState {
@@ -217,6 +235,10 @@ export class AudioService {
 
   public async setRoomLightLinked (roomId: string | number, linked: boolean): Promise<void> {
     return axiosUtils.putToPath(this.server, 'audioRoomLightLinked', { roomId }, () => ({ linked }))
+  }
+
+  public async setRoomManualMuted (roomId: string | number, muted: boolean): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioRoomManualMuted', { roomId }, () => ({ muted }))
   }
 
   public async setRoomVolume (roomId: string | number, level: number): Promise<void> {
@@ -352,7 +374,9 @@ export class AudioService {
 
   private normalizeRoom (r: Raw): AudioRoom {
     const targetId = r.targetId || r.maPlayerId || r.playerId
-    const button = r.button && typeof r.button === 'object' ? r.button : {}
+    const told = r.manualMuted !== undefined || r.lightMuted !== undefined
+    const manualMuted = told ? !!r.manualMuted : !!r.muted
+    const lightMuted = told ? !!r.lightMuted : false
     return {
       id: r.id,
       name: `${r.name || r.id}`,
@@ -361,13 +385,47 @@ export class AudioService {
       grouped: !!r.grouped,
       pinned: !!(r.pinned || r.pinnedToMainGroup),
       lightLinked: !!r.lightLinked,
-      muted: !!r.muted,
+      muted: !!r.muted || manualMuted || lightMuted,
+      manualMuted,
+      lightMuted,
       volume: this.numberOrNull(r.volume),
       playback: this.normalizePlayback(r.playback),
       color: typeof r.color === 'string' && r.color.trim() !== '' ? r.color : this.paletteColor(r.id),
-      buttonX: this.numberOrNull(r.buttonX != null ? r.buttonX : button.x),
-      buttonY: this.numberOrNull(r.buttonY != null ? r.buttonY : button.y)
+      lights: this.normalizeLights(r.lights != null ? r.lights : r.lightApplianceIds)
     }
+  }
+
+  /** See the contract above; entries that name no appliance are dropped. */
+  private normalizeLights (raw: Raw): AudioLightRef[] {
+    let list = raw
+    if (typeof list === 'string') {
+      try {
+        list = JSON.parse(list)
+      } catch {
+        list = list.split(',')
+      }
+    }
+    if (!Array.isArray(list)) {
+      return []
+    }
+    const refs: AudioLightRef[] = []
+    list.forEach((e: Raw) => {
+      let id: unknown = e
+      let channel: unknown = null
+      if (e && typeof e === 'object') {
+        id = e.applianceId != null ? e.applianceId : e.id
+        channel = e.channel != null ? e.channel : null
+      } else if (typeof e === 'string' && e.includes(':')) {
+        [id, channel] = e.split(':')
+      }
+      const applianceId = Number(typeof id === 'string' ? id.trim() : id)
+      const ch = channel === null || (typeof channel === 'string' && channel.trim() === '') ? null : Number(channel)
+      if (id === null || id === '' || !Number.isInteger(applianceId)) {
+        return
+      }
+      refs.push({ applianceId, channel: ch !== null && Number.isInteger(ch) && ch >= 0 ? ch : null })
+    })
+    return refs
   }
 
   private normalizePlayback (p: Raw): AudioPlayback | null {

@@ -148,12 +148,12 @@
       <v-icon>radio</v-icon>
     </v-btn>
 
-    <AudioTargetDialog
+    <AudioPlanDialog
       v-model="targetDialog"
       :state="state"
       :selectedKey="target ? target.key : 'main'"
       @select="selectTarget"
-    ></AudioTargetDialog>
+    ></AudioPlanDialog>
     <AudioQueueDialog
       v-model="queueDialog"
       :target="target"
@@ -172,7 +172,7 @@ import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices
 import { readStoredTarget, writeStoredTarget, resolveTarget, selectedRoomOf } from '@/utils/audioTarget'
 import { audioCommand } from '@/mixins/audioCommand'
 import { createLiveSender } from '@/utils/liveSender'
-import AudioTargetDialog from '@/components/audio/AudioTargetDialog.vue'
+import AudioPlanDialog from '@/components/audio/AudioPlanDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
 
@@ -194,7 +194,7 @@ export default {
   mixins: [audioCommand],
 
   components: {
-    AudioTargetDialog,
+    AudioPlanDialog,
     AudioQueueDialog,
     AudioRadioDialog
   },

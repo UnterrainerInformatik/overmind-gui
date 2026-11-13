@@ -122,14 +122,6 @@
 					"playFailed": "Playing failed",
 					"removedElsewhere": "The open playlist was deleted elsewhere."
 				},
-				"map": {
-					"leaveGroup": "{room}: take out of the group",
-					"joinGroup": "{room}: put back into the group",
-					"pinnedRoom": "{room}: always in the group",
-					"lightLinkOn": "{room}: linked to the lights - unlink",
-					"lightLinkOff": "{room}: not linked to the lights - link",
-					"roomUnavailableNamed": "{room}: speaker not reachable"
-				},
 				"tooltip": {
 					"target": "Choose where to play",
 					"title": "Queue and playlists",
@@ -142,6 +134,19 @@
 					"seek": "Position",
 					"volume": "Volume",
 					"radio": "Radio stations"
+				},
+				"plan": {
+					"title": "Audio in the house",
+					"tools": {
+						"overview": "Overview",
+						"mute": "Mute",
+						"group": "Group",
+						"light": "Light",
+						"volume": "Volume"
+					},
+					"startFromBar": "Start a selection from the bar",
+					"selected": "Selected",
+					"noPlan": "Plan not available - all rooms as a list"
 				}
 			},
 			"linkAudio": "Audio",
@@ -150,7 +155,7 @@
 			"linkCamera": "Camera",
 			"linkCameras": "Cameras",
 			"linkContact": "Windows / Air",
-			"linkLights": "Lights & Sound",
+			"linkLights": "Lights",
 			"linkMovement": "Motion Sensors",
 			"linkPersonen": "Persons",
 			"linkPersonenArchiv": "Archive",

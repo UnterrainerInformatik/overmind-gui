@@ -11,11 +11,7 @@
         colorGrey="rgba(60, 60, 60, 0.6)"
         colorTransparent="rgba(0, 0, 0, 0)"
         :applianceTypeFilter="['LIGHT']"
-      >
-        <template v-slot="{ scale, loaded }">
-          <FloorplanAudioRooms v-if="loaded" :scale="scale"></FloorplanAudioRooms>
-        </template>
-      </Floorplan>
+      ></Floorplan>
       <KioskLinkPanel
         :text="$t('page.kiosk.linkBack')"
         route="/app/kioskoverview"
@@ -33,7 +29,6 @@ import { mapActions } from 'vuex'
 import KioskLinkPanel from '@/components/KioskLinkPanel.vue'
 import KioskTogglePanel from '@/components/KioskTogglePanel.vue'
 import Floorplan from '@/components/floorplan/Floorplan.vue'
-import FloorplanAudioRooms from '@/components/audio/FloorplanAudioRooms.vue'
 
 export default {
   name: 'kioskLights',
@@ -41,8 +36,7 @@ export default {
   components: {
     KioskLinkPanel,
     KioskTogglePanel,
-    Floorplan,
-    FloorplanAudioRooms
+    Floorplan
   },
 
   data: () => ({
