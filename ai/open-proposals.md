@@ -94,3 +94,55 @@ yet; the server's live MA test is its task 1):
   keep `id` too.
 - MA leaves out unavailable tracks (`available: false`) when it loads a playlist. From such a
   track on, `queueIndex` no longer equals the row, so fall back to `track.uri` as with shuffle.
+
+---
+
+## Music Assistant Web-Player automatisch als Play-Target (ohne Raum)
+
+**Date:** 2026-11-14 · **Where:** audio state (`audioService.normalizeState`), target selection
+(`utils/audioTarget.ts`), plan popup stream strip (`AudioPlanDialog.streams`, `AudioStreamCard`),
+audio bar, playlist editor / queue popup play target. Server: `audio-music-assistant-bridge`.
+
+Wish (user, translated): When the user opens the Music Assistant web UI on a computer and its
+**web player** appears in MA, Overmind should pick it up **automatically**: not in any room,
+just as an extra **play target**. There are **at most 3** of them at a time.
+
+Current state (GUI, checked 2026-11-14):
+
+- `AudioState` is only `{mainGroup, rooms}`. Every target is either the main group or a room's
+  player (`room.targetId`), so MA players that no room is configured for are invisible.
+- The stored selection is `'main'` or `'room:<roomId>'` (`readStoredTarget` accepts nothing
+  else). `resolveTarget` falls back to the main group when the room is gone.
+- The plan popup's stream strip (`AudioPlanDialog.streams`) lists the main group and the solo
+  rooms as `AudioStreamCard`s. Tapping a card selects the target. The plan map draws rooms only.
+- Commands (`command`, `seek`, `setTargetVolume`, `playMedia`, queue) are already addressed by
+  `targetId`, so they would work for any MA player id the server accepts.
+
+Rough plan:
+
+- **Server:** add a list of room-less players to the state, e.g. `AudioState.players[] =
+  {targetId, name, available, playback, volume}`, filled from MA players that no room
+  references, limited to web players (MA provider/type, to be checked by the server
+  session) so that no other unassigned hardware shows up. They come and go with the browser tab,
+  so the list changes over SSE `audio-state`. The server must also accept these ids on the
+  `/audio/targets/{targetId}/...` routes, which may currently be checked against known rooms
+  and the group.
+- **GUI:**
+  - a third target kind `player` with selection `'player:<targetId>'`;
+  - extra stream cards in the plan popup strip, after the rooms, with a distinct icon (e.g.
+    `computer`/`web`) and a colour of their own (a small separate palette, or grey with an
+    icon);
+  - not on the plan map, since they have no room;
+  - when a selected web player disappears, fall back to the main group as for a vanished room,
+    and come back to it when it reappears with the same id;
+  - the playlist editor play and queue popup work unchanged through `targetId`.
+
+Open questions:
+
+- **Server session:** How does MA identify a web player (provider `builtin_player` /
+  sendspin web client)? Is its player id **stable** across reloads of the same browser, or new
+  each time? This decides whether remembering `'player:<id>'` makes sense.
+- **Server session:** Do the target routes reject ids that are neither a room nor the group?
+- **Server session:** Should a web player be groupable into the main group? Proposal: no,
+  solo target only.
+- **User:** naming. Use MA's player name ("Web (Chrome)"…) or something of our own?
