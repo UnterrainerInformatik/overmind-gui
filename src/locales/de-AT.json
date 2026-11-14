@@ -120,6 +120,8 @@
 					"shuffleOn": "Zufällig: ein",
 					"shuffleOff": "Zufällig: aus",
 					"playFailed": "Abspielen fehlgeschlagen",
+					"previewPlay": "Anspielen",
+					"previewStop": "Anspielen beenden",
 					"removedElsewhere": "Die offene Playlist wurde woanders gelöscht."
 				},
 				"tooltip": {

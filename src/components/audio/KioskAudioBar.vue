@@ -84,23 +84,16 @@
       <v-icon>skip_next</v-icon>
     </v-btn>
 
-    <div class="kiosk-audio-player-progress" :title="tooltips ? $t('page.kiosk.audio.tooltip.seek') : null">
-      <span v-if="!narrow" class="kiosk-audio-player-time">{{ timeText(shownPosition) }}</span>
-      <v-slider
-        class="kiosk-audio-player-slider"
-        :value="shownPosition"
-        :max="duration || 1"
-        :disabled="!seekable"
-        min="0"
-        step="1"
-        hide-details
-        dense
-        @start="seekStart"
-        @input="seekInput"
-        @end="seekEnd"
-        @change="seekChange"
-      ></v-slider>
-    </div>
+    <AudioSeekSlider
+      ref="seek"
+      class="kiosk-audio-player-progress"
+      time-class="kiosk-audio-player-time"
+      slider-class="kiosk-audio-player-slider"
+      :title="tooltips ? $t('page.kiosk.audio.tooltip.seek') : null"
+      :target="target"
+      :disabled="!available"
+      :show-time="!narrow"
+    ></AudioSeekSlider>
 
     <v-menu
       top
@@ -175,8 +168,9 @@ import { createLiveSender } from '@/utils/liveSender'
 import AudioPlanDialog from '@/components/audio/AudioPlanDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
+import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
 
-// How long a released slider keeps its value while no newer state arrives.
+// How long a released volume slider keeps its value while no newer state arrives.
 const HOLD_MS = 3000
 
 /**
@@ -185,7 +179,8 @@ const HOLD_MS = 3000
  * plays on its own - and shows that target's colour. Everything it shows comes
  * from the shared audio state; commands are sent and the next state shows
  * their effect, except for the two sliders, which hold the released value
- * until that state arrives (design.md D7). The volume slider sends its level
+ * until that state arrives (design.md D7). The seek slider is the shared
+ * `AudioSeekSlider` (openspec change `kiosk-search-track-preview`). The volume slider sends its level
  * live while dragged (openspec change `kiosk-live-volume`).
  */
 export default {
@@ -196,19 +191,13 @@ export default {
   components: {
     AudioPlanDialog,
     AudioQueueDialog,
-    AudioRadioDialog
+    AudioRadioDialog,
+    AudioSeekSlider
   },
 
   data: () => ({
     store: null,
     selection: 'main',
-    now: Date.now(),
-    ticker: null,
-    seekDragging: false,
-    seekDrag: null,
-    seekHeld: null,
-    seekHeldAt: null,
-    seekHoldTimer: null,
     volumeDragging: false,
     volumeDrag: null,
     volumeHeld: null,
@@ -264,23 +253,6 @@ export default {
     seekable () {
       return this.available && !!this.track && this.duration !== null
     },
-    /** The position interpolated from `elapsed` + `elapsedAt` while playing. */
-    position () {
-      if (!this.playback) {
-        return 0
-      }
-      let position = this.playback.elapsed
-      if (this.playing) {
-        position += (this.now - this.playback.elapsedAt) / 1000
-      }
-      return Math.max(0, this.duration !== null ? Math.min(position, this.duration) : position)
-    },
-    shownPosition () {
-      if (this.seekDragging && this.seekDrag !== null) {
-        return this.seekDrag
-      }
-      return this.seekHeld !== null ? this.seekHeld : Math.floor(this.position)
-    },
     shownVolume () {
       if (this.volumeDragging && this.volumeDrag !== null) {
         return this.volumeDrag
@@ -314,23 +286,6 @@ export default {
         }
       }
     },
-    playing: {
-      immediate: true,
-      handler (playing) {
-        this.now = Date.now()
-        if (playing && this.ticker === null) {
-          this.ticker = setInterval(() => { this.now = Date.now() }, 1000)
-        } else if (!playing && this.ticker !== null) {
-          clearInterval(this.ticker)
-          this.ticker = null
-        }
-      }
-    },
-    'playback.elapsedAt' (elapsedAt) {
-      if (this.seekHeld !== null && elapsedAt !== this.seekHeldAt) {
-        this.clearSeekHold()
-      }
-    },
     'target.volume' (volume) {
       // Echoes of levels sent during the drag must not move the slider back;
       // only the released level itself (or HOLD_MS) ends the hold.
@@ -339,7 +294,6 @@ export default {
       }
     },
     'target.key' () {
-      this.clearSeekHold()
       this.clearVolumeHold()
       this.cancelVolumeSender()
     }
@@ -357,56 +311,10 @@ export default {
       const targetId = this.target.targetId
       this.runAudioCommand(() => audioService.command(targetId, name))
     },
-    seek (position) {
-      if (!this.target) {
-        return
-      }
-      const targetId = this.target.targetId
-      this.runAudioCommand(() => audioService.seek(targetId, position))
-    },
     skip (seconds) {
-      if (!this.seekable) {
-        return
+      if (this.$refs.seek) {
+        this.$refs.seek.skip(seconds)
       }
-      const position = Math.max(0, Math.min(this.duration, Math.round(this.position + seconds)))
-      this.hold(position)
-      this.seek(position)
-    },
-    hold (position) {
-      this.clearSeekHold()
-      this.seekHeld = position
-      this.seekHeldAt = this.playback ? this.playback.elapsedAt : null
-      this.seekHoldTimer = setTimeout(() => this.clearSeekHold(), HOLD_MS)
-    },
-    clearSeekHold () {
-      if (this.seekHoldTimer !== null) {
-        clearTimeout(this.seekHoldTimer)
-        this.seekHoldTimer = null
-      }
-      this.seekHeld = null
-      this.seekHeldAt = null
-    },
-    seekStart (value) {
-      this.seekDragging = true
-      this.seekDrag = value
-    },
-    seekInput (value) {
-      if (this.seekDragging) {
-        this.seekDrag = value
-      }
-    },
-    seekEnd (value) {
-      // Holds the released value even when the drag ended where it began, in
-      // which case no `change` follows and nothing is sent.
-      this.seekDragging = false
-      this.seekDrag = null
-      this.hold(value)
-    },
-    seekChange (value) {
-      this.seekDragging = false
-      this.seekDrag = null
-      this.hold(value)
-      this.seek(value)
     },
     clearVolumeHold () {
       if (this.volumeHoldTimer !== null) {
@@ -474,10 +382,6 @@ export default {
       if (sender !== null) {
         sender.flush(level, call => this.runAudioCommand(call))
       }
-    },
-    timeText (seconds) {
-      const s = Math.max(0, Math.floor(seconds || 0))
-      return `${Math.floor(s / 60)}:${`${s % 60}`.padStart(2, '0')}`
     }
   },
 
@@ -491,10 +395,6 @@ export default {
 
   beforeDestroy () {
     release()
-    if (this.ticker !== null) {
-      clearInterval(this.ticker)
-    }
-    this.clearSeekHold()
     this.clearVolumeHold()
     this.cancelVolumeSender()
   }

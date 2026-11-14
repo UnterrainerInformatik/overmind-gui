@@ -62,6 +62,7 @@
             class="audio-editor-column audio-editor-column--search"
             :existing-uris="trackUris"
             :busy="busy"
+            :play-target="playTarget"
             :show-back="!wide"
             @back="view = 'playlist'"
             @add="addTrack"

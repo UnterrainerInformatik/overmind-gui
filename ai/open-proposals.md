@@ -9,9 +9,12 @@ stays short and only ever lists work that is still un-proposed.
 
 ---
 
-## Playlist-Editor: Play/Stop pro Lied, Vorhören in der Suche, Album aufklappen
+## Playlist-Editor: Play/Stop pro Lied, Album aufklappen
 
 **Date:** 2026-11-14 · **Where:** Kiosk-Playlist-Editor (`AudioPlaylistEditor`, `AudioPlaylistTracks`, `AudioLibrarySearch`)
+
+Previewing search tracks (play/stop, marking, position slider in `AudioLibrarySearch`) was split
+off into the change `kiosk-search-track-preview`; the rest below still waits for the server.
 
 Wish (user, translated):
 
@@ -19,11 +22,9 @@ Wish (user, translated):
   playlist on `playTarget`). Instead every track in the playlist gets its own **play and stop
   button**. When a track ends, the **next one in the playlist plays**. The **playing track is
   marked**. Maybe also a **song-position slider** on the currently playing track (seek).
-- **Search page:** The same play/stop buttons and song-position slider on **every found track**,
-  to listen before adding it.
 - **Albums in search:** Today a tap adds the whole album (`add(album.uri)`). Albums should also get
   an **"open album" button** that lists its tracks, so only some of them can be added (and, by the
-  point above, previewed).
+  search preview, previewed).
 
 Decisions (user, 2026-11-14):
 
@@ -31,7 +32,6 @@ Decisions (user, 2026-11-14):
   the old "Abspielen" button.
 - Playlist page: play on a track = **start the playlist from that track**; MA's queue then plays on
   by itself (no GUI-driven sequence). Stop = stop/pause the target.
-- Search page: a previewed track plays alone; when it ends, **nothing** follows.
 - Artists already have an "open" behaviour (sub-search via pills) — nothing to do there.
 
 Findings (checked 2026-11-14, code + read-only `GET /audio/state` on the live server):
@@ -50,10 +50,8 @@ Findings (checked 2026-11-14, code + read-only `GET /audio/state` on the live se
   `playMedia` + `playQueueIndex(index)` right after (works today, briefly starts track 1, races
   with MA), or a server extension `playMedia {uri, startIndex}` (MA `play_media` with
   `start_item`). Prefer the server extension; decide in the propose step with the server session.
-- **Preview a search track:** `playMedia {uri: trackUri}` replaces the queue with that single
-  track, so "nothing after it" comes for free.
-- **Song-position slider:** `POST audioTargetSeek {position}` exists, and `KioskAudioBar` already
-  has a held seek slider (`createHeldLevels`) to reuse; position from `elapsed` + `elapsedAt`.
+- **Song-position slider:** `POST audioTargetSeek {position}` exists; reuse the shared
+  `AudioSeekSlider` (from `kiosk-search-track-preview`), position from `elapsed` + `elapsedAt`.
 - **Open album:** there is no album-tracks endpoint (`audioSearch` returns albums as
   `{name, artist, uri, imageUrl}` only). Needs a server route, e.g. `GET /audio/albums/tracks?uri=`
   → `{items: [Track]}` (MA `music/albums/album_tracks`). Coordinate with the server session.

@@ -120,6 +120,8 @@
 					"shuffleOn": "Shuffle: on",
 					"shuffleOff": "Shuffle: off",
 					"playFailed": "Playing failed",
+					"previewPlay": "Play preview",
+					"previewStop": "Stop preview",
 					"removedElsewhere": "The open playlist was deleted elsewhere."
 				},
 				"tooltip": {

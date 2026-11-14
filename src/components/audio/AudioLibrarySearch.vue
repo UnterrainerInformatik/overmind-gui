@@ -42,19 +42,44 @@
             v-for="(track, index) in results.tracks"
             :key="`t-${index}-${track.uri}`"
             class="audio-search-result audio-search-track"
-            :class="{ 'audio-search-result--added': isAdded(track.uri), 'audio-search-result--disabled': busy }"
+            :class="{
+              'audio-search-result--added': isAdded(track.uri),
+              'audio-search-result--disabled': busy,
+              'audio-search-result--current': isCurrent(track.uri)
+            }"
             :data-uri="track.uri"
             @click="add(track.uri)"
           >
-            <v-img v-if="track.imageUrl" :src="track.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
-            <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>music_note</v-icon></div>
-            <div class="audio-queue-text">
+            <v-img v-if="track.imageUrl" :src="track.imageUrl" class="audio-queue-cover audio-search-dim" width="40" height="40" contain></v-img>
+            <div v-else class="audio-queue-cover audio-queue-cover--empty audio-search-dim"><v-icon small>music_note</v-icon></div>
+            <div class="audio-queue-text audio-search-dim">
               <div class="audio-queue-title">{{ track.title }}</div>
               <div class="audio-queue-artist text-caption">
                 {{ isAdded(track.uri) ? $t('page.kiosk.audio.editor.alreadyAdded') : track.artist }}
               </div>
             </div>
-            <v-icon class="ml-2">{{ isAdded(track.uri) ? 'check' : 'add' }}</v-icon>
+            <v-btn
+              icon
+              class="audio-search-preview ml-1"
+              :disabled="!playTarget"
+              :aria-label="$t(previewStops(track.uri) ? 'page.kiosk.audio.editor.previewStop' : 'page.kiosk.audio.editor.previewPlay')"
+              :title="tooltips ? $t(previewStops(track.uri) ? 'page.kiosk.audio.editor.previewStop' : 'page.kiosk.audio.editor.previewPlay') : null"
+              @click.stop="preview(track.uri)"
+            >
+              <v-icon>{{ previewStops(track.uri) ? 'stop' : 'play_arrow' }}</v-icon>
+            </v-btn>
+            <v-icon class="ml-1 audio-search-dim">{{ isAdded(track.uri) ? 'check' : 'add' }}</v-icon>
+            <div
+              v-if="isCurrent(track.uri) && currentDuration"
+              class="audio-search-seek-line"
+              @click.stop
+            >
+              <AudioSeekSlider
+                class="audio-search-seek"
+                :target="playTarget"
+                :show-time="!$vuetify.breakpoint.xsOnly"
+              ></AudioSeekSlider>
+            </div>
           </div>
         </template>
         <template v-if="results.albums.length > 0">
@@ -67,13 +92,13 @@
             :data-uri="album.uri"
             @click="add(album.uri)"
           >
-            <v-img v-if="album.imageUrl" :src="album.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
-            <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>album</v-icon></div>
-            <div class="audio-queue-text">
+            <v-img v-if="album.imageUrl" :src="album.imageUrl" class="audio-queue-cover audio-search-dim" width="40" height="40" contain></v-img>
+            <div v-else class="audio-queue-cover audio-queue-cover--empty audio-search-dim"><v-icon small>album</v-icon></div>
+            <div class="audio-queue-text audio-search-dim">
               <div class="audio-queue-title">{{ album.name }}</div>
               <div v-if="album.artist" class="audio-queue-artist text-caption">{{ album.artist }}</div>
             </div>
-            <v-icon class="ml-2">playlist_add</v-icon>
+            <v-icon class="ml-2 audio-search-dim">playlist_add</v-icon>
           </div>
         </template>
         <template v-if="results.artists.length > 0">
@@ -99,7 +124,10 @@
 </template>
 
 <script lang="js">
+import { mapGetters } from 'vuex'
 import { singleton as audioService } from '@/utils/webservices/audioService'
+import { audioCommand } from '@/mixins/audioCommand'
+import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
 
 const DEBOUNCE_MILLIS = 400
 const MIN_QUERY = 2
@@ -112,13 +140,25 @@ const emptyResults = () => ({ tracks: [], albums: [], artists: [] })
  * keystroke and from two characters on; a sequence number keeps a late answer
  * for an older query off the screen. Tracks and albums are added by their URI,
  * an artist narrows the results to a track search for its name.
+ *
+ * Every track can be previewed on `playTarget`, the editor's play target
+ * (openspec change `kiosk-search-track-preview`): play replaces that target's
+ * queue with the one track, the track the target is on is marked and gets a
+ * position slider, and its button pauses or resumes. The marking follows the
+ * audio state only, so a fresh preview lights up once the state reports it.
  */
 export default {
   name: 'AudioLibrarySearch',
 
+  components: { AudioSeekSlider },
+
+  mixins: [audioCommand],
+
   props: {
     existingUris: { type: Array, default: () => [] },
     busy: { type: Boolean, default: false },
+    /** The resolved target previews play on, or null while the audio state is not loaded. */
+    playTarget: { type: Object, default: null },
     showBack: { type: Boolean, default: false }
   },
 
@@ -134,6 +174,21 @@ export default {
   }),
 
   computed: {
+    ...mapGetters('gui/tooltips', {
+      tooltips: 'tooltips'
+    }),
+    playback () {
+      return this.playTarget ? this.playTarget.playback : null
+    },
+    currentUri () {
+      return this.playback && this.playback.track ? this.playback.track.uri : null
+    },
+    currentPlaying () {
+      return !!this.playback && this.playback.state === 'playing'
+    },
+    currentDuration () {
+      return this.playback && this.playback.duration ? this.playback.duration : null
+    },
     trimmed () {
       return (this.query || '').trim()
     },
@@ -217,6 +272,28 @@ export default {
     isAdded (uri) {
       return this.existing.has(uri)
     },
+    /** True for the track the target is on, playing or paused (design D2). */
+    isCurrent (uri) {
+      return !!uri && uri === this.currentUri
+    },
+    previewStops (uri) {
+      return this.isCurrent(uri) && this.currentPlaying
+    },
+    preview (uri) {
+      const target = this.playTarget
+      if (!target) {
+        return
+      }
+      const targetId = target.targetId
+      if (this.isCurrent(uri)) {
+        // No stop command on the server: stop pauses, play resumes.
+        const command = this.currentPlaying ? 'pause' : 'play'
+        this.runAudioCommand(() => audioService.command(targetId, command))
+        return
+      }
+      // Without `shuffle`, which does not matter for a one-track queue.
+      this.runAudioCommand(() => audioService.playMedia(targetId, uri), 'page.kiosk.audio.editor.playFailed')
+    },
     add (uri) {
       if (this.busy || this.isAdded(uri)) {
         return
@@ -249,14 +326,76 @@ export default {
   cursor: pointer;
   border-bottom: 1px solid rgba(128, 128, 128, 0.15);
 
+  // Only the parts that add are dimmed: a track's preview button and slider
+  // work while the playlist is busy and on tracks already in it.
   &.audio-search-result--added {
     cursor: default;
-    opacity: 0.6;
+
+    .audio-search-dim {
+      opacity: 0.6;
+    }
   }
 
   &.audio-search-result--disabled {
     cursor: default;
-    opacity: 0.5;
+
+    .audio-search-dim {
+      opacity: 0.5;
+    }
+  }
+
+  &.audio-search-result--current {
+    background-color: rgba(128, 128, 128, 0.2);
+
+    .audio-queue-title {
+      font-weight: bold;
+    }
+  }
+}
+
+.audio-search-track {
+  flex-wrap: wrap;
+
+  // A zero basis, so a long title shrinks instead of wrapping the buttons
+  // onto the slider's line.
+  .audio-queue-text {
+    flex: 1 1 0;
+  }
+}
+
+.audio-search-seek-line {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding-bottom: 4px;
+  cursor: default;
+}
+
+.audio-search-seek {
+  display: flex;
+  align-items: center;
+
+  .v-input {
+    margin: 0;
+  }
+
+  .audio-seek-time {
+    flex: 0 0 auto;
+    min-width: 36px;
+    font-size: 12px;
+    text-align: right;
+    margin-right: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .v-slider__thumb {
+    width: 18px;
+    height: 18px;
+    left: -9px;
+  }
+
+  .v-slider__thumb::before {
+    left: -9px;
+    top: -9px;
   }
 }
 </style>
