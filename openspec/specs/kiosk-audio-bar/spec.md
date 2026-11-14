@@ -175,8 +175,10 @@ playing entry highlighted, and a list of playlists. Tapping a queue entry SHALL 
 shuffle toggle, which is the same device-local choice as the playlist editor's shuffle toggle
 (capability `kiosk-playlist-editor`). Tapping a playlist SHALL replace the queue with that
 playlist (`POST /audio/targets/{targetId}/playMedia` with `{uri: <the playlist's URI>, shuffle:
-<the toggle>}`). The popup SHALL reload the queue when the target's track or playlist changes
-while it is open. The playlist section SHALL have an edit-playlists button that opens the
+<the toggle>}`). The playlist the target plays SHALL be marked in the list: the playlist whose
+URI equals the target's `playback.sourceUri`; when `sourceUri` is null or matches no listed
+playlist, none SHALL be marked. The popup SHALL reload the queue when the target's track,
+`queueIndex` or `sourceUri` changes while it is open. The playlist section SHALL have an edit-playlists button that opens the
 playlist editor; when the editor closes, the popup SHALL reload its queue and its playlist list.
 
 While the popup is open, including while the playlist editor is open over it, it SHALL also
@@ -234,6 +236,18 @@ background reload SHALL keep the shown queue and list while it runs and when it 
 #### Scenario: Background reload fails
 - **WHEN** a reload triggered by an event fails
 - **THEN** the popup keeps showing the queue it had
+
+#### Scenario: Current playlist marked
+- **WHEN** the selected target's state has `sourceUri` equal to the URI of the playlist "Abendessen"
+- **THEN** "Abendessen" is marked in the popup's playlist list and no other playlist is
+
+#### Scenario: No source
+- **WHEN** the selected target's `sourceUri` is null, for example after a track was added to its queue
+- **THEN** no playlist is marked
+
+#### Scenario: Source change reloads the queue
+- **WHEN** the popup is open and the target's `sourceUri` changes from null to a playlist's URI
+- **THEN** the popup reloads the queue
 
 ### Requirement: Playlist filter in the queue popup
 

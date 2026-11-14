@@ -138,6 +138,8 @@ const store = {
         audioPlaylistTracks: '/audio/playlists/{playlistId}/tracks',
         audioPlaylistTracksMove: '/audio/playlists/{playlistId}/tracks/move',
         audioSearch: '/audio/search',
+        // album tracks in album order (server change `audio-playlist-start-at-track`)
+        audioAlbumTracks: '/audio/albums/{albumId}/tracks',
         sseAppliances: '/sse/appliances',
         sseTransportsRegister: '/sse/transports/register',
         sseTransportsDeregister: '/sse/transports/deregister'

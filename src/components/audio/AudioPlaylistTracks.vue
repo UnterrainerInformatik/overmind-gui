@@ -13,16 +13,6 @@
       <v-btn
         :text="!compact"
         :icon="compact"
-        class="audio-tracks-action audio-tracks-play"
-        :disabled="!canPlay"
-        :aria-label="$t('page.kiosk.audio.editor.play')"
-        @click="$emit('play')"
-      >
-        <v-icon :left="!compact">play_arrow</v-icon><span v-if="!compact">{{ $t('page.kiosk.audio.editor.play') }}</span>
-      </v-btn>
-      <v-btn
-        :text="!compact"
-        :icon="compact"
         :color="shuffle ? 'light-blue lighten-2' : null"
         class="audio-tracks-action audio-tracks-shuffle"
         :class="{ 'audio-tracks-shuffle--on': shuffle }"
@@ -100,6 +90,7 @@
           v-for="(row, index) in rows"
           :key="row.key"
           class="audio-track"
+          :class="{ 'audio-track--current': index === currentRow }"
           :data-index="index"
         >
           <div
@@ -116,6 +107,16 @@
             <div v-if="row.track.artist" class="audio-queue-artist text-caption">{{ row.track.artist }}</div>
           </div>
           <v-btn
+            icon
+            class="audio-editor-icon audio-track-play"
+            :disabled="!playTarget"
+            :aria-label="$t(rowStops(index) ? 'page.kiosk.audio.editor.rowStop' : 'page.kiosk.audio.editor.rowPlay')"
+            :title="tooltips ? $t(rowStops(index) ? 'page.kiosk.audio.editor.rowStop' : 'page.kiosk.audio.editor.rowPlay') : null"
+            @click="$emit('play-row', index)"
+          >
+            <v-icon>{{ rowStops(index) ? 'stop' : 'play_arrow' }}</v-icon>
+          </v-btn>
+          <v-btn
             v-if="playlist.editable"
             icon
             class="audio-editor-icon audio-track-remove"
@@ -125,6 +126,17 @@
           >
             <v-icon>remove_circle_outline</v-icon>
           </v-btn>
+          <div
+            v-if="index === currentRow && currentDuration"
+            class="audio-row-seek-line audio-track-seek-line"
+            @click.stop
+          >
+            <AudioSeekSlider
+              class="audio-row-seek audio-track-seek"
+              :target="playTarget"
+              :show-time="!compact"
+            ></AudioSeekSlider>
+          </div>
         </div>
       </draggable>
     </div>
@@ -134,7 +146,11 @@
 
 <script lang="js">
 import draggable from 'vuedraggable'
+import { mapGetters } from 'vuex'
 import { createAutoScroller } from '@/utils/dragAutoScroll'
+import { playingRow } from '@/utils/audioPlaying'
+import { singleton as audioService } from '@/utils/webservices/audioService'
+import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
 
 /**
  * The tracks of the open playlist (openspec change `kiosk-playlist-editor`,
@@ -148,11 +164,16 @@ import { createAutoScroller } from '@/utils/dragAutoScroll'
  * with its own auto-scroll off; `dragAutoScroll` scrolls the list instead, at a
  * speed that does not depend on the frame rate (design D6). `drag-start` and
  * `drag-end` let the editor hold back reloads while a row is under the finger.
+ *
+ * Every row has a play/stop button for `playTarget` (change
+ * `kiosk-playlist-track-play`, design D3); it emits `play-row` and the editor
+ * decides between starting at that row and pausing/resuming. The row the
+ * target is on (`playingRow`, D2) is marked and gets a seek slider (D4).
  */
 export default {
   name: 'AudioPlaylistTracks',
 
-  components: { draggable },
+  components: { draggable, AudioSeekSlider },
 
   props: {
     playlist: { type: Object, required: true },
@@ -161,7 +182,8 @@ export default {
     failed: { type: Boolean, default: false },
     busy: { type: Boolean, default: false },
     showAddButton: { type: Boolean, default: false },
-    canPlay: { type: Boolean, default: false },
+    /** The resolved target rows play on, or null while the audio state is not loaded. */
+    playTarget: { type: Object, default: null },
     shuffle: { type: Boolean, default: false }
   },
 
@@ -172,8 +194,24 @@ export default {
   }),
 
   computed: {
+    ...mapGetters('gui/tooltips', {
+      tooltips: 'tooltips'
+    }),
     compact () {
       return this.$vuetify.breakpoint.xsOnly
+    },
+    playback () {
+      return this.playTarget ? this.playTarget.playback : null
+    },
+    /** The marked row, playing or paused, or null. */
+    currentRow () {
+      return playingRow(this.playback, audioService.playlistUri(this.playlist), this.rows.map(r => r.track))
+    },
+    currentPlaying () {
+      return !!this.playback && this.playback.state === 'playing'
+    },
+    currentDuration () {
+      return this.playback && this.playback.duration ? this.playback.duration : null
     }
   },
 
@@ -189,6 +227,9 @@ export default {
   },
 
   methods: {
+    rowStops (index) {
+      return index === this.currentRow && this.currentPlaying
+    },
     onStart (event) {
       this.dragging = true
       this.$emit('drag-start')
@@ -288,12 +329,31 @@ export default {
 .audio-track {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   min-height: 56px;
   padding: 0 8px 0 0;
   border-bottom: 1px solid rgba(128, 128, 128, 0.15);
 
   .audio-queue-cover:first-child {
     margin-left: 16px;
+  }
+
+  // A zero basis, so a long title shrinks instead of wrapping the buttons
+  // onto the slider's line.
+  .audio-queue-text {
+    flex: 1 1 0;
+  }
+
+  &.audio-track--current {
+    background-color: rgba(128, 128, 128, 0.2);
+
+    .audio-queue-title {
+      font-weight: bold;
+    }
+  }
+
+  .audio-track-seek-line {
+    padding-left: 16px;
   }
 }
 

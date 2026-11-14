@@ -183,3 +183,44 @@ export default {
   }
 }
 </script>
+
+<style lang="scss">
+// The line a list row wraps onto for its slider: the search preview's current
+// track and the open playlist's playing track (change
+// `kiosk-playlist-track-play`, design D4).
+.audio-row-seek-line {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding-bottom: 4px;
+  cursor: default;
+}
+
+.audio-row-seek {
+  display: flex;
+  align-items: center;
+
+  .v-input {
+    margin: 0;
+  }
+
+  .audio-seek-time {
+    flex: 0 0 auto;
+    min-width: 36px;
+    font-size: 12px;
+    text-align: right;
+    margin-right: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .v-slider__thumb {
+    width: 18px;
+    height: 18px;
+    left: -9px;
+  }
+
+  .v-slider__thumb::before {
+    left: -9px;
+    top: -9px;
+  }
+}
+</style>

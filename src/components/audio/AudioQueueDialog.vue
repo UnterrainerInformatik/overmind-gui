@@ -170,7 +170,7 @@ export default {
       }
       const p = this.target.playback
       const track = p && p.track ? p.track.uri || p.track.title : ''
-      return `${this.target.targetId}|${p ? p.playlistId : ''}|${p ? p.queueIndex : ''}|${track}`
+      return `${this.target.targetId}|${p && p.sourceUri ? p.sourceUri : ''}|${p ? p.queueIndex : ''}|${track}`
     },
     currentIndex () {
       if (this.queueIndex !== null) {
@@ -333,7 +333,8 @@ export default {
     },
     isCurrentPlaylist (playlist) {
       const p = this.target && this.target.playback
-      return !!p && p.playlistId !== null && `${p.playlistId}` === `${playlist.id}`
+      // The server's `sourceUri` names the playlist the queue pairs with (change `kiosk-playlist-track-play`, D6).
+      return !!p && !!p.sourceUri && p.sourceUri === audioService.playlistUri(playlist)
     },
     playIndex (index) {
       if (!this.target) {

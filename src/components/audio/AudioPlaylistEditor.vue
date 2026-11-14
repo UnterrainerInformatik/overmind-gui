@@ -41,7 +41,7 @@
             :failed="tracksFailed"
             :busy="busy"
             :show-add-button="!wide"
-            :can-play="!!playTarget"
+            :play-target="playTarget"
             :shuffle="shuffle"
             @back="backToList"
             @rename="promptRename"
@@ -50,7 +50,7 @@
             @move="moveTrack"
             @add="view = 'search'"
             @retry="loadTracks"
-            @play="play"
+            @play-row="playRow"
             @shuffle="setShuffle"
             @drag-start="onDragStart"
             @drag-end="onDragEnd"
@@ -98,6 +98,7 @@ import { acquire, release } from '@/utils/audioState'
 import { readStoredTarget, resolveTarget } from '@/utils/audioTarget'
 import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
 import { audioCommand } from '@/mixins/audioCommand'
+import { playingRow } from '@/utils/audioPlaying'
 import AudioPlaylistList from '@/components/audio/AudioPlaylistList.vue'
 import AudioPlaylistTracks from '@/components/audio/AudioPlaylistTracks.vue'
 import AudioLibrarySearch from '@/components/audio/AudioLibrarySearch.vue'
@@ -119,7 +120,9 @@ import AudioNamePrompt from '@/components/audio/AudioNamePrompt.vue'
  * Change `kiosk-playlist-editor-extras`: the open playlist can be played on
  * the device's audio target (the `target` prop from the queue popup, else the
  * stored target resolved against the shared audio state, design D3) with the
- * device's shuffle choice (D2). While open, the server's
+ * device's shuffle choice (D2). Since change `kiosk-playlist-track-play`
+ * (design D3) playing starts from a row: the whole playlist from that row on,
+ * or pause/resume on the row the target is on. While open, the server's
  * `audio-playlist-changed` event and every SSE reconnect reload the list and,
  * when it concerns them, the open playlist's tracks (D5). Such a reload is
  * held back while a drag or an edit runs, flags collapse a burst into one
@@ -340,7 +343,7 @@ export default {
     setShuffle (on) {
       setShuffle(on)
     },
-    play () {
+    playRow (index) {
       const target = this.playTarget
       const playlist = this.openPlaylist
       if (!target || !playlist) {
@@ -348,8 +351,15 @@ export default {
       }
       const targetId = target.targetId
       const uri = audioService.playlistUri(playlist)
+      const playback = target.playback
+      if (playingRow(playback, uri, this.tracks) === index) {
+        // No stop command on the server: stop pauses, play resumes.
+        const command = playback.state === 'playing' ? 'pause' : 'play'
+        this.runAudioCommand(() => audioService.command(targetId, command))
+        return
+      }
       const shuffle = this.shuffle
-      this.runAudioCommand(() => audioService.playMedia(targetId, uri, shuffle), 'page.kiosk.audio.editor.playFailed')
+      this.runAudioCommand(() => audioService.playMedia(targetId, uri, shuffle, index), 'page.kiosk.audio.editor.playFailed')
     },
 
     startLive () {

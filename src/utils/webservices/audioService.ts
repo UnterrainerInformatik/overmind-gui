@@ -18,7 +18,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioTargetVolume   {level}  0..100
  *   GET  audioTargetQueue          -> {items: [Track], currentIndex}
  *   POST audioTargetQueuePlay {index}
- *   POST audioTargetPlayMedia {uri, shuffle?}
+ *   POST audioTargetPlayMedia {uri, shuffle?, startIndex?}
  *   GET  audioRadio                -> {items: [Station]}, at most RADIO_STATIONS
  *   GET  audioPlaylists            -> {items: [Playlist]}
  *
@@ -34,16 +34,26 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   DELETE audioPlaylistTracks      {positions}
  *   POST   audioPlaylistTracksMove  {from, to}
  *   GET    audioSearch ?q=&types=track,album,artist
- *          -> {tracks: [Track], albums: [Item], artists: [Item]}, Item = {name, artist, uri, imageUrl}
+ *          -> {tracks: [Track], albums: [Item], artists: [Item]}, Item = {id, name, artist, uri, imageUrl}
+ *   GET    audioAlbumTracks                          -> {items: [Track]} in album order, 404 unknown
  *
- * Backend contract, not yet built (openspec change
- * `kiosk-playlist-editor-extras`, design D1; to be added in
- * java-overmind-server):
+ * Built server extensions (changes `kiosk-playlist-editor-extras`,
+ * `audio-queue-follows-playlist-edits` and `audio-playlist-start-at-track`):
  * - `playMedia` takes an optional `shuffle` boolean. `true` turns the target
  *   queue's shuffle on before replacing the queue (MA `player_queues/shuffle`,
  *   then `player_queues/play_media` with `option: replace`), `false` turns it
  *   off, no field leaves it as it is. The GUI sends it for playlists only, so
  *   radio still sends `{uri}`. A server that does not know it ignores it.
+ * - `playMedia` takes an optional `startIndex` (0-based row, playlists only):
+ *   the whole playlist is queued and playback starts at that row; 400 with a
+ *   `reason` when the row is out of range or unavailable. The per-track play
+ *   buttons of the open playlist send it (change `kiosk-playlist-track-play`).
+ * - Playback carries `sourceUri` (`library://playlist/<id>` while the queue
+ *   pairs one-to-one with that playlist, null otherwise and for ~500 ms after
+ *   a start or queue change) and `shuffle`. `playlistId` is gone. `queueIndex`
+ *   equals the playlist row only when unshuffled and no unavailable track
+ *   comes before it, so the GUI matches by track URI as a fallback
+ *   (`utils/audioPlaying.ts`).
  * - SSE event `audio-playlist-changed` `{playlistId}` (the id as in
  *   `audioPlaylists`) on every change to a playlist, whoever made it: tracks
  *   added, removed or moved, renamed, created, deleted. Coalesced per playlist
@@ -128,7 +138,9 @@ export interface AudioPlayback {
   elapsedAt: number;
   /** seconds; null for a stream */
   duration: number | null;
-  playlistId: string | number | null;
+  /** `library://playlist/<id>` while the queue pairs one-to-one with that playlist, else null */
+  sourceUri: string | null;
+  shuffle: boolean;
   queueIndex: number | null;
 }
 
@@ -197,6 +209,8 @@ export interface AudioPlaylist {
 }
 
 export interface AudioSearchItem {
+  /** the library id (albums: for `getAlbumTracks`); null when the server sends none */
+  id: string | number | null;
   name: string;
   artist: string | null;
   uri: string;
@@ -319,11 +333,20 @@ export class AudioService {
 
   /**
    * Replaces the target's queue with a playlist or a radio station. `shuffle`
-   * is sent only when given (playlists), see the contract above.
+   * and `startIndex` are sent only when given (playlists), see the contract
+   * above.
    */
-  public async playMedia (targetId: string, uri: string, shuffle?: boolean): Promise<void> {
-    return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId },
-      () => (shuffle === undefined ? { uri } : { uri, shuffle }))
+  public async playMedia (targetId: string, uri: string, shuffle?: boolean, startIndex?: number): Promise<void> {
+    return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId }, () => {
+      const body: { uri: string; shuffle?: boolean; startIndex?: number } = { uri }
+      if (shuffle !== undefined) {
+        body.shuffle = shuffle
+      }
+      if (startIndex !== undefined) {
+        body.startIndex = startIndex
+      }
+      return body
+    })
   }
 
   public async getRadio (): Promise<AudioStation[]> {
@@ -343,6 +366,11 @@ export class AudioService {
 
   public async getPlaylistTracks (playlistId: string | number): Promise<AudioTrack[]> {
     const response = await axiosUtils.getFromPath(this.server, 'audioPlaylistTracks', { playlistId })
+    return this.listOf(response).map(t => this.normalizeTrack(t)).filter((t): t is AudioTrack => t !== null)
+  }
+
+  public async getAlbumTracks (albumId: string | number): Promise<AudioTrack[]> {
+    const response = await axiosUtils.getFromPath(this.server, 'audioAlbumTracks', { albumId })
     return this.listOf(response).map(t => this.normalizeTrack(t)).filter((t): t is AudioTrack => t !== null)
   }
 
@@ -508,7 +536,8 @@ export class AudioService {
       elapsed: this.numberOrNull(p.elapsed) || 0,
       elapsedAt: this.numberOrNull(p.elapsedAt) || Date.now(),
       duration: this.numberOrNull(p.duration),
-      playlistId: p.playlistId != null ? p.playlistId : null,
+      sourceUri: typeof p.sourceUri === 'string' && p.sourceUri !== '' ? p.sourceUri : null,
+      shuffle: p.shuffle === true,
       queueIndex: this.numberOrNull(p.queueIndex)
     }
   }
@@ -527,6 +556,7 @@ export class AudioService {
   private normalizeSearchItem (i: Raw): AudioSearchItem {
     const artist = i.artist || (Array.isArray(i.artists) ? i.artists.join(', ') : null)
     return {
+      id: typeof i.id === 'string' || typeof i.id === 'number' ? i.id : null,
       name: `${i.name || i.title || i.uri}`,
       artist: artist || null,
       uri: `${i.uri}`,
@@ -549,7 +579,7 @@ export class AudioService {
   }
 
   private idlePlayback (): AudioPlayback {
-    return { state: 'idle', track: null, elapsed: 0, elapsedAt: Date.now(), duration: null, playlistId: null, queueIndex: null }
+    return { state: 'idle', track: null, elapsed: 0, elapsedAt: Date.now(), duration: null, sourceUri: null, shuffle: false, queueIndex: null }
   }
 
   private paletteColor (id: string | number): string {

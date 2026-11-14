@@ -21,7 +21,12 @@
         outlined
       ></v-text-field>
     </div>
-    <div v-if="artist" class="px-4 pb-2">
+    <div v-if="album" class="px-4 pb-2">
+      <v-chip close class="audio-search-album-chip" @click:close="leaveAlbum">
+        <v-icon left small>album</v-icon>{{ album.name }}
+      </v-chip>
+    </div>
+    <div v-else-if="artist" class="px-4 pb-2">
       <v-chip close class="audio-search-artist" @click:close="leaveArtist">
         <v-icon left small>person</v-icon>{{ artist }}
       </v-chip>
@@ -29,7 +34,7 @@
     <v-progress-linear class="audio-search-loading" :active="loading" indeterminate height="4"></v-progress-linear>
 
     <div class="audio-search-scroll">
-      <div v-if="!artist && trimmed.length < 2" class="pa-4 audio-editor-message audio-search-hint">{{ $t('page.kiosk.audio.editor.searchHint') }}</div>
+      <div v-if="!artist && !album && trimmed.length < 2" class="pa-4 audio-editor-message audio-search-hint">{{ $t('page.kiosk.audio.editor.searchHint') }}</div>
       <div v-else-if="failed" class="pa-4 audio-editor-message audio-search-failed">
         <div>{{ $t('page.kiosk.audio.editor.loadFailed') }}</div>
         <v-btn text color="primary" class="audio-search-retry mt-2" @click="runSearch">{{ $t('page.kiosk.audio.editor.retry') }}</v-btn>
@@ -71,11 +76,11 @@
             <v-icon class="ml-1 audio-search-dim">{{ isAdded(track.uri) ? 'check' : 'add' }}</v-icon>
             <div
               v-if="isCurrent(track.uri) && currentDuration"
-              class="audio-search-seek-line"
+              class="audio-row-seek-line audio-search-seek-line"
               @click.stop
             >
               <AudioSeekSlider
-                class="audio-search-seek"
+                class="audio-row-seek audio-search-seek"
                 :target="playTarget"
                 :show-time="!$vuetify.breakpoint.xsOnly"
               ></AudioSeekSlider>
@@ -99,6 +104,16 @@
               <div v-if="album.artist" class="audio-queue-artist text-caption">{{ album.artist }}</div>
             </div>
             <v-icon class="ml-2 audio-search-dim">playlist_add</v-icon>
+            <v-btn
+              v-if="album.id !== null"
+              icon
+              class="audio-editor-icon audio-search-open-album ml-1"
+              :aria-label="$t('page.kiosk.audio.editor.openAlbum')"
+              :title="tooltips ? $t('page.kiosk.audio.editor.openAlbum') : null"
+              @click.stop="openAlbum(album)"
+            >
+              <v-icon>chevron_right</v-icon>
+            </v-btn>
           </div>
         </template>
         <template v-if="results.artists.length > 0">
@@ -146,6 +161,11 @@ const emptyResults = () => ({ tracks: [], albums: [], artists: [] })
  * queue with the one track, the track the target is on is marked and gets a
  * position slider, and its button pauses or resumes. The marking follows the
  * audio state only, so a fresh preview lights up once the state reports it.
+ *
+ * An album with an `id` can be opened (change `kiosk-playlist-track-play`,
+ * design D5): like the artist drill-in, its tracks replace the results under a
+ * closable chip. It remembers the artist it was opened from, so closing it
+ * returns to the results it came from; typing leaves both.
  */
 export default {
   name: 'AudioLibrarySearch',
@@ -165,6 +185,8 @@ export default {
   data: () => ({
     query: '',
     artist: null,
+    /** The open album `{id, name, artist}`, `artist` being the drill-in it was opened from. */
+    album: null,
     results: emptyResults(),
     loading: false,
     failed: false,
@@ -203,6 +225,7 @@ export default {
   watch: {
     query () {
       this.artist = null
+      this.album = null
       this.schedule()
     }
   },
@@ -226,6 +249,10 @@ export default {
       this.timer = setTimeout(() => this.runSearch(), DEBOUNCE_MILLIS)
     },
     runSearch () {
+      if (this.album) {
+        const id = this.album.id
+        return this.load(async () => ({ tracks: await audioService.getAlbumTracks(id), albums: [], artists: [] }))
+      }
       if (this.artist) {
         return this.search(this.artist, ['track'])
       }
@@ -233,11 +260,15 @@ export default {
         return this.search(this.trimmed, ['track', 'album', 'artist'])
       }
     },
-    async search (text, types) {
+    search (text, types) {
+      return this.load(() => audioService.search(text, types))
+    },
+    /** Shows `fetch`'s answer unless a newer request was started meanwhile. */
+    async load (fetch) {
       const sequence = ++this.sequence
       this.loading = true
       try {
-        const answer = await audioService.search(text, types)
+        const answer = await fetch()
         if (sequence !== this.sequence) {
           return
         }
@@ -262,6 +293,22 @@ export default {
       this.results = emptyResults()
       this.answered = false
       this.search(item.name, ['track'])
+    },
+    openAlbum (item) {
+      clearTimeout(this.timer)
+      this.album = { id: item.id, name: item.name, artist: this.artist }
+      this.results = emptyResults()
+      this.answered = false
+      this.failed = false
+      this.runSearch()
+    },
+    leaveAlbum () {
+      this.artist = this.album ? this.album.artist : null
+      this.album = null
+      this.results = emptyResults()
+      this.answered = false
+      this.failed = false
+      this.runSearch()
     },
     leaveArtist () {
       this.artist = null
@@ -360,42 +407,6 @@ export default {
   // onto the slider's line.
   .audio-queue-text {
     flex: 1 1 0;
-  }
-}
-
-.audio-search-seek-line {
-  flex: 0 0 100%;
-  min-width: 0;
-  padding-bottom: 4px;
-  cursor: default;
-}
-
-.audio-search-seek {
-  display: flex;
-  align-items: center;
-
-  .v-input {
-    margin: 0;
-  }
-
-  .audio-seek-time {
-    flex: 0 0 auto;
-    min-width: 36px;
-    font-size: 12px;
-    text-align: right;
-    margin-right: 8px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .v-slider__thumb {
-    width: 18px;
-    height: 18px;
-    left: -9px;
-  }
-
-  .v-slider__thumb::before {
-    left: -9px;
-    top: -9px;
   }
 }
 </style>
