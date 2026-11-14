@@ -17,7 +17,7 @@
           @click="targetDialog = true"
         >
           <span class="kiosk-audio-player-dot"></span>
-          <v-icon small class="kiosk-audio-player-target-icon">{{ target && target.kind === 'room' ? 'speaker' : 'speaker_group' }}</v-icon>
+          <v-icon small class="kiosk-audio-player-target-icon">{{ targetIcon }}</v-icon>
           <span v-if="!narrow" class="kiosk-audio-player-target-name">{{ targetName }}</span>
         </button>
       </template>
@@ -228,9 +228,18 @@ export default {
     target () {
       return resolveTarget(this.state, this.selection, this.$t('page.kiosk.audio.mainGroup'))
     },
-    /** True once a loaded state has made a remembered room fall back to the main group. */
+    /**
+     * True once a loaded state has made a remembered room fall back to the main
+     * group. Never for a web player: it stays remembered while it is gone and is
+     * controlled again when it comes back (openspec change
+     * `audio-web-player-targets`, design D3).
+     */
     selectionFellBack () {
-      return !!this.state && this.selection !== 'main' && !this.selectedRoom
+      return !!this.state && this.selection.startsWith('room:') && !this.selectedRoom
+    },
+    targetIcon () {
+      const kind = this.target ? this.target.kind : 'main'
+      return kind === 'room' ? 'speaker' : kind === 'player' ? 'devices' : 'speaker_group'
     },
     targetName () {
       return this.target ? this.target.name : this.$t('page.kiosk.audio.mainGroup')
@@ -347,7 +356,8 @@ export default {
       if (this.volumeSender === null || this.volumeSenderKey !== target.key) {
         this.cancelVolumeSender()
         // A solo room is turned up through its room, which the server maps to
-        // the room's own player; the main group through its target.
+        // the room's own player; the main group and a web player through
+        // their target.
         const { kind, roomId, targetId } = target
         this.volumeSender = createLiveSender(level => kind === 'room'
           ? audioService.setRoomVolume(roomId, level)

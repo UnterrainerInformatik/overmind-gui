@@ -63,7 +63,7 @@
 </template>
 
 <script lang="js">
-import { MAIN_GROUP_COLOR } from '@/utils/webservices/audioService'
+import { MAIN_GROUP_COLOR, WEB_PLAYER_COLOR } from '@/utils/webservices/audioService'
 import { refreshPlanAppliances } from '@/utils/audioPlanAppliances'
 import AudioPlanMap from '@/components/audio/AudioPlanMap.vue'
 import AudioStreamCard from '@/components/audio/AudioStreamCard.vue'
@@ -113,7 +113,11 @@ export default {
     narrow () {
       return this.$vuetify.breakpoint.xsOnly
     },
-    /** The main group, then every solo room that can be a target. */
+    /**
+     * The main group, then every solo room that can be a target, then every
+     * available web player in the server's order (openspec change
+     * `audio-web-player-targets`, design D5). Web players never reach the map.
+     */
     streams () {
       if (!this.state) {
         return []
@@ -139,7 +143,18 @@ export default {
           playback: r.playback,
           volume: r.volume
         }))
-      return [main, ...solo]
+      const players = (this.state.players || [])
+        .filter(p => p.available && p.targetId)
+        .map(p => ({
+          key: `player:${p.targetId}`,
+          kind: 'player',
+          targetId: p.targetId,
+          name: p.name,
+          color: WEB_PLAYER_COLOR,
+          playback: p.playback,
+          volume: p.volume
+        }))
+      return [main, ...solo, ...players]
     }
   },
 

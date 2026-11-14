@@ -90,6 +90,22 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   `lightMuted = false`, so an older server's mute is drawn as manual.
  *   The former guessed `buttonX`/`buttonY` (change `kiosk-light-and-sound`)
  *   were never built and are no longer read.
+ * - Web players (openspec change `audio-web-player-targets`, design D1; to be
+ *   built in java-overmind-server): MA players no room is configured for -
+ *   browser tabs with the MA web UI, the MA mobile app or PWA. **Guessed**:
+ *
+ *     AudioState.players[] = {
+ *       targetId: string,                     // MA player id, also on /audio/targets/{targetId}/...
+ *       name: string,                         // MA's name, e.g. "Web (Firefox on Linux)"
+ *       available: boolean,
+ *       playback: Playback,                   // as a room's
+ *       volume: number                        // 0..100
+ *     }
+ *
+ *   The target id is read like a room's. A missing or non-array `players`
+ *   gives no web players (today's server), so it does not invalidate the
+ *   state; entries without a target id are dropped; the name falls back to
+ *   the id. Web players are always solo and never grouped.
  */
 
 export type AudioPlaybackStatus = 'playing' | 'paused' | 'idle'
@@ -150,9 +166,20 @@ export interface AudioRoom {
   lights: AudioLightRef[];
 }
 
+/** A room-less MA player (browser tab, MA app or PWA), always solo. */
+export interface AudioWebPlayer {
+  targetId: string;
+  name: string;
+  available: boolean;
+  playback: AudioPlayback | null;
+  volume: number | null;
+}
+
 export interface AudioState {
   mainGroup: AudioMainGroup;
   rooms: AudioRoom[];
+  /** empty when the server sends none */
+  players: AudioWebPlayer[];
 }
 
 export interface AudioQueue {
@@ -208,6 +235,13 @@ export interface AudioStation {
  * ever given something close.
  */
 export const MAIN_GROUP_COLOR = '#283593'
+
+/**
+ * The one colour all web players share (blue grey 700): a neutral dark slate,
+ * apart from MAIN_GROUP_COLOR's indigo, ROOM_PALETTE's saturated hues and the
+ * light unavailable grey. Web players are told apart by name.
+ */
+export const WEB_PLAYER_COLOR = '#455A64'
 
 /**
  * Fallback room colours, picked by room id. 16 entries, so the 13-15 players of
@@ -381,8 +415,30 @@ export class AudioService {
         playback: this.normalizePlayback(g.playback) || this.idlePlayback(),
         volume: this.numberOrNull(g.volume)
       },
-      rooms: raw.rooms.filter((r: Raw) => r && r.id != null).map((r: Raw) => this.normalizeRoom(r))
+      rooms: raw.rooms.filter((r: Raw) => r && r.id != null).map((r: Raw) => this.normalizeRoom(r)),
+      players: this.normalizePlayers(raw.players)
     }
+  }
+
+  private normalizePlayers (raw: Raw): AudioWebPlayer[] {
+    if (!Array.isArray(raw)) {
+      return []
+    }
+    const players: AudioWebPlayer[] = []
+    for (const p of raw) {
+      const targetId = p && typeof p === 'object' ? p.targetId || p.maPlayerId || p.playerId : null
+      if (!targetId) {
+        continue
+      }
+      players.push({
+        targetId: `${targetId}`,
+        name: `${p.name || targetId}`,
+        available: p.available !== false,
+        playback: this.normalizePlayback(p.playback),
+        volume: this.numberOrNull(p.volume)
+      })
+    }
+    return players
   }
 
   private normalizeRoom (r: Raw): AudioRoom {

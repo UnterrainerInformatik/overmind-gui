@@ -22,7 +22,7 @@
       </div>
       <div class="audio-stream-card-texts">
         <div class="audio-stream-card-name">
-          <v-icon x-small class="audio-stream-card-kind">{{ stream.kind === 'main' ? 'speaker_group' : 'speaker' }}</v-icon>
+          <v-icon x-small class="audio-stream-card-kind">{{ kindIcon }}</v-icon>
           <span>{{ stream.name }}</span>
           <v-icon v-if="selected" small class="audio-stream-card-check" :aria-label="$t('page.kiosk.audio.plan.selected')">check_circle</v-icon>
         </div>
@@ -70,11 +70,12 @@ import { audioCommand } from '@/mixins/audioCommand'
 import { createHeldLevels } from '@/utils/heldLevels'
 
 /**
- * One stream of the audio plan popup's strip: the main group or a solo room
- * (openspec change `kiosk-audio-plan-popup`, "One card per stream"). Cover,
- * title, transport and the stream's volume, which is sent live while dragged
- * to the stream's target. A solo room with nothing to play gets the narrow
- * form. Tapping the card outside its controls selects the stream.
+ * One stream of the audio plan popup's strip: the main group, a solo room or a
+ * web player (openspec changes `kiosk-audio-plan-popup`, "One card per stream",
+ * and `audio-web-player-targets`). Cover, title, transport and the stream's
+ * volume, which is sent live while dragged to the stream's target. A solo room
+ * or web player with nothing to play gets the narrow form. Tapping the card
+ * outside its controls selects the stream.
  */
 export default {
   name: 'AudioStreamCard',
@@ -98,7 +99,11 @@ export default {
     },
     narrow () {
       const p = this.stream.playback
-      return this.stream.kind === 'room' && (!p || (!p.track && p.state === 'idle'))
+      return this.stream.kind !== 'main' && (!p || (!p.track && p.state === 'idle'))
+    },
+    kindIcon () {
+      const kind = this.stream.kind
+      return kind === 'main' ? 'speaker_group' : kind === 'player' ? 'devices' : 'speaker'
     },
     coverUrl () {
       return this.track ? this.track.imageUrl : null

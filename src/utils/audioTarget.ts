@@ -1,4 +1,4 @@
-import { AudioState, AudioPlayback, MAIN_GROUP_COLOR } from '@/utils/webservices/audioService'
+import { AudioState, AudioPlayback, MAIN_GROUP_COLOR, WEB_PLAYER_COLOR } from '@/utils/webservices/audioService'
 
 /**
  * The device's audio target: what the kiosk audio bar controls and what the
@@ -8,12 +8,16 @@ import { AudioState, AudioPlayback, MAIN_GROUP_COLOR } from '@/utils/webservices
  * The stored selection is 'main' or 'room:<roomId>'. The room id rather than
  * the target id is stored, because the id a solo room is addressed by is MA's
  * and is not ours to keep.
+ *
+ * A web player (openspec change `audio-web-player-targets`, design D2) is
+ * stored as 'player:<targetId>': it has no other identity, and MA keeps that id
+ * stable per browser profile.
  */
 const STORAGE_KEY = 'kioskAudioTarget'
 
 export interface AudioTarget {
   key: string;
-  kind: 'main' | 'room';
+  kind: 'main' | 'room' | 'player';
   targetId: string;
   roomId: string | number | null;
   name: string;
@@ -25,7 +29,7 @@ export interface AudioTarget {
 export function readStoredTarget (): string {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw === 'main' || (raw && raw.startsWith('room:'))) {
+    if (raw === 'main' || (raw && (raw.startsWith('room:') || raw.startsWith('player:')))) {
       return raw
     }
   } catch {
@@ -56,8 +60,20 @@ export function selectedRoomOf (state: AudioState | null, selection: string) {
 }
 
 /**
- * The selection resolved against the state: the room while it may be one,
- * else the main group. Null while no state is known.
+ * The selected web player while it is in the state and available, else null.
+ */
+export function selectedPlayerOf (state: AudioState | null, selection: string) {
+  if (!state || !selection.startsWith('player:')) {
+    return null
+  }
+  const id = selection.substring('player:'.length)
+  const player = state.players.find(p => p.targetId === id)
+  return player && player.available ? player : null
+}
+
+/**
+ * The selection resolved against the state: the room or web player while it
+ * may be one, else the main group. Null while no state is known.
  */
 export function resolveTarget (state: AudioState | null, selection: string, mainGroupName: string): AudioTarget | null {
   if (!state) {
@@ -74,6 +90,19 @@ export function resolveTarget (state: AudioState | null, selection: string, main
       color: room.color,
       playback: room.playback,
       volume: room.volume
+    }
+  }
+  const player = selectedPlayerOf(state, selection)
+  if (player) {
+    return {
+      key: `player:${player.targetId}`,
+      kind: 'player',
+      targetId: player.targetId,
+      roomId: null,
+      name: player.name,
+      color: WEB_PLAYER_COLOR,
+      playback: player.playback,
+      volume: player.volume
     }
   }
   const group = state.mainGroup
