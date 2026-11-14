@@ -47,6 +47,8 @@
         class="audio-stream-card-volume"
         :value="shownVolume"
         :disabled="disabled || stream.volume === null"
+        :color="volumeColor"
+        :track-color="volumeTrackColor"
         min="0"
         max="100"
         step="1"
@@ -107,6 +109,15 @@ export default {
     shownVolume () {
       const level = this.levels.shown(this.volumeKey, this.stream.volume)
       return level !== null ? level : 0
+    },
+    // Fixed per-theme accent so the slider stands out from the card
+    // (change `audio-card-volume-contrast`, D1): the theme's primary is
+    // nearly the card's own tone in the dark theme.
+    volumeColor () {
+      return this.$vuetify.theme.dark ? '#4FC3F7' : '#1976D2'
+    },
+    volumeTrackColor () {
+      return this.$vuetify.theme.dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'
     }
   },
 
