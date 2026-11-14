@@ -176,4 +176,6 @@ Decisions (user, 2026-11-14):
   our own names on.
 - **A remembered web player that is gone → silently fall back to the main group**, like a
   vanished room. Nothing says "not connected". When the same id comes back, the stored
-  `'player:<id>'` selects it again.
+  `'player:<id>'` selects it again. User, more precisely: when the web player disappears, its
+  **queue goes away** (an open queue popup for it closes or switches) and the **UI switches to
+  the main group**.
