@@ -14,4 +14,4 @@
 
 - [x] 3.1 `npm run lint` and `npm run build` clean
 - [x] 3.2 Headless Puppeteer against `npm run serve` with writes blocked: at 1020 × 590, 768 and 360 px check the six tools fit, balance rooms marked / others dimmed, panel opens with the speakers' levels, a drag issues throttled `PUT .../speakers/{playerId}/volume` requests ending with the released level (intercepted, not sent), tool switch closes the panel; also an older state without `speakers`
-- [ ] 3.3 After deploy, one real check with the user's consent on the stereo-pair room (balance only, no playback)
+- [x] 3.3 After deploy, one real check with the user's consent on the stereo-pair room (balance only, no playback)
