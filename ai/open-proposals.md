@@ -137,12 +137,40 @@ Rough plan:
     and come back to it when it reappears with the same id;
   - the playlist editor play and queue popup work unchanged through `targetId`.
 
-Open questions:
+Server session answers (2026-11-14, MA 2.10.8 code + read-only live MA; one was open at the
+time: "Web (Firefox on Linux)"):
 
-- **Server session:** How does MA identify a web player (provider `builtin_player` /
-  sendspin web client)? Is its player id **stable** across reloads of the same browser, or new
-  each time? This decides whether remembering `'player:<id>'` makes sense.
-- **Server session:** Do the target routes reject ids that are neither a room nor the group?
-- **Server session:** Should a web player be groupable into the main group? Proposal: no,
-  solo target only.
-- **User:** naming. Use MA's player name ("Web (Chrome)"…) or something of our own?
+- **Identification works:** `provider == "sendspin"` and `device_info.model` ∈ {"Web Player",
+  "Web Browser", "Mobile Application", "PWA"}. This is MA's own `is_web_player` heuristic
+  (`sendspin/player.py`). Web players also have `private: true` and `expose_to_ha: false`.
+  Hardware uses another provider (`universal_player`: Louders, Cast-1), and `type` is "player"
+  for all, so it is useless. For browsers only, filter on "Web Player"/"Web Browser"; the MA
+  mobile app and PWA would otherwise match too. A sendspin player claimed by a bridge
+  (Cast/AirPlay over sendspin) is not a web player.
+- **The player id is stable per browser:** the frontend keeps it in
+  `localStorage["sendspin_webplayer_id"]`. It survives reloads and browser restarts. A different
+  profile, a private window or cleared site data gives a new id. So `'player:<id>'` can be
+  remembered, but it may be orphaned.
+- **Closing the tab removes the player** in MA (`ClientRemovedEvent` → `players.unregister`,
+  event `player_removed`), rather than setting `available=false`. A reconnect within aiosendspin's
+  cleanup grace reuses the old player. Closing was not measured live.
+- **Name:** browser + OS, e.g. "Web (Firefox on Linux)". Two machines with the same browser and
+  OS look the same. They differ only by id (or the not-unique user agent in
+  `device_info.software_version`). The player can be renamed in MA.
+- **Server routes:** today `AudioService.resolveTarget` allows only the main group and room
+  players. Anything else gets `404 "no audio target [...]"`, a grouped room `409`, so the server
+  must allow web player ids too.
+- **Grouping:** technically possible (in `can_group_with` of the main group's syncgroup), but MA
+  marks web players `private` and they vanish with the tab. Agreed: **solo target only**.
+- **State:** `AudioState.players[] = {targetId, name, available, playback, volume}` is agreed.
+  `available` will hardly ever be false, because a closed tab removes the player. For a
+  remembered but missing player, the GUI shows "not connected" itself (or falls back to the
+  main group, to decide in the propose step).
+
+Still open (user):
+
+- Browsers only, or also the MA mobile app / PWA?
+- Naming: MA's name ("Web (Firefox on Linux)", same for two identical machines) unless renamed
+  in MA, or something of our own?
+- A remembered web player that is gone: fall back to the main group silently, or show it as
+  "not connected" in the bar until it comes back?
