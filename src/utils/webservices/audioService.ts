@@ -12,7 +12,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioRoomGrouped    {grouped}
  *   PUT  audioRoomVolume     {level}  0..100
  *   PUT  audioRoomLightLinked {linked}
- *   PUT  audioRoomManualMuted {muted}   (guessed, see below)
+ *   PUT  audioRoomManualMuted {muted}   see below
  *   PUT  audioRoomSpeakerVolume {level} 0..100, one speaker of a group room
  *   POST audioTargetCommand           play|pause|next|previous
  *   POST audioTargetSeek     {position} seconds
@@ -83,7 +83,8 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  * - `imageUrl` is a server path (`/audio/image?path=...`) and is made absolute.
  * - A room's mute and lights (openspec change `kiosk-audio-plan-popup`,
  *   design D1; built by java-overmind-server change
- *   `audio-desired-state-and-manual-mute`). **Guessed**:
+ *   `audio-desired-state-and-manual-mute`, confirmed against its specs
+ *   `audio-manual-mute` and `audio-music-assistant-bridge`):
  *
  *     AudioState.rooms[] += {
  *       manualMuted: boolean,                 // set by hand; the lights never touch it

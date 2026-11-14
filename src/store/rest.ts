@@ -122,7 +122,7 @@ const store = {
         audioRoomGrouped: '/audio/rooms/{roomId}/grouped',
         audioRoomVolume: '/audio/rooms/{roomId}/volume',
         audioRoomLightLinked: '/audio/rooms/{roomId}/lightLinked',
-        // guessed, change `kiosk-audio-plan-popup` design D1
+        // server spec `audio-manual-mute` (java-overmind-server)
         audioRoomManualMuted: '/audio/rooms/{roomId}/manualMuted',
         // one speaker of a group room (server change `audio-speaker-reconnect-restore-and-balance`)
         audioRoomSpeakerVolume: '/audio/rooms/{roomId}/speakers/{playerId}/volume',
