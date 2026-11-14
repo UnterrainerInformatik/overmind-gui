@@ -80,3 +80,17 @@ opsx change with the server once both users agree. Nothing is implemented yet:
 - **Open album → `GET /audio/albums/tracks?uri=<albumUri>`** → `{items: [AudioTrackJson]}` (same
   format as playlist tracks), via MA `music/albums/album_tracks`. Unknown URI gives 404, missing
   uri gives 400.
+
+Final server API (server change `audio-playlist-start-at-track`, proposed 2026-11-14, not built
+yet; the server's live MA test is its task 1):
+
+- `playback.sourceUri` + `playback.shuffle`; `playlistId` is removed. `sourceUri` is set to null
+  on a new playMedia or clear, on enqueue, when the MA queue no longer matches, and on a restart.
+- `playMedia {uri, startIndex?, shuffle?}`: `startIndex` is 0-based and allowed only for
+  `library://playlist/<id>`; an invalid value gives 400.
+- Album tracks: **`GET /audio/albums/{id}/tracks`** → `{items: [Track]}` (path id, like
+  `/audio/artists/{id}/tracks`; unknown id gives 404). Album search hits carry `id`, but the
+  GUI's search normalization currently keeps only `{name, artist, uri, imageUrl}`, so it must
+  keep `id` too.
+- MA leaves out unavailable tracks (`available: false`) when it loads a playlist. From such a
+  track on, `queueIndex` no longer equals the row, so fall back to `track.uri` as with shuffle.
