@@ -167,10 +167,13 @@ time: "Web (Firefox on Linux)"):
   remembered but missing player, the GUI shows "not connected" itself (or falls back to the
   main group, to decide in the propose step).
 
-Still open (user):
+Decisions (user, 2026-11-14):
 
-- Browsers only, or also the MA mobile app / PWA?
-- Naming: MA's name ("Web (Firefox on Linux)", same for two identical machines) unless renamed
-  in MA, or something of our own?
-- A remembered web player that is gone: fall back to the main group silently, or show it as
-  "not connected" in the bar until it comes back?
+- **Browsers and the MA mobile app / PWA** all count: use the full model set
+  {"Web Player", "Web Browser", "Mobile Application", "PWA"}.
+- **Name from MA** (`name`, renamable there). No names of our own: the only identity is the
+  id the browser keeps in its localStorage (no MAC or similar), which is too unstable to hang
+  our own names on.
+- **A remembered web player that is gone → silently fall back to the main group**, like a
+  vanished room. Nothing says "not connected". When the same id comes back, the stored
+  `'player:<id>'` selects it again.
