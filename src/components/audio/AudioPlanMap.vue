@@ -166,6 +166,8 @@ const PX_PER_LEVEL = 2
 const HATCH_STEP_PX = 6
 const UNAVAILABLE_COLOR = '#9E9E9E'
 const LINKED_COLOR = '#FFB300'
+/** Outline of grouped rooms in the group tool; light, so it stands out on the main group's dark fill. */
+const GROUPED_OUTLINE_COLOR = '#ECEFF1'
 // estimated width of one character of a room name at 12 px
 const CHAR_PX = 7
 
@@ -316,7 +318,7 @@ export default {
         return { color: LINKED_COLOR, width: 3 }
       }
       if (this.tool === 'group' && (room.grouped || room.pinned) && room.available) {
-        return { color: MAIN_GROUP_COLOR, width: 1.5 }
+        return { color: GROUPED_OUTLINE_COLOR, width: 1.5 }
       }
       return null
     },

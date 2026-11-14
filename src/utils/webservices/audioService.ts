@@ -201,13 +201,26 @@ export interface AudioStation {
 }
 
 /**
- * The main group's own colour. Room colours are expected to be saturated, so a
- * white-ish neutral stays apart from them; the bar shows a group icon with it
- * as well, in case a room is ever given something close.
+ * The main group's own colour: a dark indigo, which stays apart from the
+ * saturated room colours (including ROOM_PALETTE's lighter blue) and, unlike
+ * the former light grey, does not glare on the tablet where the main group is
+ * always visible. The bar shows a group icon with it as well, in case a room is
+ * ever given something close.
  */
-export const MAIN_GROUP_COLOR = '#ECEFF1'
+export const MAIN_GROUP_COLOR = '#283593'
 
-const ROOM_PALETTE = ['#E53935', '#1E88E5', '#43A047', '#FB8C00', '#8E24AA', '#00ACC1', '#FDD835', '#6D4C41']
+/**
+ * Fallback room colours, picked by room id. 16 entries, so the 13-15 players of
+ * the house get one each while their ids are consecutive. Neighbours differ in
+ * hue, and none is close to MAIN_GROUP_COLOR, the unavailable grey or the light
+ * link's amber.
+ */
+const ROOM_PALETTE = [
+  '#E53935', '#1E88E5', '#43A047', '#FB8C00',
+  '#8E24AA', '#00ACC1', '#FDD835', '#6D4C41',
+  '#D81B60', '#00897B', '#C0CA33', '#F48FB1',
+  '#7E57C2', '#A1887F', '#4FC3F7', '#B71C1C'
+]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Raw = any
