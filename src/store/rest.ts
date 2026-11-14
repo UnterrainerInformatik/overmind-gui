@@ -124,6 +124,8 @@ const store = {
         audioRoomLightLinked: '/audio/rooms/{roomId}/lightLinked',
         // guessed, change `kiosk-audio-plan-popup` design D1
         audioRoomManualMuted: '/audio/rooms/{roomId}/manualMuted',
+        // one speaker of a group room (server change `audio-speaker-reconnect-restore-and-balance`)
+        audioRoomSpeakerVolume: '/audio/rooms/{roomId}/speakers/{playerId}/volume',
         audioTargetCommand: '/audio/targets/{targetId}/{command}',
         audioTargetSeek: '/audio/targets/{targetId}/seek',
         audioTargetVolume: '/audio/targets/{targetId}/volume',

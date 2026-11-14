@@ -13,6 +13,7 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioRoomVolume     {level}  0..100
  *   PUT  audioRoomLightLinked {linked}
  *   PUT  audioRoomManualMuted {muted}   (guessed, see below)
+ *   PUT  audioRoomSpeakerVolume {level} 0..100, one speaker of a group room
  *   POST audioTargetCommand           play|pause|next|previous
  *   POST audioTargetSeek     {position} seconds
  *   PUT  audioTargetVolume   {level}  0..100
@@ -116,6 +117,22 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   gives no web players (today's server), so it does not invalidate the
  *   state; entries without a target id are dropped; the name falls back to
  *   the id. Web players are always solo and never grouped.
+ * - A room's speakers and balance (openspec change
+ *   `kiosk-audio-plan-balance-tool`; built by java-overmind-server change
+ *   `audio-speaker-reconnect-restore-and-balance`, capability
+ *   `audio-speaker-balance`):
+ *
+ *     AudioState.rooms[] += {
+ *       speakers: [{ playerId: string, name: string, available: boolean, volume: number }],
+ *       balanceSupported: boolean            // a group room with at least two speakers
+ *     }
+ *
+ *     PUT audioRoomSpeakerVolume {level} -> 204, 409 not a group room / speaker
+ *                                           unavailable, 404 unknown speaker
+ *
+ *   Entries without a string `playerId` are dropped, the name falls back to
+ *   the id, an unknown volume is null. Missing fields (an older server) give
+ *   `speakers: []` and `balanceSupported: false`.
  */
 
 export type AudioPlaybackStatus = 'playing' | 'paused' | 'idle'
@@ -176,6 +193,19 @@ export interface AudioRoom {
   color: string;
   /** the room's lights as configured, groups not expanded; empty when unknown */
   lights: AudioLightRef[];
+  /** the room's MA players; empty when unknown */
+  speakers: AudioSpeaker[];
+  /** the server can set the speakers' levels one by one */
+  balanceSupported: boolean;
+}
+
+/** One MA player of a group room, in the server's order. */
+export interface AudioSpeaker {
+  playerId: string;
+  name: string;
+  available: boolean;
+  /** 0..100, null when unknown */
+  volume: number | null;
 }
 
 /** A room-less MA player (browser tab, MA app or PWA), always solo. */
@@ -304,6 +334,10 @@ export class AudioService {
 
   public async setRoomVolume (roomId: string | number, level: number): Promise<void> {
     return axiosUtils.putToPath(this.server, 'audioRoomVolume', { roomId }, () => ({ level: Math.round(level) }))
+  }
+
+  public async setSpeakerVolume (roomId: string | number, playerId: string, level: number): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioRoomSpeakerVolume', { roomId, playerId }, () => ({ level: Math.round(level) }))
   }
 
   public async command (targetId: string, command: AudioCommand): Promise<void> {
@@ -488,8 +522,30 @@ export class AudioService {
       volume: this.numberOrNull(r.volume),
       playback: this.normalizePlayback(r.playback),
       color: typeof r.color === 'string' && r.color.trim() !== '' ? r.color : this.paletteColor(r.id),
-      lights: this.normalizeLights(r.lights != null ? r.lights : r.lightApplianceIds)
+      lights: this.normalizeLights(r.lights != null ? r.lights : r.lightApplianceIds),
+      speakers: this.normalizeSpeakers(r.speakers),
+      balanceSupported: r.balanceSupported === true
     }
+  }
+
+  /** See the contract above. */
+  private normalizeSpeakers (raw: Raw): AudioSpeaker[] {
+    if (!Array.isArray(raw)) {
+      return []
+    }
+    const speakers: AudioSpeaker[] = []
+    for (const s of raw) {
+      if (!s || typeof s !== 'object' || typeof s.playerId !== 'string' || s.playerId === '') {
+        continue
+      }
+      speakers.push({
+        playerId: s.playerId,
+        name: `${s.name || s.playerId}`,
+        available: s.available !== false,
+        volume: this.numberOrNull(s.volume)
+      })
+    }
+    return speakers
   }
 
   /** See the contract above; entries that name no appliance are dropped. */

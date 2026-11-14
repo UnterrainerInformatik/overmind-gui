@@ -118,6 +118,7 @@
           <v-icon v-if="tool === 'group' && r.room.pinned" small class="audio-plan-mark-pin">push_pin</v-icon>
           <v-icon v-if="tool === 'light' && r.room.lightLinked" small class="audio-plan-mark-bulb">lightbulb</v-icon>
           <span v-if="tool === 'volume' && levelOf(r.room) !== null" class="audio-plan-mark-level">{{ levelOf(r.room) }}</span>
+          <v-icon v-if="tool === 'balance' && balanceOf(r.room)" small class="audio-plan-mark-balance">tune</v-icon>
         </div>
       </div>
 
@@ -136,6 +137,7 @@
           <div v-if="hatchesOf(room).length" class="audio-plan-chip-hatch" :class="hatchesOf(room).map(h => `audio-plan-chip-hatch--${h}`)"></div>
           <v-icon v-if="tool === 'group' && room.pinned" x-small class="audio-plan-mark-pin">push_pin</v-icon>
           <v-icon v-if="(tool === 'light' || tool === 'overview') && room.lightLinked" x-small class="audio-plan-mark-bulb">lightbulb</v-icon>
+          <v-icon v-if="tool === 'balance' && balanceOf(room)" x-small class="audio-plan-mark-balance">tune</v-icon>
           <span class="audio-plan-chip-name">{{ room.name }}</span>
           <span v-if="tool === 'volume' && levelOf(room) !== null" class="audio-plan-mark-level">{{ levelOf(room) }}</span>
         </div>
@@ -159,6 +161,7 @@ import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices
 import { audioCommand } from '@/mixins/audioCommand'
 import { createHeldLevels } from '@/utils/heldLevels'
 import { planAppliances } from '@/utils/audioPlanAppliances'
+import { hasBalance } from '@/utils/audioBalance'
 import { layoutRooms, isSmallOnScreen, PLAN_WIDTH, PLAN_HEIGHT, MIN_TOUCH_PX } from '@/utils/audioPlanGeometry'
 
 const DRAG_THRESHOLD_PX = 6
@@ -168,6 +171,8 @@ const UNAVAILABLE_COLOR = '#9E9E9E'
 const LINKED_COLOR = '#FFB300'
 /** Outline of grouped rooms in the group tool; light, so it stands out on the main group's dark fill. */
 const GROUPED_OUTLINE_COLOR = '#ECEFF1'
+/** Outline of the room whose balance panel is open. */
+const BALANCE_OUTLINE_COLOR = '#4FC3F7'
 // estimated width of one character of a room name at 12 px
 const CHAR_PX = 7
 
@@ -179,7 +184,9 @@ const CHAR_PX = 7
  * no area, or all rooms when the plan or the appliances are missing, are chips
  * that work the same way. Everything shown is the server's state; requests
  * only send, one at a time per room and tool, and the Volume tool's drag is
- * sent live with the shared hold logic (design D6).
+ * sent live with the shared hold logic (design D6). The Balance tool (change
+ * `kiosk-audio-plan-balance-tool`, design D3a) only marks the rooms with a
+ * balance and asks the dialog to open the panel of a tapped one.
  */
 export default {
   name: 'AudioPlanMap',
@@ -189,6 +196,8 @@ export default {
   props: {
     state: { type: Object, required: true },
     tool: { type: String, default: 'overview' },
+    // the room whose balance panel is open, outlined in the Balance tool
+    balanceRoomId: { type: [String, Number], default: null },
     disabled: { type: Boolean, default: false }
   },
 
@@ -288,11 +297,15 @@ export default {
       }
       return room.grouped || room.pinned ? MAIN_GROUP_COLOR : room.color
     },
+    balanceOf (room) {
+      return hasBalance(room)
+    },
     fillOpacityOf (room) {
       if (!room.available) {
         return 0.35
       }
       switch (this.tool) {
+        case 'balance': return hasBalance(room) ? 0.6 : 0.2
         case 'mute': return 0.45
         case 'volume': return 0.25
         case 'light': return room.lightLinked ? 0.6 : 0.25
@@ -314,6 +327,9 @@ export default {
       if (this.pressed && this.pressed.room.id === room.id) {
         return { color: '#FFFFFF', width: 2 }
       }
+      if (this.tool === 'balance' && this.balanceRoomId !== null && `${room.id}` === `${this.balanceRoomId}`) {
+        return { color: BALANCE_OUTLINE_COLOR, width: 3 }
+      }
       if (this.tool === 'light' && room.lightLinked) {
         return { color: LINKED_COLOR, width: 3 }
       }
@@ -330,6 +346,8 @@ export default {
         'audio-plan-room--linked': room.lightLinked,
         'audio-plan-room--manual-muted': room.manualMuted,
         'audio-plan-room--light-muted': room.lightMuted,
+        'audio-plan-room--no-balance': this.tool === 'balance' && !hasBalance(room),
+        'audio-plan-room--balance-open': this.tool === 'balance' && this.balanceRoomId !== null && `${room.id}` === `${this.balanceRoomId}`,
         'audio-plan-room--pressed': !!this.pressed && this.pressed.room.id === room.id
       }
     },
@@ -448,6 +466,12 @@ export default {
           break
         case 'light':
           this.send('light', room, () => audioService.setRoomLightLinked(id, !room.lightLinked))
+          break
+        case 'balance':
+          // opens the panel only; a room without a balance does nothing
+          if (hasBalance(room)) {
+            this.$emit('open-balance', id)
+          }
           break
         default:
           // Volume: a tap without movement sends nothing
@@ -584,9 +608,17 @@ export default {
   white-space: nowrap;
   color: #212121;
 
-  &.audio-plan-room--unavailable {
+  &.audio-plan-room--unavailable,
+  &.audio-plan-room--no-balance {
     opacity: 0.5;
   }
+}
+
+.audio-plan-mark-balance.v-icon {
+  color: #fff !important;
+  padding: 2px;
+  border-radius: 50%;
+  background-color: rgba(33, 33, 33, 0.75);
 }
 
 .audio-plan-mark-name {
@@ -696,6 +728,14 @@ export default {
 
   .audio-plan-map--light &:not(.audio-plan-room--linked) {
     opacity: 0.5;
+  }
+
+  &.audio-plan-room--no-balance {
+    opacity: 0.45;
+  }
+
+  &.audio-plan-room--balance-open {
+    box-shadow: inset 0 0 0 3px #4FC3F7;
   }
 
   .audio-plan-map--group &.audio-plan-room--grouped {

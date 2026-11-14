@@ -40,17 +40,28 @@
           <AudioPlanMap
             :state="state"
             :tool="tool"
+            :balance-room-id="balanceRoom ? balanceRoom.id : null"
             @focus-stream="focusStream"
+            @open-balance="openBalance"
           ></AudioPlanMap>
-          <div ref="strip" class="audio-plan-strip">
-            <AudioStreamCard
-              v-for="stream in streams"
-              :key="stream.key"
-              :stream="stream"
-              :selected="stream.key === selectedKey"
-              :pulse="stream.key === pulseKey"
-              @select="select"
-            ></AudioStreamCard>
+          <div class="audio-plan-bottom">
+            <div ref="strip" class="audio-plan-strip">
+              <AudioStreamCard
+                v-for="stream in streams"
+                :key="stream.key"
+                :stream="stream"
+                :selected="stream.key === selectedKey"
+                :pulse="stream.key === pulseKey"
+                @select="select"
+              ></AudioStreamCard>
+            </div>
+            <!-- over the strip, so the map and the tool bar stay usable (design D2) -->
+            <AudioBalancePanel
+              v-if="balanceRoom"
+              :key="`balance-${balanceRoom.id}`"
+              :room="balanceRoom"
+              @close="closeBalance"
+            ></AudioBalancePanel>
           </div>
         </template>
         <div v-else class="audio-plan-unavailable">
@@ -67,6 +78,8 @@ import { MAIN_GROUP_COLOR, WEB_PLAYER_COLOR } from '@/utils/webservices/audioSer
 import { refreshPlanAppliances } from '@/utils/audioPlanAppliances'
 import AudioPlanMap from '@/components/audio/AudioPlanMap.vue'
 import AudioStreamCard from '@/components/audio/AudioStreamCard.vue'
+import AudioBalancePanel from '@/components/audio/AudioBalancePanel.vue'
+import { hasBalance } from '@/utils/audioBalance'
 
 const PULSE_MS = 1500
 const HISTORY_MARK = 'audioPlanPopup'
@@ -88,7 +101,8 @@ export default {
 
   components: {
     AudioPlanMap,
-    AudioStreamCard
+    AudioStreamCard,
+    AudioBalancePanel
   },
 
   props: {
@@ -104,14 +118,25 @@ export default {
       { name: 'mute', icon: 'volume_off' },
       { name: 'group', icon: 'speaker_group' },
       { name: 'light', icon: 'lightbulb' },
-      { name: 'volume', icon: 'equalizer' }
+      { name: 'volume', icon: 'equalizer' },
+      { name: 'balance', icon: 'tune' }
     ],
-    pulseKey: null
+    pulseKey: null,
+    // the room whose balance panel is open (openspec change `kiosk-audio-plan-balance-tool`, design D2)
+    balanceRoomId: null
   }),
 
   computed: {
     narrow () {
       return this.$vuetify.breakpoint.xsOnly
+    },
+    /** The open panel's room as the state has it now; null once it lost its balance. */
+    balanceRoom () {
+      if (this.balanceRoomId === null || !this.state || this.tool !== 'balance') {
+        return null
+      }
+      const room = this.state.rooms.find(r => `${r.id}` === `${this.balanceRoomId}`)
+      return room && hasBalance(room) ? room : null
     },
     /**
      * The main group, then every solo room that can be a target, then every
@@ -159,6 +184,15 @@ export default {
   },
 
   watch: {
+    tool () {
+      this.closeBalance()
+    },
+    /** Closed for good once the room no longer supports a balance, so it does not come back by itself. */
+    balanceRoom (room) {
+      if (!room) {
+        this.closeBalance()
+      }
+    },
     value: {
       immediate: true,
       handler (open) {
@@ -167,6 +201,7 @@ export default {
           refreshPlanAppliances()
           this.pushHistory()
         } else {
+          this.closeBalance()
           this.popHistory()
           this.clearPulse()
         }
@@ -177,6 +212,12 @@ export default {
   methods: {
     close () {
       this.$emit('input', false)
+    },
+    openBalance (roomId) {
+      this.balanceRoomId = roomId
+    },
+    closeBalance () {
+      this.balanceRoomId = null
     },
     select (key) {
       this.$emit('select', key)
@@ -311,10 +352,17 @@ export default {
   overflow-y: auto;
 }
 
-.audio-plan-strip {
+.audio-plan-bottom {
+  position: relative;
   display: flex;
   flex: 1 0 150px;
   min-height: 150px;
+}
+
+.audio-plan-strip {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
   gap: 8px;
   padding: 8px;
   overflow-x: auto;

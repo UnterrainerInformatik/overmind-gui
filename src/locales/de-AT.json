@@ -146,7 +146,11 @@
 						"mute": "Stumm",
 						"group": "Gruppe",
 						"light": "Licht",
-						"volume": "Lautstärke"
+						"volume": "Lautstärke",
+						"balance": "Balance"
+					},
+					"balance": {
+						"speakerUnavailable": "nicht verfügbar"
 					},
 					"startFromBar": "Über die Leiste eine Auswahl starten",
 					"selected": "Gewählt",

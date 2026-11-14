@@ -146,7 +146,11 @@
 						"mute": "Mute",
 						"group": "Group",
 						"light": "Light",
-						"volume": "Volume"
+						"volume": "Volume",
+						"balance": "Balance"
+					},
+					"balance": {
+						"speakerUnavailable": "not available"
 					},
 					"startFromBar": "Start a selection from the bar",
 					"selected": "Selected",
