@@ -57,3 +57,23 @@ Findings (checked 2026-11-14, code + read-only `GET /audio/state` on the live se
 - **Open album:** there is no album-tracks endpoint (`audioSearch` returns albums as
   `{name, artist, uri, imageUrl}` only). Needs a server route, e.g. `GET /audio/albums/tracks?uri=`
   → `{items: [Track]}` (MA `music/albums/album_tracks`). Coordinate with the server session.
+
+Server session answers (2026-11-14). All three need a server change, which will be one joint
+opsx change with the server once both users agree. Nothing is implemented yet:
+
+- **Marking → `playback.sourceUri` + `playback.shuffle`** (GUI asked for this instead of
+  `playlistId`; `playlistId` is hard-coded null today and the GUI may drop it). The server
+  remembers the URI of the last `playMedia` per queue and resets it to null on clear, on a
+  `playMedia` with another URI, on enqueue, or when the queue is replaced from outside, e.g. the
+  MA UI (heuristic via `PlaylistQueues.match`). It may be null after a server restart. GUI rule:
+  mark a row when `sourceUri == playlist.uri` and `queueIndex == row`; with `shuffle` on, fall back
+  to `track.uri`. If null or unsure, mark nothing.
+- **Start from a track → `playMedia {uri, startIndex}`** (0-based). The server reads the playlist
+  tracks right before starting and passes the track URI at that position as MA `start_item`.
+  An out-of-range index gives 400. Caveats: with duplicate songs MA probably starts at the
+  first occurrence, and the shuffle behaviour plus MA version support for `start_item` are still
+  to be checked on the live MA by the server session. **Do not** use the
+  `playMedia` + `playQueueIndex` workaround.
+- **Open album → `GET /audio/albums/tracks?uri=<albumUri>`** → `{items: [AudioTrackJson]}` (same
+  format as playlist tracks), via MA `music/albums/album_tracks`. Unknown URI gives 404, missing
+  uri gives 400.
