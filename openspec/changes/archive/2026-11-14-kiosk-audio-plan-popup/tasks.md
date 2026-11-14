@@ -40,4 +40,4 @@
 
 - [x] 8.1 `npm run lint` and the production build (`npm run build`, which type-checks unlike the dev server)
 - [x] 8.2 Headless Chrome at 1020 × 590, 1280 × 600 and 390 × 844 against a mocked audio state and appliance list: every scenario of `kiosk-audio-plan-popup`, plus the modified `kiosk-audio-bar` and `kiosk-light-and-sound` scenarios
-- [ ] 8.3 Once the server change `audio-desired-state-and-manual-mute` is deployed: against the real server on a quiet room, toggle manual mute, group and light link and drag the volume, and check the state follows; put every room back as it was afterwards
+- [x] 8.3 Once the server change `audio-desired-state-and-manual-mute` is deployed: against the real server on a quiet room, toggle manual mute, group and light link and drag the volume, and check the state follows; put every room back as it was afterwards
