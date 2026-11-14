@@ -30,7 +30,7 @@
             :patternTransform="`rotate(${h.angle})`"
           >
             <rect x="0" y="0" :width="h.dark / scale" :height="hatchStep" :fill="h.darkColor"></rect>
-            <rect :x="h.dark / scale" y="0" :width="h.light / scale" :height="hatchStep" :fill="h.lightColor"></rect>
+            <rect :x="h.dark / scale" y="0" :width="h.line / scale" :height="hatchStep" :fill="h.color"></rect>
           </pattern>
           <clipPath v-for="r in placed" :id="clipId(r.room)" :key="`clip-${r.room.id}`">
             <polygon v-for="p in r.geometry.polygons" :key="p.key" :points="p.points.join(',')"></polygon>
@@ -86,7 +86,7 @@
               class="audio-plan-room-hatch"
               :class="`audio-plan-room-hatch--${h}`"
               :points="p.points.join(',')"
-              :fill="`url(#${hatchId(h)})`"
+              :fill="`url(#${hatchId(h, fillOf(r.room))})`"
             ></polygon>
           </template>
           <template v-if="outlineOf(r.room)">
@@ -235,19 +235,23 @@ export default {
     hatchStep () {
       return HATCH_STEP_PX / this.scale
     },
-    /** `╱` is a vertical line turned clockwise, `╲` one turned anticlockwise. */
+    /**
+     * One pattern per hatch kind and room colour: a line in the room's stream
+     * colour beside a dark edge, so it stands out from its own fill.
+     * `╱` is a vertical line turned clockwise, `╲` one turned anticlockwise.
+     */
     hatches () {
       const strong = this.tool === 'mute'
       const line = {
-        dark: strong ? 2.5 : 1.5,
-        light: strong ? 1.5 : 1,
-        darkColor: strong ? 'rgba(0, 0, 0, 0.85)' : 'rgba(0, 0, 0, 0.6)',
-        lightColor: strong ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.6)'
+        dark: strong ? 1.5 : 1,
+        line: strong ? 2.5 : 1.5,
+        darkColor: strong ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.5)'
       }
-      return [
-        { id: this.hatchId('manual'), angle: 45, ...line },
-        { id: this.hatchId('light'), angle: -45, ...line }
-      ]
+      const colors = [...new Set(this.placed.map(r => this.fillOf(r.room)))]
+      return colors.flatMap(color => [
+        { id: this.hatchId('manual', color), angle: 45, color, ...line },
+        { id: this.hatchId('light', color), angle: -45, color, ...line }
+      ])
     },
     draggingVolume () {
       return !!this.pressed && this.pressed.moved && this.pressed.level !== null
@@ -264,8 +268,8 @@ export default {
   },
 
   methods: {
-    hatchId (kind) {
-      return `audio-plan-${this._uid}-hatch-${kind}`
+    hatchId (kind, color) {
+      return `audio-plan-${this._uid}-hatch-${kind}-${color.replace(/[^0-9a-zA-Z]/g, '')}`
     },
     clipId (room) {
       return `audio-plan-${this._uid}-clip-${room.id}`
@@ -733,18 +737,18 @@ export default {
 
   // `╱`: stripes across a gradient running to the bottom right
   &.audio-plan-chip-hatch--manual {
-    background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0 1.5px, rgba(255, 255, 255, 0.6) 1.5px 2.5px, transparent 2.5px 6px);
+    background-image: repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0 1px, var(--audio-plan-chip-color) 1px 2.5px, transparent 2.5px 6px);
   }
 
   // `╲`
   &.audio-plan-chip-hatch--light {
-    background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.6) 0 1.5px, rgba(255, 255, 255, 0.6) 1.5px 2.5px, transparent 2.5px 6px);
+    background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.5) 0 1px, var(--audio-plan-chip-color) 1px 2.5px, transparent 2.5px 6px);
   }
 
   &.audio-plan-chip-hatch--manual.audio-plan-chip-hatch--light {
     background-image:
-      repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.6) 0 1.5px, rgba(255, 255, 255, 0.6) 1.5px 2.5px, transparent 2.5px 6px),
-      repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0 1.5px, rgba(255, 255, 255, 0.6) 1.5px 2.5px, transparent 2.5px 6px);
+      repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.5) 0 1px, var(--audio-plan-chip-color) 1px 2.5px, transparent 2.5px 6px),
+      repeating-linear-gradient(135deg, rgba(0, 0, 0, 0.5) 0 1px, var(--audio-plan-chip-color) 1px 2.5px, transparent 2.5px 6px);
   }
 
   .audio-plan-map--mute & {
