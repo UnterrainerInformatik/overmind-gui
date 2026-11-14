@@ -70,10 +70,13 @@ opsx change with the server once both users agree. Nothing is implemented yet:
   to `track.uri`. If null or unsure, mark nothing.
 - **Start from a track → `playMedia {uri, startIndex}`** (0-based). The server reads the playlist
   tracks right before starting and passes the track URI at that position as MA `start_item`.
-  An out-of-range index gives 400. Caveats: with duplicate songs MA probably starts at the
-  first occurrence, and the shuffle behaviour plus MA version support for `start_item` are still
-  to be checked on the live MA by the server session. **Do not** use the
-  `playMedia` + `playQueueIndex` workaround.
+  An out-of-range index gives 400. **Do not** use the `playMedia` + `playQueueIndex`
+  workaround. From reading the MA 2.10.8 code (not tested live yet): without shuffle,
+  `start_item` drops the preceding tracks, which would break `queueIndex == row`. So without
+  shuffle the server does `clear` → `play_media option=add` → `play_index(startIndex)`, which
+  keeps the full playlist and does not briefly start track 1. With shuffle it uses
+  `start_item`: MA keeps all tracks, pins the chosen one first and shuffles the rest, so the GUI
+  falls back to `track.uri`. The API stays `playMedia {uri, startIndex}`.
 - **Open album → `GET /audio/albums/tracks?uri=<albumUri>`** → `{items: [AudioTrackJson]}` (same
   format as playlist tracks), via MA `music/albums/album_tracks`. Unknown URI gives 404, missing
   uri gives 400.
