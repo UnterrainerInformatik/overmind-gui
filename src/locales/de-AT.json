@@ -107,6 +107,8 @@
 					"tracks": "Titel",
 					"albums": "Alben",
 					"artists": "Künstler",
+					"showAllAlbums": "Alle {count} Alben zeigen",
+					"showAllArtists": "Alle {count} Künstler zeigen",
 					"add": "Hinzufügen",
 					"remove": "Entfernen",
 					"drag": "Zum Verschieben ziehen",

@@ -264,8 +264,11 @@ export interface AudioSearchResult {
 
 export type AudioSearchType = 'track' | 'album' | 'artist'
 
-/** At most this many results are shown per group. */
-const SEARCH_GROUP_LIMIT = 25
+/**
+ * Hits asked for per type: the server's maximum. The GUI renders the answer
+ * in parts (openspec change `kiosk-search-all-results`, design D1).
+ */
+const SEARCH_LIMIT = 500
 
 /**
  * At most this many radio stations are shown (mirrors the server's
@@ -446,19 +449,21 @@ export class AudioService {
     return axiosUtils.postToPath(this.server, 'audioPlaylistTracksMove', { playlistId }, () => ({ from, to }))
   }
 
-  /** Results without a `uri` are dropped, and each group is cut to 25. */
+  /**
+   * Asks for up to `SEARCH_LIMIT` hits per type; only results without a `uri`
+   * are dropped, how much is shown is up to the caller.
+   */
   public async search (query: string, types: AudioSearchType[]): Promise<AudioSearchResult> {
-    const params = `q=${encodeURIComponent(query.trim())}&types=${types.join(',')}`
+    const params = `q=${encodeURIComponent(query.trim())}&types=${types.join(',')}&limit=${SEARCH_LIMIT}`
     const response = await axiosUtils.getResponse(this.server, 'audioSearch', params) || {}
     const group = (plural: string, singular: string): Raw[] =>
       this.listOf(response[plural] != null ? response[plural] : response[singular]).filter(i => i && i.uri)
     return {
       tracks: group('tracks', 'track')
         .map(t => this.normalizeTrack(t))
-        .filter((t): t is AudioTrack => t !== null)
-        .slice(0, SEARCH_GROUP_LIMIT),
-      albums: group('albums', 'album').slice(0, SEARCH_GROUP_LIMIT).map(i => this.normalizeSearchItem(i)),
-      artists: group('artists', 'artist').slice(0, SEARCH_GROUP_LIMIT).map(i => this.normalizeSearchItem(i))
+        .filter((t): t is AudioTrack => t !== null),
+      albums: group('albums', 'album').map(i => this.normalizeSearchItem(i)),
+      artists: group('artists', 'artist').map(i => this.normalizeSearchItem(i))
     }
   }
 

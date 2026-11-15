@@ -33,7 +33,7 @@
     </div>
     <v-progress-linear class="audio-search-loading" :active="loading" indeterminate height="4"></v-progress-linear>
 
-    <div class="audio-search-scroll">
+    <div ref="scroll" class="audio-search-scroll">
       <div v-if="!artist && !album && trimmed.length < 2" class="pa-4 audio-editor-message audio-search-hint">{{ $t('page.kiosk.audio.editor.searchHint') }}</div>
       <div v-else-if="failed" class="pa-4 audio-editor-message audio-search-failed">
         <div>{{ $t('page.kiosk.audio.editor.loadFailed') }}</div>
@@ -41,10 +41,72 @@
       </div>
       <div v-else-if="answered && isEmpty" class="pa-4 audio-editor-message audio-search-none">{{ $t('page.kiosk.audio.editor.noResults') }}</div>
       <template v-else>
+        <template v-if="results.albums.length > 0">
+          <div class="audio-queue-section text-overline px-4 pt-2">{{ $t('page.kiosk.audio.editor.albums') }}</div>
+          <div
+            v-for="(album, index) in shownAlbums"
+            :key="`a-${index}-${album.uri}`"
+            class="audio-search-result audio-search-album"
+            :class="{ 'audio-search-result--disabled': busy }"
+            :data-uri="album.uri"
+            @click="add(album.uri)"
+          >
+            <v-img v-if="album.imageUrl" :src="album.imageUrl" class="audio-queue-cover audio-search-dim" width="40" height="40" contain></v-img>
+            <div v-else class="audio-queue-cover audio-queue-cover--empty audio-search-dim"><v-icon small>album</v-icon></div>
+            <div class="audio-queue-text audio-search-dim">
+              <div class="audio-queue-title">{{ album.name }}</div>
+              <div v-if="album.artist" class="audio-queue-artist text-caption">{{ album.artist }}</div>
+            </div>
+            <v-icon class="ml-2 audio-search-dim">playlist_add</v-icon>
+            <v-btn
+              v-if="album.id !== null"
+              icon
+              class="audio-editor-icon audio-search-open-album ml-1"
+              :aria-label="$t('page.kiosk.audio.editor.openAlbum')"
+              :title="tooltips ? $t('page.kiosk.audio.editor.openAlbum') : null"
+              @click.stop="openAlbum(album)"
+            >
+              <v-icon>chevron_right</v-icon>
+            </v-btn>
+          </div>
+          <div
+            v-if="shownAlbums.length < results.albums.length"
+            class="audio-search-result audio-search-show-all audio-search-show-all--albums"
+            @click="expand('albums')"
+          >
+            <span class="audio-queue-text">{{ $t('page.kiosk.audio.editor.showAllAlbums', { count: results.albums.length }) }}</span>
+            <v-icon class="ml-2">expand_more</v-icon>
+          </div>
+        </template>
+        <template v-if="results.artists.length > 0">
+          <div class="audio-queue-section text-overline px-4 pt-2">{{ $t('page.kiosk.audio.editor.artists') }}</div>
+          <div
+            v-for="(item, index) in shownArtists"
+            :key="`r-${index}-${item.uri}`"
+            class="audio-search-result audio-search-artist-result"
+            :data-uri="item.uri"
+            @click="drillInto(item)"
+          >
+            <v-img v-if="item.imageUrl" :src="item.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
+            <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>person</v-icon></div>
+            <div class="audio-queue-text">
+              <div class="audio-queue-title">{{ item.name }}</div>
+            </div>
+            <v-icon class="ml-2">chevron_right</v-icon>
+          </div>
+          <div
+            v-if="shownArtists.length < results.artists.length"
+            class="audio-search-result audio-search-show-all audio-search-show-all--artists"
+            @click="expand('artists')"
+          >
+            <span class="audio-queue-text">{{ $t('page.kiosk.audio.editor.showAllArtists', { count: results.artists.length }) }}</span>
+            <v-icon class="ml-2">expand_more</v-icon>
+          </div>
+        </template>
         <template v-if="results.tracks.length > 0">
           <div class="audio-queue-section text-overline px-4 pt-2">{{ $t('page.kiosk.audio.editor.tracks') }}</div>
           <div
-            v-for="(track, index) in results.tracks"
+            v-for="(track, index) in shownTracks"
             :key="`t-${index}-${track.uri}`"
             class="audio-search-result audio-search-track"
             :class="{
@@ -86,52 +148,7 @@
               ></AudioSeekSlider>
             </div>
           </div>
-        </template>
-        <template v-if="results.albums.length > 0">
-          <div class="audio-queue-section text-overline px-4 pt-2">{{ $t('page.kiosk.audio.editor.albums') }}</div>
-          <div
-            v-for="(album, index) in results.albums"
-            :key="`a-${index}-${album.uri}`"
-            class="audio-search-result audio-search-album"
-            :class="{ 'audio-search-result--disabled': busy }"
-            :data-uri="album.uri"
-            @click="add(album.uri)"
-          >
-            <v-img v-if="album.imageUrl" :src="album.imageUrl" class="audio-queue-cover audio-search-dim" width="40" height="40" contain></v-img>
-            <div v-else class="audio-queue-cover audio-queue-cover--empty audio-search-dim"><v-icon small>album</v-icon></div>
-            <div class="audio-queue-text audio-search-dim">
-              <div class="audio-queue-title">{{ album.name }}</div>
-              <div v-if="album.artist" class="audio-queue-artist text-caption">{{ album.artist }}</div>
-            </div>
-            <v-icon class="ml-2 audio-search-dim">playlist_add</v-icon>
-            <v-btn
-              v-if="album.id !== null"
-              icon
-              class="audio-editor-icon audio-search-open-album ml-1"
-              :aria-label="$t('page.kiosk.audio.editor.openAlbum')"
-              :title="tooltips ? $t('page.kiosk.audio.editor.openAlbum') : null"
-              @click.stop="openAlbum(album)"
-            >
-              <v-icon>chevron_right</v-icon>
-            </v-btn>
-          </div>
-        </template>
-        <template v-if="results.artists.length > 0">
-          <div class="audio-queue-section text-overline px-4 pt-2">{{ $t('page.kiosk.audio.editor.artists') }}</div>
-          <div
-            v-for="(item, index) in results.artists"
-            :key="`r-${index}-${item.uri}`"
-            class="audio-search-result audio-search-artist-result"
-            :data-uri="item.uri"
-            @click="drillInto(item)"
-          >
-            <v-img v-if="item.imageUrl" :src="item.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
-            <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>person</v-icon></div>
-            <div class="audio-queue-text">
-              <div class="audio-queue-title">{{ item.name }}</div>
-            </div>
-            <v-icon class="ml-2">chevron_right</v-icon>
-          </div>
+          <div v-if="moreTracks" ref="more" class="audio-search-more"></div>
         </template>
       </template>
     </div>
@@ -146,6 +163,12 @@ import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
 
 const DEBOUNCE_MILLIS = 400
 const MIN_QUERY = 2
+/** Albums and artists shown before "show all" (change `kiosk-search-all-results`, D2). */
+const COLLAPSED_COUNT = 5
+/** Tracks added per page while scrolling (D3). */
+const TRACK_PAGE = 50
+/** How close to the end of the list the next page is added, in px. */
+const MORE_MARGIN = 200
 
 const emptyResults = () => ({ tracks: [], albums: [], artists: [] })
 
@@ -166,6 +189,13 @@ const emptyResults = () => ({ tracks: [], albums: [], artists: [] })
  * design D5): like the artist drill-in, its tracks replace the results under a
  * closable chip. It remembers the artist it was opened from, so closing it
  * returns to the results it came from; typing leaves both.
+ *
+ * The search asks for every hit the server gives (change
+ * `kiosk-search-all-results`) and shows albums, then artists, then tracks.
+ * Albums and artists show their first five, a "show all" row opens the rest.
+ * Tracks are rendered fifty at a time: a sentinel after the last one adds the
+ * next page when it comes near the view (IntersectionObserver, or a scroll
+ * listener where that is missing). Every new `results` starts collapsed again.
  */
 export default {
   name: 'AudioLibrarySearch',
@@ -192,7 +222,9 @@ export default {
     failed: false,
     answered: false,
     sequence: 0,
-    timer: null
+    timer: null,
+    expanded: { albums: false, artists: false },
+    trackPages: 1
   }),
 
   computed: {
@@ -217,6 +249,18 @@ export default {
     existing () {
       return new Set(this.existingUris)
     },
+    shownAlbums () {
+      return this.expanded.albums ? this.results.albums : this.results.albums.slice(0, COLLAPSED_COUNT)
+    },
+    shownArtists () {
+      return this.expanded.artists ? this.results.artists : this.results.artists.slice(0, COLLAPSED_COUNT)
+    },
+    shownTracks () {
+      return this.results.tracks.slice(0, this.trackPages * TRACK_PAGE)
+    },
+    moreTracks () {
+      return this.shownTracks.length < this.results.tracks.length
+    },
     isEmpty () {
       return this.results.tracks.length === 0 && this.results.albums.length === 0 && this.results.artists.length === 0
     }
@@ -227,14 +271,78 @@ export default {
       this.artist = null
       this.album = null
       this.schedule()
+    },
+    // Every new answer, drill-in, album and leaving one replaces `results`.
+    results () {
+      this.expanded = { albums: false, artists: false }
+      this.trackPages = 1
+      this.watchMore()
+    },
+    'shownTracks.length' () {
+      this.watchMore()
+    }
+  },
+
+  mounted () {
+    if (window.IntersectionObserver) {
+      this.observer = new window.IntersectionObserver(this.onMoreIntersect, {
+        root: this.$refs.scroll,
+        rootMargin: `0px 0px ${MORE_MARGIN}px 0px`
+      })
+    } else {
+      this.onScroll = () => this.checkMore()
+      this.$refs.scroll.addEventListener('scroll', this.onScroll, { passive: true })
     }
   },
 
   beforeDestroy () {
     clearTimeout(this.timer)
+    if (this.observer) {
+      this.observer.disconnect()
+      this.observer = null
+    }
+    if (this.onScroll && this.$refs.scroll) {
+      this.$refs.scroll.removeEventListener('scroll', this.onScroll)
+    }
   },
 
   methods: {
+    expand (group) {
+      this.expanded = { ...this.expanded, [group]: true }
+    },
+    /**
+     * (Re-)watches the sentinel after a render. Observing anew delivers a fresh
+     * entry, so a sentinel that is still in view after a page adds the next.
+     */
+    watchMore () {
+      this.$nextTick(() => {
+        if (this.observer) {
+          this.observer.disconnect()
+          if (this.$refs.more) {
+            this.observer.observe(this.$refs.more)
+          }
+        } else {
+          this.checkMore()
+        }
+      })
+    },
+    onMoreIntersect (entries) {
+      if (entries.some(e => e.isIntersecting)) {
+        this.nextTrackPage()
+      }
+    },
+    /** Scroll-listener fallback without IntersectionObserver. */
+    checkMore () {
+      const scroll = this.$refs.scroll
+      if (scroll && scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - MORE_MARGIN) {
+        this.nextTrackPage()
+      }
+    },
+    nextTrackPage () {
+      if (this.moreTracks) {
+        this.trackPages++
+      }
+    },
     schedule () {
       clearTimeout(this.timer)
       // Anything already in flight is stale from this keystroke on.
@@ -460,6 +568,24 @@ export default {
       font-weight: bold;
     }
   }
+}
+
+.audio-search-show-all {
+  font-weight: 500;
+
+  &.audio-search-show-all--albums,
+  &.audio-search-show-all--albums .v-icon {
+    color: var(--audio-album-color);
+  }
+
+  &.audio-search-show-all--artists,
+  &.audio-search-show-all--artists .v-icon {
+    color: var(--audio-filter-color);
+  }
+}
+
+.audio-search-more {
+  height: 1px;
 }
 
 .audio-search-track {

@@ -107,6 +107,8 @@
 					"tracks": "Tracks",
 					"albums": "Albums",
 					"artists": "Artists",
+					"showAllAlbums": "Show all {count} albums",
+					"showAllArtists": "Show all {count} artists",
 					"add": "Add",
 					"remove": "Remove",
 					"drag": "Drag to move",
