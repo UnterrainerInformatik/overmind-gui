@@ -353,10 +353,72 @@ export default {
 
 <style lang="scss">
 .audio-library-search {
+  // Filter colour (search field, artists) and album colour (change
+  // `kiosk-search-filter-colours`). Tints are separate rgba values, because
+  // color-mix() is missing on older kiosk browsers.
+  --audio-filter-color: #00897b;
+  --audio-filter-tint: rgba(0, 137, 123, 0.1);
+  --audio-album-color: #ef6c00;
+  --audio-album-tint: rgba(239, 108, 0, 0.1);
+
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+}
+
+.theme--dark .audio-library-search,
+.audio-library-search.theme--dark {
+  --audio-filter-color: #4db6ac;
+  --audio-filter-tint: rgba(77, 182, 172, 0.14);
+  --audio-album-color: #ffb74d;
+  --audio-album-tint: rgba(255, 183, 77, 0.14);
+}
+
+// The search field always wears the filter colour, idle and focused. Vuetify
+// sets the focused colour with `primary--text !important`.
+.audio-search-field.v-text-field--outlined {
+  fieldset {
+    border-color: var(--audio-filter-color) !important;
+  }
+
+  .v-label,
+  .v-input__prepend-inner .v-icon {
+    color: var(--audio-filter-color) !important;
+  }
+}
+
+.audio-search-artist-result {
+  background-color: var(--audio-filter-tint);
+  box-shadow: inset 4px 0 0 var(--audio-filter-color);
+}
+
+.audio-search-album {
+  background-color: var(--audio-album-tint);
+  box-shadow: inset 4px 0 0 var(--audio-album-color);
+}
+
+.v-chip.audio-search-artist,
+.v-chip.audio-search-album-chip {
+  border: 1px solid;
+}
+
+.v-chip.audio-search-artist {
+  background-color: var(--audio-filter-tint) !important;
+  border-color: var(--audio-filter-color);
+
+  .v-icon {
+    color: var(--audio-filter-color) !important;
+  }
+}
+
+.v-chip.audio-search-album-chip {
+  background-color: var(--audio-album-tint) !important;
+  border-color: var(--audio-album-color);
+
+  .v-icon {
+    color: var(--audio-album-color) !important;
+  }
 }
 
 .audio-search-scroll {
