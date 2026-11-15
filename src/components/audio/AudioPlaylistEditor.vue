@@ -42,7 +42,6 @@
             :busy="busy"
             :show-add-button="!wide"
             :play-target="playTarget"
-            :shuffle="shuffle"
             @back="backToList"
             @rename="promptRename"
             @delete="confirmDelete = true"
@@ -51,7 +50,6 @@
             @add="view = 'search'"
             @retry="loadTracks"
             @play-row="playRow"
-            @shuffle="setShuffle"
             @drag-start="onDragStart"
             @drag-end="onDragEnd"
           ></AudioPlaylistTracks>
@@ -96,7 +94,6 @@ import { singleton as audioService } from '@/utils/webservices/audioService'
 import { SseClient } from '@/utils/sseClient'
 import { acquire, release } from '@/utils/audioState'
 import { readStoredTarget, resolveTarget } from '@/utils/audioTarget'
-import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
 import { audioCommand } from '@/mixins/audioCommand'
 import { playingRow } from '@/utils/audioPlaying'
 import AudioPlaylistList from '@/components/audio/AudioPlaylistList.vue'
@@ -119,8 +116,10 @@ import AudioNamePrompt from '@/components/audio/AudioNamePrompt.vue'
  *
  * Change `kiosk-playlist-editor-extras`: the open playlist can be played on
  * the device's audio target (the `target` prop from the queue popup, else the
- * stored target resolved against the shared audio state, design D3) with the
- * device's shuffle choice (D2). Since change `kiosk-playlist-track-play`
+ * stored target resolved against the shared audio state, design D3). Since
+ * change `audio-shuffle-on-player` no `shuffle` is sent: the target's own
+ * shuffle mode applies, switched on the bar or in the queue popup. Since
+ * change `kiosk-playlist-track-play`
  * (design D3) playing starts from a row: the whole playlist from that row on,
  * or pause/resume on the row the target is on. While open, the server's
  * `audio-playlist-changed` event and every SSE reconnect reload the list and,
@@ -158,7 +157,6 @@ export default {
     busy: false,
     prompt: { open: false, mode: 'create' },
     confirmDelete: false,
-    shuffleStore: audioShuffle,
     audioStore: null,
     selection: 'main',
     dragging: false,
@@ -175,9 +173,6 @@ export default {
     },
     trackUris () {
       return this.tracks.map(t => t.uri).filter(uri => !!uri)
-    },
-    shuffle () {
-      return this.shuffleStore.on
     },
     /** Where play sends the playlist: the target the audio bar would control on this device. */
     playTarget () {
@@ -340,9 +335,6 @@ export default {
       })
     },
 
-    setShuffle (on) {
-      setShuffle(on)
-    },
     playRow (index) {
       const target = this.playTarget
       const playlist = this.openPlaylist
@@ -358,8 +350,7 @@ export default {
         this.runAudioCommand(() => audioService.command(targetId, command))
         return
       }
-      const shuffle = this.shuffle
-      this.runAudioCommand(() => audioService.playMedia(targetId, uri, shuffle, index), 'page.kiosk.audio.editor.playFailed')
+      this.runAudioCommand(() => audioService.playMedia(targetId, uri, index), 'page.kiosk.audio.editor.playFailed')
     },
 
     startLive () {

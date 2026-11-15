@@ -83,6 +83,12 @@
     >
       <v-icon>skip_next</v-icon>
     </v-btn>
+    <AudioShuffleToggle
+      v-if="!narrow"
+      class="kiosk-audio-player-btn kiosk-audio-player-shuffle"
+      :target="target"
+      :disabled="!available"
+    ></AudioShuffleToggle>
 
     <AudioSeekSlider
       ref="seek"
@@ -169,6 +175,7 @@ import AudioPlanDialog from '@/components/audio/AudioPlanDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
 import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
+import AudioShuffleToggle from '@/components/audio/AudioShuffleToggle.vue'
 
 // How long a released volume slider keeps its value while no newer state arrives.
 const HOLD_MS = 3000
@@ -181,7 +188,9 @@ const HOLD_MS = 3000
  * their effect, except for the two sliders, which hold the released value
  * until that state arrives (design.md D7). The seek slider is the shared
  * `AudioSeekSlider` (openspec change `kiosk-search-track-preview`). The volume slider sends its level
- * live while dragged (openspec change `kiosk-live-volume`).
+ * live while dragged (openspec change `kiosk-live-volume`). The shuffle toggle
+ * is the player's mode, shared with the queue popup (change
+ * `audio-shuffle-on-player`).
  */
 export default {
   name: 'KioskAudioBar',
@@ -192,7 +201,8 @@ export default {
     AudioPlanDialog,
     AudioQueueDialog,
     AudioRadioDialog,
-    AudioSeekSlider
+    AudioSeekSlider,
+    AudioShuffleToggle
   },
 
   data: () => ({

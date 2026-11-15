@@ -45,40 +45,32 @@ Open points for the explore/propose step (needs the server session):
 
 ---
 
-## "Zufällig" gehört zum Player, nicht zur Playlist
+## Bibliothekssuche: alle Treffer, Alben → Künstler → Titel, mit Nachladen
 
-**Date:** 2026-11-15 · **Where:** Kiosk audio — `AudioPlaylistTracks` (playlist page), `AudioQueueDialog` (queue popup, playlists column), `KioskAudioBar`
+**Date:** 2026-11-15 · **Where:** Kiosk audio (`AudioLibrarySearch` im Playlist-Editor) + Server
 
-Wish (user, translated): The "Zufällig: aus/an" button on the playlist page suggests that shuffle
-is a **property of the playlist**. It is actually a **player setting**, so it belongs on the
-**player bar** or on the **queue (Warteliste) page**.
+Wish (user, translated): the title search still does not show every title that matches the
+query; long lists stop at around "C". Idea: show **albums first, then artists, then titles**,
+as a list that **loads more** while scrolling.
 
-Findings (code, 2026-11-15):
+Found:
 
-- Today the button is neither: it is a **per-device preference** (`utils/audioShuffle.ts`,
-  `localStorage` key `kioskAudioShuffle`), shared by the playlist page (`audio-tracks-shuffle`) and
-  the queue popup's playlists column (`audio-queue-shuffle`). It only takes effect when a playlist
-  is **started** — sent as `shuffle` in `POST audioTargetPlayMedia`, where the server switches
-  the target queue's MA shuffle before replacing the queue.
-- The real state lives in the player queue: `playback.shuffle` per target is already in the audio
-  state, but the button does not show it. So it can say "aus" while the player shuffles (set by
-  another device, the MA UI, or an earlier start), and toggling it changes nothing until the next
-  playlist start.
+- The GUI cuts every group at **25** (`SEARCH_GROUP_LIMIT` in `audioService.ts`) and sends no
+  `limit`. Results come sorted by name, so the cut lands at about "C". This is the main cause.
+- The server (`AudioLibrary.search`) returns up to `limit` items per group (default 100, max 500)
+  and merges per-word searches for queries with several words. MA's `music/search` has **no
+  offset**, so it cannot page.
+- Today the GUI shows the groups in the order tracks → albums → artists.
 
-Idea:
+Options for the propose step:
 
-- One shuffle toggle **per target**, bound to that target's `playback.shuffle` and switching it
-  **immediately** on the player (also for the currently playing queue).
-- Place it on the player bar (`KioskAudioBar`, next to play/next) and/or in the queue column of
-  the queue popup; remove it from the playlist page and the playlists column.
-- Playlist starts (`playMedia`) then send no `shuffle` field, so the player's current setting
-  applies; drop the device preference `audioShuffle`.
-
-Open points for the propose step (needs the server session):
-
-- Server route to set shuffle without starting media, e.g. `PUT audioTargetShuffle {on}` (MA
-  `player_queues/shuffle`). Does toggling reshuffle the running queue in MA, and how does that
-  interact with `queueIndex`/marking the playing row (`utils/audioPlaying.ts` falls back to the
-  track URI when shuffled)?
-- Bar vs. queue popup vs. both — bar space on mobile width.
-- Radio: hide/disable the toggle while a radio stream plays?
+1. **Quick fix, GUI only:** drop the 25 cap and send `limit=500`; show albums → artists → tracks;
+   render tracks in pages of e.g. 50 with "load more" / infinite scroll on the client. No server
+   work, but still capped at 500 hits per type and one larger request.
+2. **Real paging (with the server):** a paged route per type on MA's `…/library_items`
+   (`search`, `limit`, `offset`); the GUI loads the next page when the end of the list comes
+   into view. Server draft: java-overmind-server `ai/open-proposals.md`, "Suche: alle Treffer,
+   mit Nachladen".
+- Open: are the albums and artists groups capped too, or only tracks? Does the per-word search
+  survive under option 2? Should a group be collapsible when it is long (e.g. 200 albums before
+  the first title)?

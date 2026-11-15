@@ -132,6 +132,7 @@ const store = {
         audioTargetQueue: '/audio/targets/{targetId}/queue',
         audioTargetQueuePlay: '/audio/targets/{targetId}/queue/play',
         audioTargetPlayMedia: '/audio/targets/{targetId}/playMedia',
+        audioTargetShuffle: '/audio/targets/{targetId}/shuffle',
         audioRadio: '/audio/radio',
         audioPlaylists: '/audio/playlists',
         // The playlist editor (openspec change `kiosk-playlist-editor`), same

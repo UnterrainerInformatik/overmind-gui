@@ -19,7 +19,8 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   PUT  audioTargetVolume   {level}  0..100
  *   GET  audioTargetQueue          -> {items: [Track], currentIndex}
  *   POST audioTargetQueuePlay {index}
- *   POST audioTargetPlayMedia {uri, shuffle?, startIndex?}
+ *   POST audioTargetPlayMedia {uri, startIndex?}
+ *   PUT  audioTargetShuffle   {enabled}   see below
  *   GET  audioRadio                -> {items: [Station]}, at most RADIO_STATIONS
  *   GET  audioPlaylists            -> {items: [Playlist]}
  *
@@ -40,11 +41,10 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *
  * Built server extensions (changes `kiosk-playlist-editor-extras`,
  * `audio-queue-follows-playlist-edits` and `audio-playlist-start-at-track`):
- * - `playMedia` takes an optional `shuffle` boolean. `true` turns the target
- *   queue's shuffle on before replacing the queue (MA `player_queues/shuffle`,
- *   then `player_queues/play_media` with `option: replace`), `false` turns it
- *   off, no field leaves it as it is. The GUI sends it for playlists only, so
- *   radio still sends `{uri}`. A server that does not know it ignores it.
+ * - `playMedia` takes an optional `shuffle` boolean (server keeps accepting
+ *   it), but the GUI no longer sends it (change `audio-shuffle-on-player`):
+ *   shuffle is the player's setting, so a start plays in the target's current
+ *   shuffle mode.
  * - `playMedia` takes an optional `startIndex` (0-based row, playlists only):
  *   the whole playlist is queued and playback starts at that row; 400 with a
  *   `reason` when the row is out of range or unavailable. The per-track play
@@ -63,6 +63,14 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   target's queue in MA because the playlist it plays was edited (server
  *   change `audio-queue-follows-playlist-edits`; `audio-playlist-changed`
  *   follows it). The queue popup reloads the queue on it for its own target.
+ *
+ * **Guessed** until java-overmind-server builds it (change
+ * `audio-shuffle-on-player`, design D1):
+ * - `PUT audioTargetShuffle {enabled: boolean}` switches the target queue's
+ *   shuffle mode at once (MA `player_queues/shuffle`, the same queue
+ *   resolution as `playMedia`). 204; 404 unknown target; 400 when `enabled`
+ *   is missing or not a boolean; 502 with a `reason` when MA fails. The next
+ *   `audio-state` carries the new `shuffle`. Until built it answers 404.
  *
  * The search shape is what the built server sends (`AudioSearchJson`, a type
  * not asked for is null). Also read: the singular keys `track`/`album`/`artist`
@@ -367,21 +375,23 @@ export class AudioService {
   }
 
   /**
-   * Replaces the target's queue with a playlist or a radio station. `shuffle`
-   * and `startIndex` are sent only when given (playlists), see the contract
-   * above.
+   * Replaces the target's queue with a playlist or a radio station.
+   * `startIndex` is sent only when given (playlists); no `shuffle` is sent, so
+   * the target's current shuffle mode applies (see the contract above).
    */
-  public async playMedia (targetId: string, uri: string, shuffle?: boolean, startIndex?: number): Promise<void> {
+  public async playMedia (targetId: string, uri: string, startIndex?: number): Promise<void> {
     return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId }, () => {
-      const body: { uri: string; shuffle?: boolean; startIndex?: number } = { uri }
-      if (shuffle !== undefined) {
-        body.shuffle = shuffle
-      }
+      const body: { uri: string; startIndex?: number } = { uri }
       if (startIndex !== undefined) {
         body.startIndex = startIndex
       }
       return body
     })
+  }
+
+  /** Switches the target queue's shuffle mode at once (guessed route, see above). */
+  public async setShuffle (targetId: string, enabled: boolean): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioTargetShuffle', { targetId }, () => ({ enabled }))
   }
 
   public async getRadio (): Promise<AudioStation[]> {

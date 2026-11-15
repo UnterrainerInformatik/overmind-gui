@@ -30,26 +30,33 @@
 
       <v-card-text class="pa-0 audio-queue-body" :class="{ 'audio-queue-body--wide': wide }">
         <div class="audio-queue-column audio-queue-column--queue">
-          <div v-if="loadingQueue && queue.length === 0" class="pa-4">
-            <v-progress-linear indeterminate></v-progress-linear>
+          <div class="audio-queue-section audio-queue-queue-head px-4 pt-2">
+            <span class="text-overline">{{ $t('page.kiosk.audio.queue') }}</span>
+            <v-spacer></v-spacer>
+            <AudioShuffleToggle class="audio-queue-shuffle" :target="target"></AudioShuffleToggle>
           </div>
-          <div v-else-if="queueFailed" class="pa-4 audio-queue-message">{{ $t('page.kiosk.audio.loadFailed') }}</div>
-          <div v-else-if="queue.length === 0" class="pa-4 audio-queue-message audio-queue-empty">{{ $t('page.kiosk.audio.queueEmpty') }}</div>
-          <div
-            v-for="(track, index) in queue"
-            :key="`q-${index}`"
-            class="audio-queue-entry"
-            :class="{ 'audio-queue-entry--current': index === currentIndex }"
-            :data-index="index"
-            @click="playIndex(index)"
-          >
-            <v-img v-if="track.imageUrl" :src="track.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
-            <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>music_note</v-icon></div>
-            <div class="audio-queue-text">
-              <div class="audio-queue-title">{{ track.title }}</div>
-              <div v-if="track.artist" class="audio-queue-artist text-caption">{{ track.artist }}</div>
+          <div class="audio-queue-queue-list">
+            <div v-if="loadingQueue && queue.length === 0" class="pa-4">
+              <v-progress-linear indeterminate></v-progress-linear>
             </div>
-            <v-icon v-if="index === currentIndex" class="ml-2">equalizer</v-icon>
+            <div v-else-if="queueFailed" class="pa-4 audio-queue-message">{{ $t('page.kiosk.audio.loadFailed') }}</div>
+            <div v-else-if="queue.length === 0" class="pa-4 audio-queue-message audio-queue-empty">{{ $t('page.kiosk.audio.queueEmpty') }}</div>
+            <div
+              v-for="(track, index) in queue"
+              :key="`q-${index}`"
+              class="audio-queue-entry"
+              :class="{ 'audio-queue-entry--current': index === currentIndex }"
+              :data-index="index"
+              @click="playIndex(index)"
+            >
+              <v-img v-if="track.imageUrl" :src="track.imageUrl" class="audio-queue-cover" width="40" height="40" contain></v-img>
+              <div v-else class="audio-queue-cover audio-queue-cover--empty"><v-icon small>music_note</v-icon></div>
+              <div class="audio-queue-text">
+                <div class="audio-queue-title">{{ track.title }}</div>
+                <div v-if="track.artist" class="audio-queue-artist text-caption">{{ track.artist }}</div>
+              </div>
+              <v-icon v-if="index === currentIndex" class="ml-2">equalizer</v-icon>
+            </div>
           </div>
         </div>
 
@@ -57,20 +64,6 @@
           <div class="audio-queue-playlists-fixed">
             <div class="audio-queue-section audio-queue-playlists-head px-4 pt-2">
               <span class="text-overline">{{ $t('page.kiosk.audio.playlists') }}</span>
-              <v-spacer></v-spacer>
-              <v-btn
-                icon
-                class="audio-queue-shuffle"
-                :class="{ 'audio-queue-shuffle--on': shuffle }"
-                :color="shuffle ? 'light-blue lighten-2' : null"
-                :input-value="shuffle"
-                :aria-pressed="shuffle ? 'true' : 'false'"
-                :aria-label="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
-                :title="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
-                @click="toggleShuffle"
-              >
-                <v-icon>{{ shuffle ? 'shuffle_on' : 'shuffle' }}</v-icon>
-              </v-btn>
             </div>
             <div v-if="!playlistsFailed && playlists.length > 0" class="px-4 pb-2">
               <v-text-field
@@ -117,8 +110,8 @@
 <script lang="js">
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
-import { audioShuffle, setShuffle } from '@/utils/audioShuffle'
 import { SseClient } from '@/utils/sseClient'
+import AudioShuffleToggle from '@/components/audio/AudioShuffleToggle.vue'
 
 // Lazy, so vuedraggable and the editor only load when someone edits.
 const AudioPlaylistEditor = () => import('@/components/audio/AudioPlaylistEditor.vue')
@@ -135,13 +128,14 @@ const LIVE_RELOAD_DEBOUNCE_MS = 300
  * It also reloads in the background, also behind the editor, on the SSE
  * events `audio-queue-changed` (this target only), `audio-playlist-changed`
  * and after a reconnect (change `kiosk-queue-live-updates`).
- * A playlist is played with the device's shuffle choice, the same one the
- * editor shows (change `kiosk-playlist-editor-extras`, design D2).
+ * The queue column's head holds the player's shuffle toggle; a playlist is
+ * started without `shuffle`, so the target's mode applies, and a mode change
+ * reloads the queue (change `audio-shuffle-on-player`, D3-D5).
  */
 export default {
   name: 'AudioQueueDialog',
 
-  components: { AudioPlaylistEditor },
+  components: { AudioPlaylistEditor, AudioShuffleToggle },
 
   mixins: [audioCommand],
 
@@ -161,16 +155,12 @@ export default {
     editorOpen: false,
     editorMounted: false,
     playlistFilter: '',
-    shuffleStore: audioShuffle,
     listening: false,
     pending: { queue: false, playlists: false },
     flushTimer: null
   }),
 
   computed: {
-    shuffle () {
-      return this.shuffleStore.on
-    },
     /** Queue and playlists side by side, at the playlist editor's breakpoint (change `kiosk-queue-popup-side-by-side`, D1). */
     wide () {
       return this.$vuetify.breakpoint.mdAndUp
@@ -182,7 +172,8 @@ export default {
       }
       const p = this.target.playback
       const track = p && p.track ? p.track.uri || p.track.title : ''
-      return `${this.target.targetId}|${p && p.sourceUri ? p.sourceUri : ''}|${p ? p.queueIndex : ''}|${track}`
+      // `shuffle`: MA reorders the upcoming entries when the mode changes (change `audio-shuffle-on-player`, D4).
+      return `${this.target.targetId}|${p && p.sourceUri ? p.sourceUri : ''}|${p ? p.queueIndex : ''}|${track}|${p ? p.shuffle : ''}`
     },
     currentIndex () {
       if (this.queueIndex !== null) {
@@ -360,11 +351,7 @@ export default {
         return
       }
       const targetId = this.target.targetId
-      const shuffle = this.shuffle
-      this.runAudioCommand(() => audioService.playMedia(targetId, audioService.playlistUri(playlist), shuffle))
-    },
-    toggleShuffle () {
-      setShuffle(!this.shuffle)
+      this.runAudioCommand(() => audioService.playMedia(targetId, audioService.playlistUri(playlist)))
     }
   }
 }
@@ -384,17 +371,23 @@ export default {
     overflow-y: auto;
   }
 
+  .audio-queue-column--queue,
   .audio-queue-column--playlists {
     display: flex;
     flex-direction: column;
     overflow-y: hidden;
+  }
+
+  .audio-queue-column--playlists {
     border-left: 1px solid rgba(128, 128, 128, 0.25);
   }
 
+  .audio-queue-queue-head,
   .audio-queue-playlists-fixed {
     flex: 0 0 auto;
   }
 
+  .audio-queue-queue-list,
   .audio-queue-playlists-list {
     flex: 1 1 auto;
     min-height: 0;
@@ -417,9 +410,11 @@ export default {
   }
 }
 
+.audio-queue-queue-head,
 .audio-queue-playlists-head {
   display: flex;
   align-items: center;
+  min-height: 56px;
 
   .v-btn.v-btn--icon.audio-queue-shuffle {
     width: 48px;

@@ -9,51 +9,36 @@
         <v-icon x-small left>lock</v-icon>{{ $t('page.kiosk.audio.editor.readOnlyMark') }}
       </v-chip>
     </div>
-    <div class="audio-tracks-actions" :class="{ 'audio-tracks-actions--compact': compact }">
+    <div v-if="playlist.editable" class="audio-tracks-actions" :class="{ 'audio-tracks-actions--compact': compact }">
+      <v-spacer></v-spacer>
       <v-btn
+        v-if="showAddButton"
         :text="!compact"
         :icon="compact"
-        :color="shuffle ? 'light-blue lighten-2' : null"
-        class="audio-tracks-action audio-tracks-shuffle"
-        :class="{ 'audio-tracks-shuffle--on': shuffle }"
-        :input-value="shuffle"
-        :aria-pressed="shuffle ? 'true' : 'false'"
-        :aria-label="$t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff')"
-        @click="$emit('shuffle', !shuffle)"
+        class="audio-tracks-action audio-tracks-add-btn"
+        :aria-label="$t('page.kiosk.audio.editor.addTracks')"
+        @click="$emit('add')"
       >
-        <v-icon :left="!compact">{{ shuffle ? 'shuffle_on' : 'shuffle' }}</v-icon><span v-if="!compact">{{ $t(shuffle ? 'page.kiosk.audio.editor.shuffleOn' : 'page.kiosk.audio.editor.shuffleOff') }}</span>
+        <v-icon :left="!compact">playlist_add</v-icon><span v-if="!compact">{{ $t('page.kiosk.audio.editor.addTracks') }}</span>
       </v-btn>
-      <v-spacer></v-spacer>
-      <template v-if="playlist.editable">
-        <v-btn
-          v-if="showAddButton"
-          :text="!compact"
-          :icon="compact"
-          class="audio-tracks-action audio-tracks-add-btn"
-          :aria-label="$t('page.kiosk.audio.editor.addTracks')"
-          @click="$emit('add')"
-        >
-          <v-icon :left="!compact">playlist_add</v-icon><span v-if="!compact">{{ $t('page.kiosk.audio.editor.addTracks') }}</span>
-        </v-btn>
-        <v-btn
-          icon
-          class="audio-tracks-action audio-tracks-rename"
-          :disabled="busy"
-          :aria-label="$t('page.kiosk.audio.editor.rename')"
-          @click="$emit('rename')"
-        >
-          <v-icon>edit</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          class="audio-tracks-action audio-tracks-delete"
-          :disabled="busy"
-          :aria-label="$t('page.kiosk.audio.editor.delete')"
-          @click="$emit('delete')"
-        >
-          <v-icon>delete</v-icon>
-        </v-btn>
-      </template>
+      <v-btn
+        icon
+        class="audio-tracks-action audio-tracks-rename"
+        :disabled="busy"
+        :aria-label="$t('page.kiosk.audio.editor.rename')"
+        @click="$emit('rename')"
+      >
+        <v-icon>edit</v-icon>
+      </v-btn>
+      <v-btn
+        icon
+        class="audio-tracks-action audio-tracks-delete"
+        :disabled="busy"
+        :aria-label="$t('page.kiosk.audio.editor.delete')"
+        @click="$emit('delete')"
+      >
+        <v-icon>delete</v-icon>
+      </v-btn>
     </div>
     <v-progress-linear
       class="audio-tracks-busy"
@@ -183,8 +168,7 @@ export default {
     busy: { type: Boolean, default: false },
     showAddButton: { type: Boolean, default: false },
     /** The resolved target rows play on, or null while the audio state is not loaded. */
-    playTarget: { type: Object, default: null },
-    shuffle: { type: Boolean, default: false }
+    playTarget: { type: Object, default: null }
   },
 
   data: () => ({
