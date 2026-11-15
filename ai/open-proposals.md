@@ -10,27 +10,6 @@ stays short and only ever lists work that is still un-proposed.
 
 ---
 
-## Bibliothekssuche: eigene Farben für Künstler und Alben
-
-**Date:** 2026-11-15 · **Where:** Kiosk-Playlist-Editor, `AudioLibrarySearch`
-
-Wish (user, translated): In the list where songs are searched and added to the playlist, albums
-and artist selectors should get **distinct colours**. An artist does not add anything, it sets a
-**filter** (drill-in: `audio-search-artist-result` → chip `audio-search-artist`, track search for
-the artist's name). To make that obvious, the **search field always has the same colour as the
-artist selectors** (artist rows and the artist chip) — "filter colour". Albums (rows
-`audio-search-album`, chip `audio-search-album-chip`) get a second, different colour. Tracks stay
-neutral.
-
-Open points for the propose step:
-
-- Pick the two colours from the Vuetify theme (light and dark), check contrast; maybe a left
-  accent bar / tinted background instead of full fill so covers stay readable.
-- "Always" = also when no artist filter is active (the field is the filter input), not only
-  while drilled in.
-
----
-
 ## Hörbücher/Alben aus Ordnern als Playlists, mit gemerkter Position
 
 **Date:** 2026-11-15 · **Where:** Kiosk audio (playlist pages / editor) + server
@@ -63,3 +42,43 @@ Open points for the explore/propose step (needs the server session):
   (end of last track). Only for marked "Hörspiel" playlists, or for all?
 - Related: `playMedia {uri, startIndex}` + seek from the playlist-track-play change can be reused
   for "continue at track N, position P".
+
+---
+
+## "Zufällig" gehört zum Player, nicht zur Playlist
+
+**Date:** 2026-11-15 · **Where:** Kiosk audio — `AudioPlaylistTracks` (playlist page), `AudioQueueDialog` (queue popup, playlists column), `KioskAudioBar`
+
+Wish (user, translated): The "Zufällig: aus/an" button on the playlist page suggests that shuffle
+is a **property of the playlist**. It is actually a **player setting**, so it belongs on the
+**player bar** or on the **queue (Warteliste) page**.
+
+Findings (code, 2026-11-15):
+
+- Today the button is neither: it is a **per-device preference** (`utils/audioShuffle.ts`,
+  `localStorage` key `kioskAudioShuffle`), shared by the playlist page (`audio-tracks-shuffle`) and
+  the queue popup's playlists column (`audio-queue-shuffle`). It only takes effect when a playlist
+  is **started** — sent as `shuffle` in `POST audioTargetPlayMedia`, where the server switches
+  the target queue's MA shuffle before replacing the queue.
+- The real state lives in the player queue: `playback.shuffle` per target is already in the audio
+  state, but the button does not show it. So it can say "aus" while the player shuffles (set by
+  another device, the MA UI, or an earlier start), and toggling it changes nothing until the next
+  playlist start.
+
+Idea:
+
+- One shuffle toggle **per target**, bound to that target's `playback.shuffle` and switching it
+  **immediately** on the player (also for the currently playing queue).
+- Place it on the player bar (`KioskAudioBar`, next to play/next) and/or in the queue column of
+  the queue popup; remove it from the playlist page and the playlists column.
+- Playlist starts (`playMedia`) then send no `shuffle` field, so the player's current setting
+  applies; drop the device preference `audioShuffle`.
+
+Open points for the propose step (needs the server session):
+
+- Server route to set shuffle without starting media, e.g. `PUT audioTargetShuffle {on}` (MA
+  `player_queues/shuffle`). Does toggling reshuffle the running queue in MA, and how does that
+  interact with `queueIndex`/marking the playing row (`utils/audioPlaying.ts` falls back to the
+  track URI when shuffled)?
+- Bar vs. queue popup vs. both — bar space on mobile width.
+- Radio: hide/disable the toggle while a radio stream plays?
