@@ -40,8 +40,8 @@
       icon
       class="kiosk-audio-player-btn kiosk-audio-player-previous"
       :disabled="!available"
-      :title="tooltips ? $t('page.kiosk.audio.tooltip.previous') : null"
-      @click="command('previous')"
+      :title="tooltips ? $t(chapterMode ? 'page.kiosk.audio.tooltip.previousChapter' : 'page.kiosk.audio.tooltip.previous') : null"
+      @click="previous"
     >
       <v-icon>skip_previous</v-icon>
     </v-btn>
@@ -50,10 +50,10 @@
       icon
       class="kiosk-audio-player-btn kiosk-audio-player-back10"
       :disabled="!seekable"
-      :title="tooltips ? $t('page.kiosk.audio.tooltip.back10') : null"
-      @click="skip(-10)"
+      :title="tooltips ? $t(longSkip ? 'page.kiosk.audio.tooltip.back30' : 'page.kiosk.audio.tooltip.back10') : null"
+      @click="skip(-skipSeconds)"
     >
-      <v-icon>replay_10</v-icon>
+      <v-icon>{{ longSkip ? 'replay_30' : 'replay_10' }}</v-icon>
     </v-btn>
     <v-btn
       icon
@@ -69,17 +69,17 @@
       icon
       class="kiosk-audio-player-btn kiosk-audio-player-forward10"
       :disabled="!seekable"
-      :title="tooltips ? $t('page.kiosk.audio.tooltip.forward10') : null"
-      @click="skip(10)"
+      :title="tooltips ? $t(longSkip ? 'page.kiosk.audio.tooltip.forward30' : 'page.kiosk.audio.tooltip.forward10') : null"
+      @click="skip(skipSeconds)"
     >
-      <v-icon>forward_10</v-icon>
+      <v-icon>{{ longSkip ? 'forward_30' : 'forward_10' }}</v-icon>
     </v-btn>
     <v-btn
       icon
       class="kiosk-audio-player-btn kiosk-audio-player-next"
-      :disabled="!available"
-      :title="tooltips ? $t('page.kiosk.audio.tooltip.next') : null"
-      @click="command('next')"
+      :disabled="!available || (chapterMode && nextChapterStart === null)"
+      :title="tooltips ? $t(chapterMode ? 'page.kiosk.audio.tooltip.nextChapter' : 'page.kiosk.audio.tooltip.next') : null"
+      @click="next"
     >
       <v-icon>skip_next</v-icon>
     </v-btn>
@@ -99,6 +99,9 @@
       :target="target"
       :disabled="!available"
       :show-time="!narrow"
+      :range-start="chapterRange ? chapterRange.start : null"
+      :range-end="chapterRange ? chapterRange.end : null"
+      @position="barPosition = $event"
     ></AudioSeekSlider>
 
     <v-menu
@@ -146,6 +149,16 @@
     >
       <v-icon>radio</v-icon>
     </v-btn>
+    <v-btn
+      icon
+      class="kiosk-audio-player-btn kiosk-audio-player-books"
+      :disabled="!available"
+      :title="tooltips ? $t('page.kiosk.audio.tooltip.audiobooks') : null"
+      :aria-label="$t('page.kiosk.audio.tooltip.audiobooks')"
+      @click="booksDialog = true"
+    >
+      <v-icon>menu_book</v-icon>
+    </v-btn>
 
     <AudioPlanDialog
       v-model="targetDialog"
@@ -161,6 +174,10 @@
       v-model="radioDialog"
       :target="target"
     ></AudioRadioDialog>
+    <AudioBooksDialog
+      v-model="booksDialog"
+      :target="target"
+    ></AudioBooksDialog>
   </v-footer>
 </template>
 
@@ -171,14 +188,26 @@ import { singleton as audioService, MAIN_GROUP_COLOR } from '@/utils/webservices
 import { readStoredTarget, writeStoredTarget, resolveTarget, selectedRoomOf } from '@/utils/audioTarget'
 import { audioCommand } from '@/mixins/audioCommand'
 import { createLiveSender } from '@/utils/liveSender'
+import {
+  AUDIOBOOK_SKIP_SECONDS, audiobookIdOf, chapterEndOf, chapterIndexAt, itemKindOf,
+  nextChapterTarget, previousChapterTarget
+} from '@/utils/audiobooks'
 import AudioPlanDialog from '@/components/audio/AudioPlanDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
+import AudioBooksDialog from '@/components/audio/AudioBooksDialog.vue'
 import AudioSeekSlider from '@/components/audio/AudioSeekSlider.vue'
 import AudioShuffleToggle from '@/components/audio/AudioShuffleToggle.vue'
 
 // How long a released volume slider keeps its value while no newer state arrives.
 const HOLD_MS = 3000
+
+/*
+ * Audiobooks with their chapters, by book id, for the session (openspec change
+ * `kiosk-audiobooks`, D2). Shared by every bar instance; a failed load is not
+ * kept, so the book is asked for again the next time it starts.
+ */
+const bookCache = new Map()
 
 /**
  * The music player bar along the bottom of every kiosk page (openspec change
@@ -191,6 +220,12 @@ const HOLD_MS = 3000
  * live while dragged (openspec change `kiosk-live-volume`). The shuffle toggle
  * is the player's mode, shared with the queue popup (change
  * `audio-shuffle-on-player`).
+ *
+ * While an audiobook or podcast episode plays the skip buttons jump 30 s;
+ * an audiobook with at least two chapters puts the bar into chapter mode
+ * (change `kiosk-audiobooks`, D2/D3): title and slider follow the current
+ * chapter, and previous/next seek between chapters instead of moving in the
+ * queue. The chapter is taken from the position the slider shows.
  */
 export default {
   name: 'KioskAudioBar',
@@ -201,6 +236,7 @@ export default {
     AudioPlanDialog,
     AudioQueueDialog,
     AudioRadioDialog,
+    AudioBooksDialog,
     AudioSeekSlider,
     AudioShuffleToggle
   },
@@ -214,7 +250,12 @@ export default {
     volumeHoldTimer: null,
     targetDialog: false,
     queueDialog: false,
-    radioDialog: false
+    radioDialog: false,
+    booksDialog: false,
+    // the position the seek slider shows, in the whole track
+    barPosition: 0,
+    // the loaded book of the current track, or null
+    book: null
   }),
 
   computed: {
@@ -281,14 +322,57 @@ export default {
       }
       return this.target && this.target.volume !== null ? this.target.volume : 0
     },
+    itemKind () {
+      return this.track ? itemKindOf(this.track.uri) : null
+    },
+    longSkip () {
+      return this.itemKind !== null
+    },
+    skipSeconds () {
+      return this.longSkip ? AUDIOBOOK_SKIP_SECONDS : 10
+    },
+    bookId () {
+      return this.track ? audiobookIdOf(this.track.uri) : null
+    },
+    /** The chapters while the bar is in chapter mode, else null. */
+    chapters () {
+      if (!this.book || this.bookId === null || `${this.book.id}` !== this.bookId || this.book.chapters.length < 2) {
+        return null
+      }
+      return this.book.chapters
+    },
+    chapterMode () {
+      return this.chapters !== null && this.seekable
+    },
+    chapterIndex () {
+      return this.chapterMode ? chapterIndexAt(this.chapters, this.barPosition) : -1
+    },
+    chapterRange () {
+      if (this.chapterIndex < 0) {
+        return null
+      }
+      return { start: this.chapters[this.chapterIndex].start, end: chapterEndOf(this.chapters, this.chapterIndex, this.duration) }
+    },
+    nextChapterStart () {
+      return this.chapterMode ? nextChapterTarget(this.chapters, this.barPosition) : null
+    },
     titleText () {
       if (!this.available) {
         return this.$t('page.kiosk.audio.unavailable')
       }
+      if (this.chapterIndex >= 0) {
+        return this.chapters[this.chapterIndex].name
+      }
       return this.track && this.track.title ? this.track.title : this.$t('page.kiosk.audio.nothingPlaying')
     },
     artistText () {
-      return this.available && this.track ? this.track.artist : null
+      if (!this.available || !this.track) {
+        return null
+      }
+      if (this.chapterIndex >= 0) {
+        return this.book.authors.length > 0 ? `${this.book.name} · ${this.book.authors.join(', ')}` : this.book.name
+      }
+      return this.track.artist
     }
   },
 
@@ -315,6 +399,12 @@ export default {
     'target.key' () {
       this.clearVolumeHold()
       this.cancelVolumeSender()
+    },
+    bookId: {
+      immediate: true,
+      handler (id) {
+        this.loadBook(id)
+      }
     }
   },
 
@@ -333,6 +423,48 @@ export default {
     skip (seconds) {
       if (this.$refs.seek) {
         this.$refs.seek.skip(seconds)
+      }
+    },
+    previous () {
+      if (this.chapterMode && this.$refs.seek) {
+        this.$refs.seek.seekTo(previousChapterTarget(this.chapters, this.barPosition))
+      } else if (this.itemKind === 'audiobook' && this.seekable && this.$refs.seek) {
+        // MA's `previous` on a book resumes instead of restarting (server brief)
+        this.$refs.seek.seekTo(0)
+      } else {
+        this.command('previous')
+      }
+    },
+    next () {
+      if (this.chapterMode) {
+        if (this.nextChapterStart !== null && this.$refs.seek) {
+          this.$refs.seek.seekTo(this.nextChapterStart)
+        }
+      } else {
+        this.command('next')
+      }
+    },
+    /** Loads the playing book's chapters once per id; a failure leaves the bar in plain mode (D2). */
+    async loadBook (id) {
+      if (id === null) {
+        this.book = null
+        return
+      }
+      if (bookCache.has(id)) {
+        this.book = bookCache.get(id)
+        return
+      }
+      this.book = null
+      try {
+        const book = await audioService.getAudiobook(id)
+        if (book) {
+          bookCache.set(id, book)
+          if (this.bookId === id) {
+            this.book = book
+          }
+        }
+      } catch (err) {
+        // plain mode with ±30 s; asked again the next time the book starts
       }
     },
     clearVolumeHold () {

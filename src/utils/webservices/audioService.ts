@@ -142,6 +142,34 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   Entries without a string `playerId` are dropped, the name falls back to
  *   the id, an unknown volume is null. Missing fields (an older server) give
  *   `speakers: []` and `balanceSupported: false`.
+ * - Audiobooks and podcasts (openspec change `kiosk-audiobooks`, design D1;
+ *   built by java-overmind-server change `audio-audiobooks-podcasts`, see its
+ *   `ai/draft-audio-audiobooks-podcasts-for-frontend.md`). Whole seconds:
+ *
+ *     GET audioAudiobooks ?library=adults|kids -> {items: [Audiobook]}, 400 unknown library
+ *     GET audioAudiobook                       -> Audiobook + {chapters: [{position, name, start, end|null}]}, 404
+ *     GET audioPodcasts                        -> {items: [Podcast]}
+ *     GET audioPodcastEpisodes                 -> {items: [Episode]} by position, 404
+ *     PUT audioPlayed {uri, played}            -> 204 (MA mark_played / mark_unplayed)
+ *     POST audioTargetPlayMedia {uri, position?}  position overrides MA's resume point
+ *
+ *     Audiobook = {id, uri, name, authors: [string], imageUrl|null, duration,
+ *                  resumePosition, fullyPlayed, recentRank|null}
+ *     Podcast   = {id, uri, name, imageUrl|null, episodeCount, recentRank|null}
+ *     Episode   = {id, uri, name, position, duration, resumePosition,
+ *                  fullyPlayed, recentRank|null, imageUrl|null}
+ *
+ *   `recentRank` is MA's play order (agreed 2026-11-15; MA has no playlog
+ *   timestamp): 1 = heard most recently, null = never; global per kind, may
+ *   have gaps. Episode `id`/`uri` are opaque provider strings
+ *   (`filesystem_local--x://podcast_episode/<folder>/<file>`), passed on as
+ *   they are. While an item plays, `track.uri` is the book's
+ *   `library://audiobook/<id>` or that episode uri, `elapsed` the position in
+ *   the whole item and `duration` its total. `seek {position: 0}` on a book
+ *   lands at second 1 (MA reads 0 as "resume"). Entries without `uri` are
+ *   dropped; a missing number is 0 (`duration` null), `authors` is also read
+ *   as a string. The list routes answer 404 on a server without them, which
+ *   `isNotAvailable` tells apart from other failures.
  */
 
 export type AudioPlaybackStatus = 'playing' | 'paused' | 'idle'
@@ -277,6 +305,55 @@ const SEARCH_LIMIT = 500
  */
 export const RADIO_STATIONS = 12
 
+export type AudioAudiobookLibrary = 'adults' | 'kids'
+
+export interface AudioChapter {
+  position: number;
+  name: string;
+  /** seconds */
+  start: number;
+  /** seconds; null when the server sends none (the book's duration then) */
+  end: number | null;
+}
+
+export interface AudioAudiobook {
+  id: string | number;
+  uri: string;
+  name: string;
+  authors: string[];
+  imageUrl: string | null;
+  /** seconds; null when unknown */
+  duration: number | null;
+  /** seconds; 0 when not started */
+  resumePosition: number;
+  fullyPlayed: boolean;
+  /** MA's play order: 1 = heard most recently, null = never */
+  recentRank: number | null;
+  /** only from `getAudiobook`; empty in lists */
+  chapters: AudioChapter[];
+}
+
+export interface AudioPodcast {
+  id: string | number;
+  uri: string;
+  name: string;
+  imageUrl: string | null;
+  episodeCount: number | null;
+  recentRank: number | null;
+}
+
+export interface AudioEpisode {
+  id: string | number;
+  uri: string;
+  name: string;
+  position: number;
+  duration: number | null;
+  resumePosition: number;
+  fullyPlayed: boolean;
+  recentRank: number | null;
+  imageUrl: string | null;
+}
+
 export interface AudioStation {
   name: string;
   uri: string;
@@ -382,14 +459,76 @@ export class AudioService {
    * `startIndex` is sent only when given (playlists); no `shuffle` is sent, so
    * the target's current shuffle mode applies (see the contract above).
    */
-  public async playMedia (targetId: string, uri: string, startIndex?: number): Promise<void> {
+  public async playMedia (targetId: string, uri: string, startIndex?: number, position?: number): Promise<void> {
     return axiosUtils.postToPath(this.server, 'audioTargetPlayMedia', { targetId }, () => {
-      const body: { uri: string; startIndex?: number } = { uri }
+      const body: { uri: string; startIndex?: number; position?: number } = { uri }
       if (startIndex !== undefined) {
         body.startIndex = startIndex
       }
+      if (position !== undefined) {
+        body.position = Math.max(0, Math.round(position))
+      }
       return body
     })
+  }
+
+  /**
+   * Plays an audiobook or podcast episode. Without `position` MA resumes at
+   * its stored point; with it playback starts there (design D1).
+   */
+  public async playItem (targetId: string, uri: string, position?: number): Promise<void> {
+    return this.playMedia(targetId, uri, undefined, position)
+  }
+
+  public async getAudiobooks (library: AudioAudiobookLibrary): Promise<AudioAudiobook[]> {
+    const response = await axiosUtils.getResponse(this.server, 'audioAudiobooks', `library=${library}`)
+    return this.listOf(response).filter(b => b && b.uri).map(b => this.normalizeAudiobook(b))
+  }
+
+  /** The book with its chapters, sorted by start. */
+  public async getAudiobook (audiobookId: string | number): Promise<AudioAudiobook | null> {
+    const response = await axiosUtils.getFromPath(this.server, 'audioAudiobook', { audiobookId })
+    return response && response.uri ? this.normalizeAudiobook(response) : null
+  }
+
+  public async getPodcasts (): Promise<AudioPodcast[]> {
+    const response = await axiosUtils.getResponse(this.server, 'audioPodcasts')
+    return this.listOf(response).filter(p => p && p.uri).map(p => ({
+      id: p.id != null ? p.id : p.uri,
+      uri: `${p.uri}`,
+      name: `${p.name || p.uri}`,
+      imageUrl: this.absoluteUrl(p.imageUrl),
+      episodeCount: this.numberOrNull(p.episodeCount),
+      recentRank: this.numberOrNull(p.recentRank)
+    }))
+  }
+
+  /** The episodes sorted by `position`. */
+  public async getPodcastEpisodes (podcastId: string | number): Promise<AudioEpisode[]> {
+    const response = await axiosUtils.getFromPath(this.server, 'audioPodcastEpisodes', { podcastId })
+    return this.listOf(response)
+      .filter(e => e && e.uri)
+      .map(e => ({
+        id: e.id != null ? e.id : e.uri,
+        uri: `${e.uri}`,
+        name: `${e.name || e.title || e.uri}`,
+        position: this.numberOrNull(e.position) || 0,
+        duration: this.numberOrNull(e.duration),
+        resumePosition: Math.max(0, this.numberOrNull(e.resumePosition) || 0),
+        fullyPlayed: e.fullyPlayed === true,
+        recentRank: this.numberOrNull(e.recentRank),
+        imageUrl: this.absoluteUrl(e.imageUrl)
+      }))
+      .sort((a, b) => a.position - b.position)
+  }
+
+  public async setPlayed (uri: string, played: boolean): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioPlayed', {}, () => ({ uri, played }))
+  }
+
+  /** True for the 404 a route answers before the server has it (design D1, Migration Plan). */
+  public isNotAvailable (err: unknown): boolean {
+    return !!err && typeof err === 'object' && (err as { status?: unknown }).status === 404
   }
 
   /** Switches the target queue's shuffle mode at once (guessed route, see above). */
@@ -633,6 +772,40 @@ export class AudioService {
       artist: artist || null,
       uri: `${i.uri}`,
       imageUrl: this.absoluteUrl(i.imageUrl)
+    }
+  }
+
+  private normalizeAudiobook (b: Raw): AudioAudiobook {
+    let authors: string[] = []
+    if (Array.isArray(b.authors)) {
+      authors = b.authors.filter((a: Raw) => a != null && `${a}`.trim() !== '').map((a: Raw) => `${a}`)
+    } else if (typeof b.authors === 'string' && b.authors.trim() !== '') {
+      authors = [b.authors]
+    } else if (typeof b.author === 'string' && b.author.trim() !== '') {
+      authors = [b.author]
+    }
+    const chapters: AudioChapter[] = Array.isArray(b.chapters)
+      ? b.chapters
+        .filter((c: Raw) => c && typeof c === 'object' && this.numberOrNull(c.start) !== null)
+        .map((c: Raw, index: number) => ({
+          position: this.numberOrNull(c.position) !== null ? c.position : index + 1,
+          name: `${c.name || c.title || index + 1}`,
+          start: Math.max(0, c.start),
+          end: this.numberOrNull(c.end)
+        }))
+        .sort((x: AudioChapter, y: AudioChapter) => x.start - y.start)
+      : []
+    return {
+      id: b.id != null ? b.id : b.uri,
+      uri: `${b.uri}`,
+      name: `${b.name || b.title || b.uri}`,
+      authors,
+      imageUrl: this.absoluteUrl(b.imageUrl),
+      duration: this.numberOrNull(b.duration),
+      resumePosition: Math.max(0, this.numberOrNull(b.resumePosition) || 0),
+      fullyPlayed: b.fullyPlayed === true,
+      recentRank: this.numberOrNull(b.recentRank),
+      chapters
     }
   }
 

@@ -139,7 +139,12 @@
 					"next": "Next track",
 					"seek": "Position",
 					"volume": "Volume",
-					"radio": "Radio stations"
+					"radio": "Radio stations",
+					"audiobooks": "Audiobooks and podcasts",
+					"back30": "Back 30 seconds",
+					"forward30": "Forward 30 seconds",
+					"previousChapter": "Previous chapter",
+					"nextChapter": "Next chapter"
 				},
 				"plan": {
 					"title": "Audio in the house",
@@ -157,6 +162,27 @@
 					"startFromBar": "Start a selection from the bar",
 					"selected": "Selected",
 					"noPlan": "Plan not available - all rooms as a list"
+				},
+				"books": {
+					"title": "Audiobooks and podcasts",
+					"tabAdults": "Adults",
+					"tabKids": "Kids",
+					"tabPodcasts": "Podcasts",
+					"continue": "Continue",
+					"play": "Play",
+					"restart": "From the start",
+					"markPlayed": "Mark as played",
+					"markUnplayed": "Mark as unplayed",
+					"played": "Played",
+					"filter": "Filter",
+					"notAvailable": "Audiobooks are not yet available on the server.",
+					"empty": "Nothing here.",
+					"noMatch": "Nothing found.",
+					"back": "Back",
+					"chapters": "Chapters",
+					"episodes": "Episodes",
+					"more": "More actions",
+					"remaining": "{time} left"
 				}
 			},
 			"linkAudio": "Audio",

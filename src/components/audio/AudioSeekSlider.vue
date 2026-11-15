@@ -1,10 +1,10 @@
 <template>
   <div class="audio-seek">
-    <span v-if="showTime" :class="['audio-seek-time', timeClass]">{{ timeText(shownPosition) }}</span>
+    <span v-if="showTime" :class="['audio-seek-time', timeClass]">{{ timeText(shownPosition - start) }}</span>
     <v-slider
       :class="['audio-seek-slider', sliderClass]"
-      :value="shownPosition"
-      :max="duration || 1"
+      :value="shownPosition - start"
+      :max="Math.max(1, end - start)"
       :disabled="!seekable"
       min="0"
       step="1"
@@ -32,6 +32,13 @@ const HOLD_MS = 3000
  * `elapsed` + `elapsedAt` while the target plays; a drag is not moved back by
  * incoming state, and a released value is held until a state with a new
  * `elapsedAt` arrives, or for HOLD_MS (change `kiosk-audio-player`, D7).
+ *
+ * With `rangeStart`/`rangeEnd` the slider spans only that part of the track -
+ * the current chapter of an audiobook (change `kiosk-audiobooks`, D3): it
+ * shows the position within the range and a release seeks to
+ * `rangeStart + value`. It emits `position` with the shown position in the
+ * whole track whenever that changes outside a drag, so the bar can work out
+ * the chapter from the same number the slider shows.
  */
 export default {
   name: 'AudioSeekSlider',
@@ -43,6 +50,9 @@ export default {
     target: { type: Object, default: null },
     disabled: { type: Boolean, default: false },
     showTime: { type: Boolean, default: true },
+    /** seconds; the part of the track the slider spans, the whole track by default */
+    rangeStart: { type: Number, default: null },
+    rangeEnd: { type: Number, default: null },
     /** Extra classes for the time and the slider, so a caller keeps its own markup. */
     timeClass: { type: String, default: null },
     sliderClass: { type: String, default: null }
@@ -85,9 +95,29 @@ export default {
       }
       return Math.max(0, this.duration !== null ? Math.min(position, this.duration) : position)
     },
+    start () {
+      return this.rangeStart !== null ? this.rangeStart : 0
+    },
+    end () {
+      if (this.rangeEnd !== null) {
+        return this.rangeEnd
+      }
+      return this.duration || 0
+    },
+    /** In the whole track; inside the range while one is set. */
     shownPosition () {
+      let shown
       if (this.seekDragging && this.seekDrag !== null) {
-        return this.seekDrag
+        shown = this.seekDrag
+      } else {
+        shown = this.seekHeld !== null ? this.seekHeld : Math.floor(this.position)
+      }
+      return this.rangeStart !== null ? Math.max(this.start, Math.min(this.end, shown)) : shown
+    },
+    /** The shown position outside a drag, before it is clamped to the range. */
+    reportedPosition () {
+      if (this.seekDragging) {
+        return null
       }
       return this.seekHeld !== null ? this.seekHeld : Math.floor(this.position)
     }
@@ -113,6 +143,14 @@ export default {
     },
     'target.key' () {
       this.clearSeekHold()
+    },
+    reportedPosition: {
+      immediate: true,
+      handler (position) {
+        if (position !== null) {
+          this.$emit('position', position)
+        }
+      }
     }
   },
 
@@ -124,14 +162,21 @@ export default {
       const targetId = this.target.targetId
       this.runAudioCommand(() => audioService.seek(targetId, position))
     },
-    /** Jumps `seconds` from the shown position; the bar's ±10 buttons call it. */
+    /** Jumps `seconds` from the shown position; the bar's skip buttons call it. */
     skip (seconds) {
       if (!this.seekable) {
         return
       }
-      const position = Math.max(0, Math.min(this.duration, Math.round(this.position + seconds)))
-      this.hold(position)
-      this.seek(position)
+      this.seekTo(this.position + seconds)
+    },
+    /** Seeks to `position` in the whole track, clamped to `0..duration`, and holds it. */
+    seekTo (position) {
+      if (!this.seekable) {
+        return
+      }
+      const clamped = Math.max(0, Math.min(this.duration, Math.round(position)))
+      this.hold(clamped)
+      this.seek(clamped)
     },
     hold (position) {
       this.clearSeekHold()
@@ -147,13 +192,15 @@ export default {
       this.seekHeld = null
       this.seekHeldAt = null
     },
+    // The slider's values are relative to the range start; everything held or
+    // sent is in the whole track.
     seekStart (value) {
       this.seekDragging = true
-      this.seekDrag = value
+      this.seekDrag = this.start + value
     },
     seekInput (value) {
       if (this.seekDragging) {
-        this.seekDrag = value
+        this.seekDrag = this.start + value
       }
     },
     seekEnd (value) {
@@ -161,17 +208,20 @@ export default {
       // which case no `change` follows and nothing is sent.
       this.seekDragging = false
       this.seekDrag = null
-      this.hold(value)
+      this.hold(this.start + value)
     },
     seekChange (value) {
       this.seekDragging = false
       this.seekDrag = null
-      this.hold(value)
-      this.seek(value)
+      this.hold(this.start + value)
+      this.seek(this.start + value)
     },
     timeText (seconds) {
       const s = Math.max(0, Math.floor(seconds || 0))
-      return `${Math.floor(s / 60)}:${`${s % 60}`.padStart(2, '0')}`
+      const h = Math.floor(s / 3600)
+      const m = Math.floor((s % 3600) / 60)
+      const ss = `${s % 60}`.padStart(2, '0')
+      return h > 0 ? `${h}:${`${m}`.padStart(2, '0')}:${ss}` : `${m}:${ss}`
     }
   },
 

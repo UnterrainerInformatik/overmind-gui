@@ -143,6 +143,12 @@ const store = {
         audioSearch: '/audio/search',
         // album tracks in album order (server change `audio-playlist-start-at-track`)
         audioAlbumTracks: '/audio/albums/{albumId}/tracks',
+        // audiobooks and podcasts (openspec change `kiosk-audiobooks`, design D1)
+        audioAudiobooks: '/audio/audiobooks',
+        audioAudiobook: '/audio/audiobooks/{audiobookId}',
+        audioPodcasts: '/audio/podcasts',
+        audioPodcastEpisodes: '/audio/podcasts/{podcastId}/episodes',
+        audioPlayed: '/audio/played',
         sseAppliances: '/sse/appliances',
         sseTransportsRegister: '/sse/transports/register',
         sseTransportsDeregister: '/sse/transports/deregister'

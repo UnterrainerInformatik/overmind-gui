@@ -139,7 +139,12 @@
 					"next": "Nächster Titel",
 					"seek": "Position",
 					"volume": "Lautstärke",
-					"radio": "Radiosender"
+					"radio": "Radiosender",
+					"audiobooks": "Hörbücher und Podcasts",
+					"back30": "30 Sekunden zurück",
+					"forward30": "30 Sekunden vor",
+					"previousChapter": "Vorheriges Kapitel",
+					"nextChapter": "Nächstes Kapitel"
 				},
 				"plan": {
 					"title": "Audio im Haus",
@@ -157,6 +162,27 @@
 					"startFromBar": "Über die Leiste eine Auswahl starten",
 					"selected": "Gewählt",
 					"noPlan": "Plan nicht verfügbar - alle Räume als Liste"
+				},
+				"books": {
+					"title": "Hörbücher und Podcasts",
+					"tabAdults": "Erwachsene",
+					"tabKids": "Kinder",
+					"tabPodcasts": "Podcasts",
+					"continue": "Weiterhören",
+					"play": "Abspielen",
+					"restart": "Von vorne",
+					"markPlayed": "Als gehört markieren",
+					"markUnplayed": "Als ungehört markieren",
+					"played": "Gehört",
+					"filter": "Filtern",
+					"notAvailable": "Hörbücher sind am Server noch nicht verfügbar.",
+					"empty": "Hier gibt es nichts.",
+					"noMatch": "Nichts gefunden.",
+					"back": "Zurück",
+					"chapters": "Kapitel",
+					"episodes": "Folgen",
+					"more": "Weitere Aktionen",
+					"remaining": "noch {time}"
 				}
 			},
 			"linkAudio": "Audio",
