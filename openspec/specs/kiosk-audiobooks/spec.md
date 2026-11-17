@@ -82,23 +82,32 @@ command the popup sends SHALL go to the bar's selected target. The popup SHALL:
 
 ### Requirement: Tab content
 
-Each tab SHALL show the "Weiterhören" row, a filter field and a grid of all entries.
+Each tab SHALL show the "Weiterhören" row, a filter field and a list of all entries.
 
 **The "Weiterhören" row**
 - It holds the entries that are started and not fully played (`resumePosition > 0` and not
   `fullyPlayed`), at most 12, most recently played first. For the podcast tab these are
   episodes.
 - It SHALL be hidden when no entry qualifies.
-- Each entry SHALL show its progress.
+- It SHALL be one horizontal row that scrolls sideways when its entries do not fit.
+- Each entry SHALL be compact: a small square thumbnail at its start, the name, the author (or
+  the podcast's name for an episode) and its progress, in at most 64 px height.
 
-**The grid**
-- It shows every book (or every podcast) as a cover tile with name and author.
-- Books (adults and kids) are sorted by first author, then name. Podcasts are sorted by name.
-  Kids' books carry their series as author, so a series stays together and in episode order.
+**The list**
+- It shows every book (or every podcast) as one row, one row under the other, in a single
+  column.
+- Each row SHALL start with a small square thumbnail (cover or placeholder) of at most 48 px,
+  followed by the name and, under it, the authors (books) or the number of episodes
+  (podcasts). Name and authors SHALL be cut with an ellipsis instead of wrapping.
+- A book row SHALL show the book's total duration when it is known.
 - A started book SHALL show its progress, and a fully played book SHALL be marked as played.
+- A row SHALL be at most 64 px tall and SHALL be tappable over its whole width.
+- Books (adults and kids) are sorted by first author, then name. Podcasts are sorted by name.
+  Kids' books carry their series as author, so a series stays together and in episode order,
+  read from top to bottom.
 
 **The filter field**
-- It narrows the grid to entries whose name or authors contain the text, ignoring case.
+- It narrows the list to entries whose name or authors contain the text, ignoring case.
 - It SHALL NOT take focus when the popup opens, and SHALL be empty each time the popup opens.
 
 **Loading**
@@ -115,21 +124,44 @@ Each tab SHALL show the "Weiterhören" row, a filter field and a grid of all ent
 
 #### Scenario: Filter by author
 - **WHEN** the user types "kling" in the adults' filter
-- **THEN** the grid shows only books whose author or name contains "kling", in any case
+- **THEN** the list shows only books whose author or name contains "kling", in any case
 
 #### Scenario: Kids' series in order
 - **WHEN** the "Kinder" tab lists "008 Diamantenjagd" and "007 Gruft der Piraten" by "Die drei Fragezeichen Kids" and "001" by "Wickie und die starken Männer"
-- **THEN** 007 comes before 008, and Wickie's 001 does not come between them
+- **THEN** the row of 007 is directly above the row of 008, and Wickie's 001 is not between them
+
+#### Scenario: Room on the kiosk tablet
+- **WHEN** the popup is shown at 1020x590 px on the "Erwachsene" tab with a "Weiterhören" row and 30 books
+- **THEN** at least 4 list rows are fully visible without scrolling
+
+#### Scenario: Row content
+- **WHEN** a started book "Die Känguru-Chroniken" by "Marc-Uwe Kling" with a cover and a duration of 4 h 30 min is listed
+- **THEN** its row shows the small cover at its start, the name, "Marc-Uwe Kling" under it, the duration and a progress bar
+
+#### Scenario: Podcast row
+- **WHEN** the "Podcasts" tab lists a podcast with 42 episodes
+- **THEN** its row shows the podcast's thumbnail, its name and the episode count
+
+#### Scenario: Phone width list
+- **WHEN** the popup is opened at 390 px width
+- **THEN** list rows fill the width, long names end with an ellipsis and the page has no horizontal scroll
 
 ### Requirement: Placeholder cover
 
-An entry without `imageUrl` SHALL show a square placeholder tile with its name and first author
-in readable text, on a background colour chosen from a fixed palette by the entry's name. The
-same name SHALL always get the same colour.
+An entry without `imageUrl` SHALL show a square placeholder on a background colour chosen from a
+fixed palette by the entry's name. The same name SHALL always get the same colour.
+- A small thumbnail (list rows and "Weiterhören" entries) SHALL show the entry's initials (up to
+  two letters) in readable text.
+- The large cover in the book detail SHALL show the entry's name and first author in readable
+  text.
+
+#### Scenario: Book without cover in the list
+- **WHEN** a book "Tschick" has no `imageUrl`
+- **THEN** its list row's thumbnail shows "T" on a coloured background, in both light and dark theme
 
 #### Scenario: Book without cover
-- **WHEN** a book has no `imageUrl`
-- **THEN** its tile shows the book's name and author on a coloured background, in both light and dark theme
+- **WHEN** the detail of a book without `imageUrl` is opened
+- **THEN** its cover shows the book's name and author on the same colour as its list thumbnail
 
 #### Scenario: Stable colour
 - **WHEN** the popup is opened twice
@@ -146,7 +178,7 @@ at the stored position (`playMedia` with `{uri}` and no `position`).
 
 ### Requirement: Book detail
 
-Tapping a book in the grid SHALL open its detail inside the popup, with a back control to the
+Tapping a book in the list SHALL open its detail inside the popup, with a back control to the
 list. The detail SHALL be loaded fresh when it opens.
 
 **Content**
@@ -190,7 +222,7 @@ afterwards. A failed request SHALL show a short error message and leave the show
 
 ### Requirement: Podcast detail
 
-Tapping a podcast in the grid SHALL open its episode list inside the popup, with a back control,
+Tapping a podcast in the list SHALL open its episode list inside the popup, with a back control,
 loaded fresh when it opens.
 - Each episode SHALL show its name, duration and progress, or be marked as played when fully
   played.
