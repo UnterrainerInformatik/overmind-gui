@@ -24,6 +24,7 @@
             <v-progress-linear
               v-if="isInProgress(episode)"
               class="audio-podcast-episode-progress mt-1"
+              :color="$vuetify.theme.dark ? '#fff' : 'primary'"
               :value="Math.round(progressOf(episode) * 100)"
               height="3"
             ></v-progress-linear>

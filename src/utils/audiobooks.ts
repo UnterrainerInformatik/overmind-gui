@@ -223,3 +223,22 @@ export function durationText (seconds: number | null): string {
   }
   return m > 0 ? `${h} h ${m} min` : `${h} h`
 }
+
+/**
+ * Up to two initials for a small placeholder thumbnail (change
+ * `kiosk-audiobooks-list`, D4): the first letter or digit of the first two
+ * words, uppercased; "?" when the name has none.
+ */
+export function initialsOf (name: string | null | undefined): string {
+  const initials = `${name || ''}`
+    .split(/\s+/)
+    .map(word => {
+      const match = word.match(/[\p{L}\p{N}]/u)
+      return match ? match[0] : ''
+    })
+    .filter(c => c !== '')
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+  return initials !== '' ? initials : '?'
+}

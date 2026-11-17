@@ -74,34 +74,36 @@
             <div v-if="continueItems.length > 0" class="audio-books-continue">
               <div class="text-overline">{{ $t('page.kiosk.audio.books.continue') }}</div>
               <div class="audio-books-continue-row">
-                <AudioCoverTile
+                <AudioListRow
                   v-for="entry in continueItems"
                   :key="`c-${entry.uri}`"
                   class="audio-books-continue-tile"
+                  compact
                   :data-uri="entry.uri"
                   :name="entry.name"
-                  :author="entry.subtitle"
+                  :caption="entry.subtitle"
                   :image-url="entry.imageUrl"
                   :progress="progressOf(entry)"
                   @click="resume(entry)"
-                ></AudioCoverTile>
+                ></AudioListRow>
               </div>
             </div>
             <div v-if="current.items.length === 0" class="audio-books-message audio-books-empty">{{ $t('page.kiosk.audio.books.empty') }}</div>
-            <div v-else-if="gridItems.length === 0" class="audio-books-message audio-books-no-match">{{ $t('page.kiosk.audio.books.noMatch') }}</div>
-            <div v-else class="audio-books-grid">
-              <AudioCoverTile
-                v-for="item in gridItems"
-                :key="`g-${item.uri}`"
-                class="audio-books-grid-tile"
+            <div v-else-if="listItems.length === 0" class="audio-books-message audio-books-no-match">{{ $t('page.kiosk.audio.books.noMatch') }}</div>
+            <div v-else class="audio-books-list">
+              <AudioListRow
+                v-for="item in listItems"
+                :key="`l-${item.uri}`"
+                class="audio-books-list-row"
                 :data-uri="item.uri"
                 :name="item.name"
-                :author="authorOf(item)"
+                :caption="captionOf(item)"
                 :image-url="item.imageUrl"
                 :progress="tab === 'podcasts' ? 0 : progressOf(item)"
                 :played="tab !== 'podcasts' && item.fullyPlayed"
+                :trailing="tab !== 'podcasts' && item.duration ? durationText(item.duration) : null"
                 @click="open(item)"
-              ></AudioCoverTile>
+              ></AudioListRow>
             </div>
           </template>
         </template>
@@ -113,8 +115,8 @@
 <script lang="js">
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
-import { continueEntries, matchesFilter, progressOf, sortForGrid, RELOAD_DELAY_MS } from '@/utils/audiobooks'
-import AudioCoverTile from '@/components/audio/AudioCoverTile.vue'
+import { continueEntries, durationText, matchesFilter, progressOf, sortForGrid, RELOAD_DELAY_MS } from '@/utils/audiobooks'
+import AudioListRow from '@/components/audio/AudioListRow.vue'
 import AudioBookDetail from '@/components/audio/AudioBookDetail.vue'
 import AudioPodcastDetail from '@/components/audio/AudioPodcastDetail.vue'
 
@@ -150,7 +152,7 @@ function emptyList () {
 /**
  * The audiobooks and podcasts popup of the kiosk audio bar (openspec change
  * `kiosk-audiobooks`, designs D4-D6): three tabs, each with a "Weiterhören"
- * row, a filter and a cover grid; a tap on the grid opens the book's or
+ * row, a filter and a list (change `kiosk-audiobooks-list`); a tap on the list opens the book's or
  * podcast's detail in place. Every command goes to the bar's target. Lists
  * are loaded when a tab is first shown after the popup opened; a reload keeps
  * the shown list until the new one arrives.
@@ -160,7 +162,7 @@ export default {
 
   mixins: [audioCommand],
 
-  components: { AudioCoverTile, AudioBookDetail, AudioPodcastDetail },
+  components: { AudioListRow, AudioBookDetail, AudioPodcastDetail },
 
   props: {
     value: { type: Boolean, default: false },
@@ -192,7 +194,7 @@ export default {
       }
       return continueEntries(this.current.items).map(b => ({ ...b, subtitle: this.authorOf(b) }))
     },
-    gridItems () {
+    listItems () {
       return sortForGrid(this.current.items, this.tab).filter(i => matchesFilter(i, this.filter))
     }
   },
@@ -216,6 +218,14 @@ export default {
 
   methods: {
     progressOf,
+    durationText,
+    /** Authors under a book, the episode count under a podcast (D2, D6). */
+    captionOf (item) {
+      if (this.tab === 'podcasts') {
+        return typeof item.episodeCount === 'number' ? this.$tc('page.kiosk.audio.books.episodeCount', item.episodeCount) : null
+      }
+      return this.authorOf(item)
+    },
     authorOf (item) {
       return item.authors && item.authors.length > 0 ? item.authors.join(', ') : null
     },
@@ -329,31 +339,24 @@ export default {
 
 .audio-books-continue-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
   padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
 
   .audio-books-continue-tile {
-    flex: 0 0 110px;
-    width: 110px;
+    flex: 0 0 220px;
+    width: 220px;
   }
 }
 
-.audio-books-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px 10px;
+.audio-books-body--xs .audio-books-continue-row .audio-books-continue-tile {
+  flex-basis: 180px;
+  width: 180px;
 }
 
-.audio-books-body--xs {
-  .audio-books-grid {
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  }
-
-  .audio-books-continue-row .audio-books-continue-tile {
-    flex-basis: 96px;
-    width: 96px;
-  }
+.audio-books-list {
+  display: flex;
+  flex-direction: column;
 }
 </style>

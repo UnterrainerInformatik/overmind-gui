@@ -182,7 +182,8 @@
 					"chapters": "Kapitel",
 					"episodes": "Folgen",
 					"more": "Weitere Aktionen",
-					"remaining": "noch {time}"
+					"remaining": "noch {time}",
+					"episodeCount": "1 Folge | {n} Folgen"
 				}
 			},
 			"linkAudio": "Audio",

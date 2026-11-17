@@ -182,7 +182,8 @@
 					"chapters": "Chapters",
 					"episodes": "Episodes",
 					"more": "More actions",
-					"remaining": "{time} left"
+					"remaining": "{time} left",
+					"episodeCount": "1 episode | {n} episodes"
 				}
 			},
 			"linkAudio": "Audio",
