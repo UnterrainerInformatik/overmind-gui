@@ -2,6 +2,7 @@
   <KioskPanel
     :isEnabled="calculateEnabled"
     pa="1"
+    :compact="compact"
     @click="triggerEvent(item.applianceId, item.sensorPath, item.eventPath)"
     class="noFocus"
     :borderColorRaw="active && item.colorActive ? item.colorActive : null"
@@ -14,7 +15,7 @@
             ? item.colorActive
             : (state.enabled ? 'on ' : 'off ') + ' darken-1'
         "
-        size="38"
+        :size="compact ? 32 : 38"
       >
         <v-icon>power_settings_new</v-icon>
       </v-avatar>
@@ -37,7 +38,9 @@ export default {
   name: 'KioskSwitchPanel',
 
   props: {
-    item: {}
+    item: {},
+    // the overview's low tile (openspec change `kiosk-overview-room-for-audio-bar`)
+    compact: { type: Boolean, default: false }
   },
 
   components: {

@@ -337,16 +337,16 @@
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">
         <v-col class="ma-0 pa-0 d-flex flex-wrap" cols="12">
-          <KioskMultiStatePanel :config="allStateMulti"></KioskMultiStatePanel>
-          <KioskSwitchPanel :item="shuttersGroundFloor"></KioskSwitchPanel>
-          <KioskMultiStatePanel :config="shuttersFirstFloorMulti"></KioskMultiStatePanel>
-          <KioskSwitchPanel :item="tv"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="vacation"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="snuggling"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="bioTrash"></KioskSwitchPanel>
-          <KioskSwitchPanel :item="patioOpened"></KioskSwitchPanel>
-          <KioskMultiStatePanel :config="shuttersParentsBedroomMulti"></KioskMultiStatePanel>
-          <KioskPlanPanel :item="sunblocker"></KioskPlanPanel>
+          <KioskMultiStatePanel compact :config="allStateMulti"></KioskMultiStatePanel>
+          <KioskSwitchPanel compact :item="shuttersGroundFloor"></KioskSwitchPanel>
+          <KioskMultiStatePanel compact :config="shuttersFirstFloorMulti"></KioskMultiStatePanel>
+          <KioskSwitchPanel compact :item="tv"></KioskSwitchPanel>
+          <KioskSwitchPanel compact :item="vacation"></KioskSwitchPanel>
+          <KioskSwitchPanel compact :item="snuggling"></KioskSwitchPanel>
+          <KioskSwitchPanel compact :item="bioTrash"></KioskSwitchPanel>
+          <KioskSwitchPanel compact :item="patioOpened"></KioskSwitchPanel>
+          <KioskMultiStatePanel compact :config="shuttersParentsBedroomMulti"></KioskMultiStatePanel>
+          <KioskPlanPanel compact :item="sunblocker"></KioskPlanPanel>
         </v-col>
       </v-row>
       <v-row class="ma-0 pa-0" cols="12">

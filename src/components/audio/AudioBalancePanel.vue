@@ -43,6 +43,7 @@
 </template>
 
 <script lang="js">
+import { volumeSliderColors } from '@/utils/audioVolumeColors'
 import { singleton as audioService } from '@/utils/webservices/audioService'
 import { audioCommand } from '@/mixins/audioCommand'
 import { createHeldLevels } from '@/utils/heldLevels'
@@ -66,12 +67,12 @@ export default {
   },
 
   computed: {
-    // the stream card's slider accent (change `audio-card-volume-contrast`, D1)
+    // shared kiosk volume slider accent (src/utils/audioVolumeColors.js)
     volumeColor () {
-      return this.$vuetify.theme.dark ? '#4FC3F7' : '#1976D2'
+      return volumeSliderColors(this.$vuetify.theme.dark).color
     },
     volumeTrackColor () {
-      return this.$vuetify.theme.dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'
+      return volumeSliderColors(this.$vuetify.theme.dark).trackColor
     }
   },
 

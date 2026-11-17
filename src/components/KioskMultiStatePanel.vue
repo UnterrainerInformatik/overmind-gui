@@ -9,6 +9,7 @@
     <KioskPanel
       :isEnabled="calculateEnabled"
       pa="1"
+      :compact="compact"
       @click="openDialog"
       class="noFocus"
       :borderColorRaw="activeState && activeState.colorSelectedIcon ? activeState.colorSelectedIcon : null"
@@ -17,7 +18,7 @@
         <v-avatar
           :color="isOverrideActive && activeState.colorSelectedIcon ? activeState.colorSelectedIcon : (isOverrideActive ? 'on ' : 'off ') + ' darken-1'
           "
-          size="38"
+          :size="compact ? 32 : 38"
         >
           <v-icon v-if="activeState && activeState.icon">{{ activeState.icon }}</v-icon>
           <v-icon v-else-if="config.icon">{{ config.icon }}</v-icon>
@@ -73,7 +74,9 @@ export default {
     config: {
       type: Object,
       required: true
-    }
+    },
+    // the overview's low tile (openspec change `kiosk-overview-room-for-audio-bar`)
+    compact: { type: Boolean, default: false }
   },
 
   components: {

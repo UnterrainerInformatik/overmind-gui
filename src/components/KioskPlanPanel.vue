@@ -2,6 +2,7 @@
   <KioskPanel
     :isEnabled="calculateEnabled"
     pa="1"
+    :compact="compact"
     @click="togglePlan"
     class="noFocus"
     :borderColorRaw="active && item.colorActive ? item.colorActive : null"
@@ -16,7 +17,7 @@
             ? item.colorActive
             : (active ? 'on ' : 'off ') + ' darken-1'
         "
-        size="38"
+        :size="compact ? 32 : 38"
       >
         <v-icon v-if="item.icon">{{ item.icon }}</v-icon>
         <v-icon v-else>power_settings_new</v-icon>
@@ -49,7 +50,9 @@ export default {
     item: {
       type: Object,
       required: true
-    }
+    },
+    // the overview's low tile (openspec change `kiosk-overview-room-for-audio-bar`)
+    compact: { type: Boolean, default: false }
   },
 
   components: {

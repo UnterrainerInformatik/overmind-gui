@@ -3,7 +3,7 @@
     app
     fixed
     padless
-    :class="['kiosk-audio-player', { 'kiosk-audio-player--unavailable': !available, 'kiosk-audio-player--narrow': narrow }]"
+    :class="['kiosk-audio-player', { 'kiosk-audio-player--unavailable': !available, 'kiosk-audio-player--narrow': narrow, 'kiosk-audio-player--medium': medium }]"
     :style="{ '--kiosk-audio-target-color': targetColor }"
   >
     <v-tooltip top :open-delay="openDelay" :disabled="!tooltips">
@@ -16,8 +16,10 @@
           v-on="on"
           @click="targetDialog = true"
         >
-          <span class="kiosk-audio-player-dot"></span>
-          <v-icon small class="kiosk-audio-player-target-icon">{{ targetIcon }}</v-icon>
+          <span class="kiosk-audio-player-target-mark">
+            <span class="kiosk-audio-player-dot"></span>
+            <v-icon small class="kiosk-audio-player-target-icon">{{ targetIcon }}</v-icon>
+          </span>
           <span v-if="!narrow" class="kiosk-audio-player-target-name">{{ targetName }}</span>
         </button>
       </template>
@@ -127,6 +129,8 @@
           class="kiosk-audio-player-volume-slider"
           vertical
           :value="shownVolume"
+          :color="volumeColors.color"
+          :track-color="volumeColors.trackColor"
           min="0"
           max="100"
           step="1"
@@ -192,6 +196,7 @@ import {
   AUDIOBOOK_SKIP_SECONDS, audiobookIdOf, chapterEndOf, chapterIndexAt, itemKindOf,
   nextChapterTarget, previousChapterTarget
 } from '@/utils/audiobooks'
+import { volumeSliderColors } from '@/utils/audioVolumeColors'
 import AudioPlanDialog from '@/components/audio/AudioPlanDialog.vue'
 import AudioQueueDialog from '@/components/audio/AudioQueueDialog.vue'
 import AudioRadioDialog from '@/components/audio/AudioRadioDialog.vue'
@@ -271,6 +276,13 @@ export default {
     },
     narrow () {
       return this.$vuetify.breakpoint.xsOnly
+    },
+    /** 600 to 959 px: 44 px buttons instead of 56 (change `kiosk-overview-room-for-audio-bar`, D2). */
+    medium () {
+      return this.$vuetify.breakpoint.smOnly
+    },
+    volumeColors () {
+      return volumeSliderColors(this.$vuetify.theme.dark)
     },
     selectedRoom () {
       return selectedRoomOf(this.state, this.selection)
@@ -568,11 +580,20 @@ export default {
   // full bar height.
   box-shadow: inset 0 2px 0 var(--kiosk-audio-target-color) !important;
 
+  // 56 px from 960 px up, 44 px from 600 px, 36 px on phones (modifiers
+  // below); icons 28 px from 600 px up (change
+  // `kiosk-overview-room-for-audio-bar`, D2). The shuffle toggle is its own
+  // v-btn with the same class, so it follows.
   .v-btn.kiosk-audio-player-btn {
     height: 100%;
-    width: 40px;
+    width: 56px;
+    min-width: 56px;
     flex: 0 0 auto;
     border-radius: 0;
+
+    .v-icon {
+      font-size: 28px;
+    }
   }
 }
 
@@ -586,12 +607,20 @@ export default {
 
 .kiosk-audio-player-target {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   flex: 0 1 auto;
-  max-width: 180px;
+  max-width: 88px;
   min-width: 0;
   padding: 0 8px;
   color: inherit;
+}
+
+// dot + icon on the first line, the name below (D3)
+.kiosk-audio-player-target-mark {
+  display: flex;
+  align-items: center;
 }
 
 .kiosk-audio-player-dot {
@@ -608,11 +637,14 @@ export default {
 }
 
 .kiosk-audio-player-target-name {
-  margin-left: 6px;
+  display: block;
+  max-width: 100%;
+  margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 14px;
+  font-size: 11px;
+  line-height: 13px;
 }
 
 .kiosk-audio-player-title {
@@ -682,11 +714,23 @@ export default {
 
 // Twice Vuetify's 150px long and 1.5 times as wide (track, thumb, touch area)
 // as the default vertical slider (openspec change `kiosk-queue-live-updates`).
-// Shorter on low screens, so the menu stays above the bar in phone landscape.
+// Shorter on low screens, so the menu stays above the bar in phone landscape:
+// the 69 px are Vuetify's 12 px menu margin to the viewport top, the slider's
+// 12 + 9 px margins, the card's 16 px padding and the 20 px value line.
+// The input itself is pinned to 36 px: the menu card is at least as wide as
+// the 56 px volume button and would stretch it.
+.kiosk-audio-player-volume-menu .v-input.kiosk-audio-player-volume-slider {
+  width: 36px;
+  flex: 0 0 auto;
+  margin: 0 auto;
+}
+
 .kiosk-audio-player-volume-menu .kiosk-audio-player-volume-slider .v-slider--vertical {
   width: 36px;
   min-height: 0;
-  height: #{'min(300px, calc(100vh - 110px))'};
+  // half the 18 px thumb, so the thumb at 0 still shows (Vuetify: 12 px)
+  margin-bottom: 9px;
+  height: #{'min(300px, calc(100vh - var(--kiosk-audio-bar-height) - 69px))'};
 
   .v-slider__track-container {
     width: 3px;
@@ -706,7 +750,18 @@ export default {
   }
 }
 
-.kiosk-audio-player--narrow {
+.kiosk-audio-player-volume-value {
+  opacity: 1;
+}
+
+.kiosk-audio-player.v-footer.kiosk-audio-player--medium {
+  .v-btn.kiosk-audio-player-btn {
+    width: 44px;
+    min-width: 44px;
+  }
+}
+
+.kiosk-audio-player.v-footer.kiosk-audio-player--narrow {
   .kiosk-audio-player-target {
     padding: 0 6px;
   }
@@ -718,6 +773,10 @@ export default {
   .v-btn.kiosk-audio-player-btn {
     width: 36px;
     min-width: 36px;
+
+    .v-icon {
+      font-size: 24px;
+    }
   }
 }
 </style>

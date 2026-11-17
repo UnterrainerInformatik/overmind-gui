@@ -3,10 +3,13 @@
 // The link tile was halved to make room for the audio bar (openspec change
 // `kiosk-audio-bar`): it measured 82 px before, so the bar is 41 px. The
 // halved tile was too small to tap and left nearly a whole row empty, so the
-// tile got some of its height back; the bar keeps its 41 px.
+// tile got some of its height back. The bar then took 19 px from the
+// overview's action tiles, which went from 112-118 px to 78 px (change
+// `kiosk-overview-room-for-audio-bar`), and is now as high as a link tile.
 :root {
-  --kiosk-audio-bar-height: 41px;
+  --kiosk-audio-bar-height: 60px;
   --kiosk-link-tile-height: 60px;
+  --kiosk-action-tile-height: 78px;
 }
 
 // What fixed kiosk chrome has to stay clear of at the bottom edge: the audio
