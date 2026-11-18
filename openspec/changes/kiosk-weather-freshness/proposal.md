@@ -25,6 +25,11 @@ panel has to use the timestamp and survive the omitted values.
   "Sunshine" and is attached to the value as its title. The new `radiation`
   value is not displayed - the 230 x 140 px panel has no room for a fourth
   value - but its absence or presence never breaks rendering.
+- Stop showing drizzle as dry: the rain value shows `rainLastHour` (mm over
+  the last hour) instead of `rain` (last 10 minutes, 0.1 mm resolution, so
+  drizzle stays 0.0), falling back to `rain` when absent; when `rainDuration`
+  (share of the current 10-minute slot with precipitation) is above 0 the rain
+  icon and value turn light blue as a "raining now" indicator.
 - Felt temperature uses the wind value from the record as km/h; the wind-chill
   formula already expects km/h, so the server's unit fix corrects it with no
   formula change.
@@ -48,6 +53,6 @@ panel has to use the timestamp and survive the omitted values.
 - new `tests/unit/` runner and test; `package.json` gains a `test:unit` script
 - `src/locales/de-AT.json`, `src/locales/en-US.json` (new `page.kiosk.zamg` keys)
 - Consumes the `zamg` localizedData record fields `measuredOn`, `fetchedOn`,
-  `radiation`, `radiationUnit` from java-overmind-server change
+  `radiation`, `radiationUnit`, `rainDuration`, `rainLastHour` from java-overmind-server change
   `fix-zamg-weather-units-and-freshness`; works unchanged (freshness unknown)
   against the currently deployed server.

@@ -22,6 +22,8 @@ Record contract consumed (from java-overmind-server change
   "temperature": 4.2, "temperatureUnit": "°C",
   "humidity": 81, "wind": 12.6, "windUnit": " km/h",
   "rain": 0, "rainUnit": " mm", "sun": 40, "sunUnit": "%",
+  "rainDuration": 100, "rainDurationUnit": " %",
+  "rainLastHour": 0.2, "rainLastHourUnit": " mm",
   "radiation": 112.0, "radiationUnit": " W/m²"
 }
 ```
@@ -75,6 +77,17 @@ rendered and the freed space stays as margin, so the panel never changes size.
 wind and the inside/outside temperature tiles. `calculateFeltTemperature`
 already defaults non-numeric wind/humidity to 0; its `console.log` noise is
 removed since absence is now normal.
+
+**Rain value and indicator.** Two more pure functions in
+`weatherFreshness.ts` (renamed in spirit to "weather helpers", file name kept
+short): `rainAmount(weather)` returns `{ value, unit }` from `rainLastHour`
+when numeric, else from `rain`, else `{ value: null }`; `isRaining(weather)`
+returns `typeof rainDuration === 'number' && rainDuration > 0`. Both are
+covered by the same unit test. The unit falls back to `rainUnit` and then
+`" mm"` if `rainLastHourUnit` is missing. Light blue is Vuetify
+`light-blue--text` / icon `color="light-blue"`: no extra width, so the 220 px
+value row does not wrap. Alternatives considered: a separate "raining" icon
+(costs width), or showing both 10-min and hourly amounts (no room).
 
 **Unit test without a new dependency.** `tests/unit/run.js` registers a
 `require.extensions['.ts']` hook that compiles with

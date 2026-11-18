@@ -85,6 +85,31 @@ normally. The felt temperature SHALL be computed with missing wind treated as
 - **WHEN** the record has neither `sun` nor `rain`
 - **THEN** both read "–" and no value reads `NaN`
 
+### Requirement: Rain shows the last hour and an active-rain indicator
+
+The rain value SHALL show `rainLastHour` (rain summed over the last hour, mm)
+with one decimal. When `rainLastHour` is absent or non-numeric it SHALL fall
+back to `rain` (last 10 minutes); when both are absent it SHALL read "–".
+When `rainDuration` is a number greater than 0 the rain icon and value SHALL be
+shown in light blue (raining now), regardless of the mm amount; otherwise, or
+when `rainDuration` is absent, they SHALL be shown white as before.
+
+#### Scenario: Drizzle with zero amount
+- **WHEN** the record has `rain` 0.0, `rainLastHour` 0.0 and `rainDuration` 100
+- **THEN** the rain value reads "0 mm" and icon and value are light blue
+
+#### Scenario: Hourly sum preferred
+- **WHEN** the record has `rain` 0.1 and `rainLastHour` 1.4
+- **THEN** the rain value reads "1.4 mm"
+
+#### Scenario: Hourly sum missing
+- **WHEN** the record has `rain` 0.3 and no `rainLastHour`
+- **THEN** the rain value reads "0.3 mm"
+
+#### Scenario: Dry
+- **WHEN** `rainDuration` is 0 or absent
+- **THEN** the rain icon and value are white
+
 ### Requirement: Sunshine value is labelled as duration
 
 The `sun` value SHALL be labelled as sunshine duration ("Sonnenschein" / "Sunshine")
