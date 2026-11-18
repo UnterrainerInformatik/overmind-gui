@@ -1,7 +1,8 @@
 <template>
   <KioskPanel
     v-if="weather"
-    borderColor="secondary"
+    class="kiosk-zamg-panel"
+    :borderColor="freshness.state === 'stale' ? 'red' : 'secondary'"
     bgColor="black"
     min-width="230"
     max-width="230"
@@ -49,7 +50,7 @@
                         class="ma-0 mt-1 mx-auto pa-0 black--text"
                         style="font-size: 20px !important"
                       >
-                        {{ overmindUtils.formatNumber(tempOutside, 1, true) }}°
+                        {{ fmt(tempOutside, 1, '°') }}
                       </v-col>
                     </v-row>
                   </div>
@@ -96,16 +97,16 @@
                                 style="font-size: 20px !important"
                               >
                                 {{
-                                  overmindUtils.formatNumber(
+                                  fmt(
                                     calculateFeltTemperature(
                                       tempOutside,
                                       weather.wind,
                                       weather.humidity
                                     ),
                                     1,
-                                    true
+                                    weather.temperatureUnit
                                   )
-                                }}{{ weather.temperatureUnit }}
+                                }}
                               </v-col></v-row
                             >
                             <v-row
@@ -167,7 +168,7 @@
                         class="ma-0 mt-1 mx-auto pa-0 black--text"
                         style="font-size: 20px !important"
                       >
-                        {{ overmindUtils.formatNumber(tempInside, 1, true) }}°
+                        {{ fmt(tempInside, 1, '°') }}
                       </v-col>
                     </v-row>
                   </div>
@@ -175,24 +176,38 @@
               </v-card>
             </v-col>
           </v-row>
-          <v-row class="ma-0 mt-6 mb-4 pa-0 justify-center">
+          <v-row class="ma-0 mt-4 mb-2 pa-0 justify-center">
             <v-col class="ma-0 pa-0 text-center">
-              <div class="small ma-0 pa-0">
-                <v-icon size="16" color="white">wb_sunny</v-icon>
-                {{ overmindUtils.formatNumber(weather.sun, 0, true) }}{{ weather.sunUnit }} &nbsp;<v-icon
-                  size="16"
-                  color="white"
-                  >water_drop</v-icon
+              <div class="small zamg-values ma-0 pa-0">
+                <span class="zamg-sun" :title="$t('page.kiosk.zamg.sun')"
+                  ><v-icon size="16" color="white">wb_sunny</v-icon
+                  >{{ fmt(weather.sun, 0, weather.sunUnit) }}</span
+                ><span
+                  :class="['zamg-rain', raining ? 'light-blue--text' : '']"
+                  :title="$t('page.kiosk.zamg.rain')"
+                  ><v-icon size="16" :color="raining ? 'light-blue' : 'white'"
+                    >water_drop</v-icon
+                  >{{ fmt(rain.value, 1, rain.unit) }}</span
+                ><span class="zamg-wind"
+                  ><v-icon size="16" color="white">air</v-icon
+                  >{{ fmt(weather.wind, 0, weather.windUnit) }}</span
                 >
-                {{ overmindUtils.formatNumber(weather.rain, 1, true) }}{{ weather.rainUnit }} &nbsp;<v-icon
-                  size="16"
-                  color="white"
-                  >air</v-icon
-                >
-                {{ overmindUtils.formatNumber(weather.wind, 1, true) }}{{ weather.windUnit }}
               </div>
             </v-col>
           </v-row>
+          <div
+            :class="[
+              'zamg-status ma-0 pa-0 text-center',
+              freshness.state === 'stale' ? 'red--text' : ''
+            ]"
+          >
+            <template v-if="freshness.state === 'fresh'">{{
+              $t('page.kiosk.zamg.asOf', { time: measuredTime })
+            }}</template>
+            <template v-else-if="freshness.state === 'stale'">{{
+              $t('page.kiosk.zamg.staleSince', { time: measuredTime })
+            }}</template>
+          </div>
           <v-row class="ma-0 pa-0 justify-center">
             <v-col class="ma-0 pa-0 text-center">
               <div class="small ma-0 pa-0 height-auto">
@@ -220,6 +235,7 @@ import { singleton as localizedDataService } from '@/utils/webservices/localized
 import { singleton as sunRiseSetService } from '@/utils/webservices/sunRiseSetService'
 import { singleton as appliancesService } from '@/utils/webservices/appliancesService'
 import { Debouncer } from '@/utils/debouncer'
+import { weatherFreshness, rainAmount, isRaining } from '@/utils/weatherFreshness'
 
 export default {
   name: 'KioskZamgPanel',
@@ -233,6 +249,8 @@ export default {
 
   data: () => ({
     interval: null,
+    clockInterval: null,
+    nowMs: Date.now(),
     overmindUtils,
     dateUtils,
     weather: null,
@@ -245,12 +263,31 @@ export default {
   }),
 
   computed: {
+    freshness () {
+      return weatherFreshness(this.weather && this.weather.measuredOn, this.nowMs)
+    },
+    measuredTime () {
+      return dateUtils.dateToShortTime(this.freshness.measuredAt, this.$i18n.locale)
+    },
+    rain () {
+      return rainAmount(this.weather)
+    },
+    raining () {
+      return isRaining(this.weather)
+    }
   },
 
   watch: {
   },
 
   methods: {
+    fmt (value, precision, unit) {
+      const n = typeof value === 'string' && value.trim() !== '' ? Number(value) : value
+      if (typeof n !== 'number' || !isFinite(n)) {
+        return '–'
+      }
+      return overmindUtils.formatNumber(n, precision, true) + (unit || '')
+    },
     parseDate (date, time) {
       return new Date(date.substring(0, 4) + '-' + date.substring(4, 6) + '-' + date.substring(6, 8) + ' ' + time + ':00.000')
     },
@@ -303,11 +340,9 @@ export default {
     },
     calculateFeltTemperature (temperature, wind, hum) {
       if (typeof wind !== 'number') {
-        console.log('weather.wind is not a number')
         wind = 0
       }
       if (typeof hum !== 'number') {
-        console.log('weather.humidity is not a number')
         hum = 0
       }
       const temp = parseFloat(temperature)
@@ -346,6 +381,10 @@ export default {
   },
 
   mounted () {
+    // Own clock tick, independent of the (debounced, possibly failing) fetch,
+    // so a feed that stops delivering turns stale on its own.
+    this.nowMs = Date.now()
+    this.clockInterval = setInterval(() => { this.nowMs = Date.now() }, 15000)
     this.debouncer.debounce(async () => this.update())
     this.interval = setInterval(() => this.debouncer.debounce(async () => this.update()), 10000)
   },
@@ -353,6 +392,9 @@ export default {
   beforeDestroy () {
     if (this.interval) {
       clearInterval(this.interval)
+    }
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval)
     }
   }
 }
@@ -373,5 +415,19 @@ export default {
 }
 .bold {
   font-weight: bold;
+}
+.zamg-values {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.zamg-values .v-icon {
+  margin-right: 1px;
+}
+.zamg-status {
+  font-size: 11px !important;
+  line-height: 12px;
+  height: 12px;
 }
 </style>

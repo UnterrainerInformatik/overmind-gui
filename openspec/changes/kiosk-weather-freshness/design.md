@@ -61,14 +61,18 @@ and refreshed by its own `setInterval` every 15 s, cleared in
 10 s fetch interval on purpose: the fetch is debounced and may fail, the tick
 must not depend on it. 15 s satisfies the "within 30 s" spec with margin.
 
-**Stale look.** `KioskPanel` already accepts `borderColor`; pass `error`
-when stale, else `secondary`. The status line uses Vuetify `error--text`.
+**Stale look.** `KioskPanel` already accepts `borderColor`; pass `red`
+when stale, else `secondary`. The status line uses Vuetify `red--text`.
+(Applied: the theme's `error` was the first choice, but in the dark theme it is
+a muted `#7d3939` that vanished against the dark-red kiosk background and made
+the 11 px status line hard to read; Vuetify `red` (`#F44336`) does not.)
 
 **Space for the status line.** The value row currently has `mt-6 mb-4`. The
 status line ("Stand 07:10" / "Veraltet seit 07:10", 11 px, line-height 12 px)
 goes between the value row and the sun rise/set row; the margins shrink to
-`mt-3 mb-2` (exact values tuned in the browser) so the inner card stays at
-`height="140"` with nothing clipped. In the unknown state the line is not
+`mt-4 mb-2` (tuned in the browser) so the inner card stays at
+`height="140"` with nothing clipped - the sun rise/set row, which used to
+overhang the card by 2 px, now ends 2 px inside it. In the unknown state the line is not
 rendered and the freed space stays as margin, so the panel never changes size.
 
 **Dash rendering.** A component method `fmt(value, precision, unit)` returns
@@ -85,8 +89,14 @@ when numeric, else from `rain`, else `{ value: null }`; `isRaining(weather)`
 returns `typeof rainDuration === 'number' && rainDuration > 0`. Both are
 covered by the same unit test. The unit falls back to `rainUnit` and then
 `" mm"` if `rainLastHourUnit` is missing. Light blue is Vuetify
-`light-blue--text` / icon `color="light-blue"`: no extra width, so the 220 px
-value row does not wrap. Alternatives considered: a separate "raining" icon
+`light-blue--text` / icon `color="light-blue"`: no extra width.
+
+**Value row fits one line.** Measured in the browser, the row has 204 px and
+the hourly sum's decimal ("0.2 mm") already made "40% 0.2 mm 12.6 km/h" wrap
+(212 px). The row is therefore a no-wrap flex row with a 5 px gap and 1 px
+between icon and value, and wind is shown without decimals (`13 km/h`), which
+is the usual precision on weather displays. The widest plausible row,
+"100% 12.4 mm 45 km/h", measures exactly 204 px. Alternatives considered: a separate "raining" icon
 (costs width), or showing both 10-min and hourly amounts (no room).
 
 **Unit test without a new dependency.** `tests/unit/run.js` registers a
