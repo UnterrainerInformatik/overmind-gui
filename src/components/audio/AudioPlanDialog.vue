@@ -115,10 +115,10 @@ export default {
     tool: 'overview',
     tools: [
       { name: 'overview', icon: 'dashboard' },
-      { name: 'mute', icon: 'volume_off' },
       { name: 'group', icon: 'speaker_group' },
-      { name: 'light', icon: 'lightbulb' },
       { name: 'volume', icon: 'equalizer' },
+      { name: 'light', icon: 'lightbulb' },
+      { name: 'mute', icon: 'volume_off' },
       { name: 'balance', icon: 'tune' }
     ],
     pulseKey: null,

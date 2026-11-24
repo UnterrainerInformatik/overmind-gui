@@ -90,7 +90,7 @@ apart, a muted room SHALL be drawn as manually muted.
 
 ### Requirement: One tool is active and decides what a room does
 
-The tool bar SHALL offer Overview, Mute, Group, Light, Volume and Balance, exactly one active at a
+The tool bar SHALL offer Overview, Group, Volume, Light, Mute and Balance, in that order, exactly one active at a
 time and marked clearly. Tapping a room SHALL do what the active tool does; switching tools SHALL
 send nothing.
 
