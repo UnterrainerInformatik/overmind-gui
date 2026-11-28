@@ -119,6 +119,7 @@
           <v-icon v-if="tool === 'light' && r.room.lightLinked" small class="audio-plan-mark-bulb">lightbulb</v-icon>
           <span v-if="tool === 'volume' && levelOf(r.room) !== null" class="audio-plan-mark-level">{{ levelOf(r.room) }}</span>
           <v-icon v-if="tool === 'balance' && balanceOf(r.room)" small class="audio-plan-mark-balance">tune</v-icon>
+          <v-icon v-if="tool === 'eq' && eqOf(r.room)" small class="audio-plan-mark-balance audio-plan-mark-eq" :class="{ 'audio-plan-mark-eq--unreachable': !eqReachableOf(r.room) }">graphic_eq</v-icon>
         </div>
       </div>
 
@@ -138,6 +139,7 @@
           <v-icon v-if="tool === 'group' && room.pinned" x-small class="audio-plan-mark-pin">push_pin</v-icon>
           <v-icon v-if="(tool === 'light' || tool === 'overview') && room.lightLinked" x-small class="audio-plan-mark-bulb">lightbulb</v-icon>
           <v-icon v-if="tool === 'balance' && balanceOf(room)" x-small class="audio-plan-mark-balance">tune</v-icon>
+          <v-icon v-if="tool === 'eq' && eqOf(room)" x-small class="audio-plan-mark-balance audio-plan-mark-eq" :class="{ 'audio-plan-mark-eq--unreachable': !eqReachableOf(room) }">graphic_eq</v-icon>
           <span class="audio-plan-chip-name">{{ room.name }}</span>
           <span v-if="tool === 'volume' && levelOf(room) !== null" class="audio-plan-mark-level">{{ levelOf(room) }}</span>
         </div>
@@ -162,6 +164,7 @@ import { audioCommand } from '@/mixins/audioCommand'
 import { createHeldLevels } from '@/utils/heldLevels'
 import { planAppliances } from '@/utils/audioPlanAppliances'
 import { hasBalance } from '@/utils/audioBalance'
+import { hasEq, eqReachable } from '@/utils/audioEq'
 import { layoutRooms, isSmallOnScreen, PLAN_WIDTH, PLAN_HEIGHT, MIN_TOUCH_PX } from '@/utils/audioPlanGeometry'
 
 const DRAG_THRESHOLD_PX = 6
@@ -171,8 +174,8 @@ const UNAVAILABLE_COLOR = '#9E9E9E'
 const LINKED_COLOR = '#FFB300'
 /** Outline of grouped rooms in the group tool; light, so it stands out on the main group's dark fill. */
 const GROUPED_OUTLINE_COLOR = '#ECEFF1'
-/** Outline of the room whose balance panel is open. */
-const BALANCE_OUTLINE_COLOR = '#4FC3F7'
+/** Outline of the room whose Balance or EQ panel is open. */
+const PANEL_OUTLINE_COLOR = '#4FC3F7'
 // estimated width of one character of a room name at 12 px
 const CHAR_PX = 7
 
@@ -186,7 +189,9 @@ const CHAR_PX = 7
  * only send, one at a time per room and tool, and the Volume tool's drag is
  * sent live with the shared hold logic (design D6). The Balance tool (change
  * `kiosk-audio-plan-balance-tool`, design D3a) only marks the rooms with a
- * balance and asks the dialog to open the panel of a tapped one.
+ * balance and asks the dialog to open the panel of a tapped one; the EQ tool
+ * (change `kiosk-audio-plan-eq-tool`, design D4) does the same for rooms with
+ * an EQ.
  */
 export default {
   name: 'AudioPlanMap',
@@ -196,8 +201,8 @@ export default {
   props: {
     state: { type: Object, required: true },
     tool: { type: String, default: 'overview' },
-    // the room whose balance panel is open, outlined in the Balance tool
-    balanceRoomId: { type: [String, Number], default: null },
+    // the room whose Balance or EQ panel is open, outlined in those tools
+    panelRoomId: { type: [String, Number], default: null },
     disabled: { type: Boolean, default: false }
   },
 
@@ -300,12 +305,23 @@ export default {
     balanceOf (room) {
       return hasBalance(room)
     },
+    eqOf (room) {
+      return hasEq(room)
+    },
+    eqReachableOf (room) {
+      return eqReachable(room)
+    },
+    /** The panel tools outline the room whose panel is open. */
+    panelOpenOf (room) {
+      return (this.tool === 'balance' || this.tool === 'eq') && this.panelRoomId !== null && `${room.id}` === `${this.panelRoomId}`
+    },
     fillOpacityOf (room) {
       if (!room.available) {
         return 0.35
       }
       switch (this.tool) {
         case 'balance': return hasBalance(room) ? 0.6 : 0.2
+        case 'eq': return eqReachable(room) ? 0.6 : 0.2
         case 'mute': return 0.45
         case 'volume': return 0.25
         case 'light': return room.lightLinked ? 0.6 : 0.25
@@ -327,8 +343,8 @@ export default {
       if (this.pressed && this.pressed.room.id === room.id) {
         return { color: '#FFFFFF', width: 2 }
       }
-      if (this.tool === 'balance' && this.balanceRoomId !== null && `${room.id}` === `${this.balanceRoomId}`) {
-        return { color: BALANCE_OUTLINE_COLOR, width: 3 }
+      if (this.panelOpenOf(room)) {
+        return { color: PANEL_OUTLINE_COLOR, width: 3 }
       }
       if (this.tool === 'light' && room.lightLinked) {
         return { color: LINKED_COLOR, width: 3 }
@@ -347,7 +363,8 @@ export default {
         'audio-plan-room--manual-muted': room.manualMuted,
         'audio-plan-room--light-muted': room.lightMuted,
         'audio-plan-room--no-balance': this.tool === 'balance' && !hasBalance(room),
-        'audio-plan-room--balance-open': this.tool === 'balance' && this.balanceRoomId !== null && `${room.id}` === `${this.balanceRoomId}`,
+        'audio-plan-room--no-eq': this.tool === 'eq' && !hasEq(room),
+        'audio-plan-room--balance-open': this.panelOpenOf(room),
         'audio-plan-room--pressed': !!this.pressed && this.pressed.room.id === room.id
       }
     },
@@ -470,7 +487,13 @@ export default {
         case 'balance':
           // opens the panel only; a room without a balance does nothing
           if (hasBalance(room)) {
-            this.$emit('open-balance', id)
+            this.$emit('open-panel', id)
+          }
+          break
+        case 'eq':
+          // opens the panel only, also for an unreachable EQ; a room without one does nothing
+          if (hasEq(room)) {
+            this.$emit('open-panel', id)
           }
           break
         default:
@@ -609,9 +632,15 @@ export default {
   color: #212121;
 
   &.audio-plan-room--unavailable,
-  &.audio-plan-room--no-balance {
+  &.audio-plan-room--no-balance,
+  &.audio-plan-room--no-eq {
     opacity: 0.5;
   }
+}
+
+// an EQ that cannot be read right now: still tappable
+.audio-plan-mark-eq--unreachable.v-icon {
+  opacity: 0.45;
 }
 
 .audio-plan-mark-balance.v-icon {
@@ -730,7 +759,8 @@ export default {
     opacity: 0.5;
   }
 
-  &.audio-plan-room--no-balance {
+  &.audio-plan-room--no-balance,
+  &.audio-plan-room--no-eq {
     opacity: 0.45;
   }
 

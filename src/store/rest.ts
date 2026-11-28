@@ -126,6 +126,9 @@ const store = {
         audioRoomManualMuted: '/audio/rooms/{roomId}/manualMuted',
         // one speaker of a group room (server change `audio-speaker-reconnect-restore-and-balance`)
         audioRoomSpeakerVolume: '/audio/rooms/{roomId}/speakers/{playerId}/volume',
+        // a room's EQ or crossover (server change `audio-room-eq`)
+        audioRoomEq: '/audio/rooms/{roomId}/eq',
+        audioRoomEqReset: '/audio/rooms/{roomId}/eq/reset',
         audioTargetCommand: '/audio/targets/{targetId}/{command}',
         audioTargetSeek: '/audio/targets/{targetId}/seek',
         audioTargetVolume: '/audio/targets/{targetId}/volume',

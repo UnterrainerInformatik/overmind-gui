@@ -40,11 +40,11 @@
           <AudioPlanMap
             :state="state"
             :tool="tool"
-            :balance-room-id="balanceRoom ? balanceRoom.id : null"
+            :panel-room-id="panelRoom ? panelRoom.id : null"
             @focus-stream="focusStream"
-            @open-balance="openBalance"
+            @open-panel="openPanel"
           ></AudioPlanMap>
-          <div class="audio-plan-bottom">
+          <div class="audio-plan-bottom" :class="{ 'audio-plan-bottom--eq': panelRoom && tool === 'eq' }">
             <div ref="strip" class="audio-plan-strip">
               <AudioStreamCard
                 v-for="stream in streams"
@@ -57,11 +57,17 @@
             </div>
             <!-- over the strip, so the map and the tool bar stay usable (design D2) -->
             <AudioBalancePanel
-              v-if="balanceRoom"
-              :key="`balance-${balanceRoom.id}`"
-              :room="balanceRoom"
-              @close="closeBalance"
+              v-if="panelRoom && tool === 'balance'"
+              :key="`balance-${panelRoom.id}`"
+              :room="panelRoom"
+              @close="closePanel"
             ></AudioBalancePanel>
+            <AudioEqPanel
+              v-if="panelRoom && tool === 'eq'"
+              :key="`eq-${panelRoom.id}`"
+              :room="panelRoom"
+              @close="closePanel"
+            ></AudioEqPanel>
           </div>
         </template>
         <div v-else class="audio-plan-unavailable">
@@ -79,7 +85,9 @@ import { refreshPlanAppliances } from '@/utils/audioPlanAppliances'
 import AudioPlanMap from '@/components/audio/AudioPlanMap.vue'
 import AudioStreamCard from '@/components/audio/AudioStreamCard.vue'
 import AudioBalancePanel from '@/components/audio/AudioBalancePanel.vue'
+import AudioEqPanel from '@/components/audio/AudioEqPanel.vue'
 import { hasBalance } from '@/utils/audioBalance'
+import { hasEq } from '@/utils/audioEq'
 
 const PULSE_MS = 1500
 const HISTORY_MARK = 'audioPlanPopup'
@@ -102,7 +110,8 @@ export default {
   components: {
     AudioPlanMap,
     AudioStreamCard,
-    AudioBalancePanel
+    AudioBalancePanel,
+    AudioEqPanel
   },
 
   props: {
@@ -119,24 +128,30 @@ export default {
       { name: 'volume', icon: 'equalizer' },
       { name: 'light', icon: 'lightbulb' },
       { name: 'mute', icon: 'volume_off' },
-      { name: 'balance', icon: 'tune' }
+      { name: 'balance', icon: 'tune' },
+      { name: 'eq', icon: 'graphic_eq' }
     ],
     pulseKey: null,
-    // the room whose balance panel is open (openspec change `kiosk-audio-plan-balance-tool`, design D2)
-    balanceRoomId: null
+    // the room whose Balance or EQ panel is open; the active tool says which
+    // (openspec changes `kiosk-audio-plan-balance-tool` D2, `kiosk-audio-plan-eq-tool` D2)
+    panelRoomId: null
   }),
 
   computed: {
     narrow () {
       return this.$vuetify.breakpoint.xsOnly
     },
-    /** The open panel's room as the state has it now; null once it lost its balance. */
-    balanceRoom () {
-      if (this.balanceRoomId === null || !this.state || this.tool !== 'balance') {
+    /** The open panel's room as the state has it now; null once it no longer qualifies for the active tool. */
+    panelRoom () {
+      if (this.panelRoomId === null || !this.state) {
         return null
       }
-      const room = this.state.rooms.find(r => `${r.id}` === `${this.balanceRoomId}`)
-      return room && hasBalance(room) ? room : null
+      const qualifies = this.tool === 'balance' ? hasBalance : this.tool === 'eq' ? hasEq : null
+      if (!qualifies) {
+        return null
+      }
+      const room = this.state.rooms.find(r => `${r.id}` === `${this.panelRoomId}`)
+      return room && qualifies(room) ? room : null
     },
     /**
      * The main group, then every solo room that can be a target, then every
@@ -185,12 +200,12 @@ export default {
 
   watch: {
     tool () {
-      this.closeBalance()
+      this.closePanel()
     },
-    /** Closed for good once the room no longer supports a balance, so it does not come back by itself. */
-    balanceRoom (room) {
+    /** Closed for good once the room no longer qualifies, so it does not come back by itself. */
+    panelRoom (room) {
       if (!room) {
-        this.closeBalance()
+        this.closePanel()
       }
     },
     value: {
@@ -201,7 +216,7 @@ export default {
           refreshPlanAppliances()
           this.pushHistory()
         } else {
-          this.closeBalance()
+          this.closePanel()
           this.popHistory()
           this.clearPulse()
         }
@@ -213,11 +228,11 @@ export default {
     close () {
       this.$emit('input', false)
     },
-    openBalance (roomId) {
-      this.balanceRoomId = roomId
+    openPanel (roomId) {
+      this.panelRoomId = roomId
     },
-    closeBalance () {
-      this.balanceRoomId = null
+    closePanel () {
+      this.panelRoomId = null
     },
     select (key) {
       this.$emit('select', key)
@@ -336,9 +351,10 @@ export default {
   }
 }
 
+// seven tools and the close control in 332 px (design D1)
 .audio-plan-dialog--narrow .audio-plan-tools.v-btn-toggle > .v-btn.v-btn {
-  min-width: 44px;
-  padding: 0 8px;
+  min-width: 40px;
+  padding: 0 6px;
 }
 
 // Plan at full width, the strip takes the rest but never less than 150 px;
@@ -357,6 +373,11 @@ export default {
   display: flex;
   flex: 1 0 150px;
   min-height: 150px;
+}
+
+// the EQ panel needs 220 px; the body scrolls where the strip is shorter (change `kiosk-audio-plan-eq-tool`, D5)
+.audio-plan-bottom--eq {
+  min-height: 236px;
 }
 
 .audio-plan-strip {

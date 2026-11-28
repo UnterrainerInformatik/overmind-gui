@@ -154,10 +154,27 @@
 						"group": "Group",
 						"light": "Light",
 						"volume": "Volume",
-						"balance": "Balance"
+						"balance": "Balance",
+						"eq": "EQ"
 					},
 					"balance": {
 						"speakerUnavailable": "not available"
+					},
+					"eq": {
+						"flat": "Flat",
+						"roleSatellite": "Satellite",
+						"roleSub": "Sub",
+						"presetMismatch": "differs",
+						"resetBands": "House curve",
+						"resetCrossover": "80 Hz",
+						"resetConfirm": "Really reset?",
+						"retry": "Retry",
+						"loadFailed": "The EQ could not be read",
+						"writeFailed": "The EQ could not be set",
+						"partlyFailed": "Not every speaker took the EQ",
+						"speakers": "Speakers: {list}",
+						"serverOverwrites": "Changes made in the speakers' own web UI are overwritten by the server.",
+						"unreachable": "The EQ cannot be reached right now."
 					},
 					"startFromBar": "Start a selection from the bar",
 					"selected": "Selected",

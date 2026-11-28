@@ -154,10 +154,27 @@
 						"group": "Gruppe",
 						"light": "Licht",
 						"volume": "Lautstärke",
-						"balance": "Balance"
+						"balance": "Balance",
+						"eq": "EQ"
 					},
 					"balance": {
 						"speakerUnavailable": "nicht verfügbar"
+					},
+					"eq": {
+						"flat": "Flat",
+						"roleSatellite": "Satellit",
+						"roleSub": "Sub",
+						"presetMismatch": "weicht ab",
+						"resetBands": "Hauskurve",
+						"resetCrossover": "80 Hz",
+						"resetConfirm": "Wirklich zurücksetzen?",
+						"retry": "Erneut versuchen",
+						"loadFailed": "EQ konnte nicht gelesen werden",
+						"writeFailed": "EQ konnte nicht gesetzt werden",
+						"partlyFailed": "Nicht jeder Lautsprecher hat den EQ übernommen",
+						"speakers": "Lautsprecher: {list}",
+						"serverOverwrites": "Änderungen in der Weboberfläche der Lautsprecher überschreibt der Server.",
+						"unreachable": "Der EQ ist gerade nicht erreichbar."
 					},
 					"startFromBar": "Über die Leiste eine Auswahl starten",
 					"selected": "Gewählt",

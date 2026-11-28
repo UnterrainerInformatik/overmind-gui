@@ -142,6 +142,28 @@ import { singleton as axiosUtils } from '@/utils/axiosUtils'
  *   Entries without a string `playerId` are dropped, the name falls back to
  *   the id, an unknown volume is null. Missing fields (an older server) give
  *   `speakers: []` and `balanceSupported: false`.
+ * - A room's EQ (openspec change `kiosk-audio-plan-eq-tool`, design D8; built
+ *   by java-overmind-server change `audio-room-eq`, see its
+ *   `ai/draft-audio-room-eq-for-frontend.md`):
+ *
+ *     AudioState.rooms[] += { eq: 'bands' | 'crossover' | 'none' | 'unavailable' }
+ *
+ *     GET  audioRoomEq             -> RoomEq, read live from the speakers (1-10 s)
+ *     PUT  audioRoomEq             {bands: {"<frequency>": gain}} only the changed bands,
+ *                                  or {crossover: frequency | null}  null = Flat
+ *     POST audioRoomEqReset        house curve / 80 Hz
+ *
+ *     RoomEq = {capability, bands: [{frequency, min, max, step, uom, gain}] | null,
+ *               crossover: number | null, frequencies: [number] | null,
+ *               speakers: [{playerId, name, host, role, leftPreset, rightPreset}]}
+ *
+ *   Writes answer 204, 400 bad value (re-read), 404 unknown room, 409 no EQ,
+ *   502 a speaker refused (the desired value is saved), 503 unavailable, all
+ *   with a `reason`. SSE `audio-eq-changed {roomId}` follows every write that
+ *   changed the desired EQ, including the panel's own. A missing or unknown
+ *   `eq` (an older server) reads as 'none'; bands without a numeric frequency,
+ *   non-numeric frequencies and speakers without a string `playerId` are
+ *   dropped, a band's range falls back to -15..15 step 1 and its gain to 0.
  * - Audiobooks and podcasts (openspec change `kiosk-audiobooks`, design D1;
  *   built by java-overmind-server change `audio-audiobooks-podcasts`, see its
  *   `ai/draft-audio-audiobooks-podcasts-for-frontend.md`). Whole seconds:
@@ -234,7 +256,47 @@ export interface AudioRoom {
   speakers: AudioSpeaker[];
   /** the server can set the speakers' levels one by one */
   balanceSupported: boolean;
+  /** what the room's EQ offers; 'none' when unknown */
+  eq: AudioEqCapability;
 }
+
+export type AudioEqCapability = 'bands' | 'crossover' | 'none' | 'unavailable'
+
+/** One band of a bands room, in the server's order; `gain` is the desired value. */
+export interface AudioEqBand {
+  frequency: number;
+  min: number;
+  max: number;
+  step: number;
+  uom: string;
+  gain: number;
+}
+
+/** One speaker of an EQ room with the presets it reports now. */
+export interface AudioEqSpeaker {
+  playerId: string;
+  name: string;
+  host: string | null;
+  /** 'satellite' | 'sub' in a crossover room, else null */
+  role: string | null;
+  leftPreset: string | null;
+  rightPreset: string | null;
+}
+
+/** A room's EQ as `GET audioRoomEq` answers it. */
+export interface AudioRoomEq {
+  capability: AudioEqCapability;
+  /** empty unless a bands room */
+  bands: AudioEqBand[];
+  /** the desired crossover frequency; null is Flat */
+  crossover: number | null;
+  /** the crossover frequencies offered; empty unless a crossover room */
+  frequencies: number[];
+  speakers: AudioEqSpeaker[];
+}
+
+/** A `PUT audioRoomEq` body. */
+export type AudioRoomEqWrite = { bands: Record<string, number> } | { crossover: number | null }
 
 /** One MA player of a group room, in the server's order. */
 export interface AudioSpeaker {
@@ -423,6 +485,19 @@ export class AudioService {
 
   public async setRoomVolume (roomId: string | number, level: number): Promise<void> {
     return axiosUtils.putToPath(this.server, 'audioRoomVolume', { roomId }, () => ({ level: Math.round(level) }))
+  }
+
+  /** The room's EQ, read live by the server from its speakers. */
+  public async getRoomEq (roomId: string | number): Promise<AudioRoomEq> {
+    return this.normalizeRoomEq(await axiosUtils.getFromPath(this.server, 'audioRoomEq', { roomId }))
+  }
+
+  public async setRoomEq (roomId: string | number, body: AudioRoomEqWrite): Promise<void> {
+    return axiosUtils.putToPath(this.server, 'audioRoomEq', { roomId }, () => body)
+  }
+
+  public async resetRoomEq (roomId: string | number): Promise<void> {
+    return axiosUtils.postToPath(this.server, 'audioRoomEqReset', { roomId }, () => ({}))
   }
 
   public async setSpeakerVolume (roomId: string | number, playerId: string, level: number): Promise<void> {
@@ -679,7 +754,60 @@ export class AudioService {
       color: typeof r.color === 'string' && r.color.trim() !== '' ? r.color : this.paletteColor(r.id),
       lights: this.normalizeLights(r.lights != null ? r.lights : r.lightApplianceIds),
       speakers: this.normalizeSpeakers(r.speakers),
-      balanceSupported: r.balanceSupported === true
+      balanceSupported: r.balanceSupported === true,
+      eq: this.eqCapability(r.eq)
+    }
+  }
+
+  private eqCapability (raw: unknown): AudioEqCapability {
+    return raw === 'bands' || raw === 'crossover' || raw === 'unavailable' ? raw : 'none'
+  }
+
+  /** See the contract above. */
+  private normalizeRoomEq (raw: Raw): AudioRoomEq {
+    const r = raw && typeof raw === 'object' ? raw : {}
+    const bands: AudioEqBand[] = []
+    if (Array.isArray(r.bands)) {
+      for (const b of r.bands) {
+        if (!b || typeof b !== 'object' || this.numberOrNull(b.frequency) === null) {
+          continue
+        }
+        const min = this.numberOrNull(b.min)
+        const max = this.numberOrNull(b.max)
+        const step = this.numberOrNull(b.step)
+        const gain = this.numberOrNull(b.gain)
+        bands.push({
+          frequency: b.frequency,
+          min: min !== null ? min : -15,
+          max: max !== null ? max : 15,
+          step: step !== null && step > 0 ? step : 1,
+          uom: typeof b.uom === 'string' ? b.uom : 'dB',
+          gain: gain !== null ? gain : 0
+        })
+      }
+    }
+    const speakers: AudioEqSpeaker[] = []
+    if (Array.isArray(r.speakers)) {
+      for (const s of r.speakers) {
+        if (!s || typeof s !== 'object' || typeof s.playerId !== 'string' || s.playerId === '') {
+          continue
+        }
+        speakers.push({
+          playerId: s.playerId,
+          name: `${s.name || s.playerId}`,
+          host: typeof s.host === 'string' && s.host !== '' ? s.host : null,
+          role: typeof s.role === 'string' && s.role !== '' ? s.role : null,
+          leftPreset: typeof s.leftPreset === 'string' ? s.leftPreset : null,
+          rightPreset: typeof s.rightPreset === 'string' ? s.rightPreset : null
+        })
+      }
+    }
+    return {
+      capability: this.eqCapability(r.capability),
+      bands,
+      crossover: this.numberOrNull(r.crossover),
+      frequencies: Array.isArray(r.frequencies) ? r.frequencies.filter((f: unknown) => this.numberOrNull(f) !== null) : [],
+      speakers
     }
   }
 
