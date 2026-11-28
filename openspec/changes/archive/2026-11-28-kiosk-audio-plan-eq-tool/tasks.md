@@ -25,4 +25,4 @@
 
 - [x] 4.1 `npm run lint` and `npm run build` clean
 - [x] 4.2 Headless Puppeteer against `npm run serve` with writes blocked (PUT/POST intercepted, not sent): at 1020 × 590, 768 and 360 px check seven tools fit (apply D1 label fallback if 768 overflows), EQ rooms marked / Cast room dimmed, band panel builds 15 sliders from the live `GET`, a release issues one intercepted `PUT` with only that band, two releases during an in-flight (delayed, intercepted) write merge into one `PUT`, crossover panel shows the speakers and roles and *Flat* sends `{"crossover": null}`, reset asks first, a mocked `503` shows the reason with retry, tool switch closes the panel; also a state without `eq` (every room dimmed); Balance tool still works
-- [ ] 4.3 After deploy, one real check with the user's consent: one band on a bands room and back, no playback started
+- [x] 4.3 After deploy, one real check with the user's consent: one band on a bands room and back, no playback started
